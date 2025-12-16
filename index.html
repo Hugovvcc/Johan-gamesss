@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Johan game</title>
+<title>Johan Game Plinko</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
 :root{
  --pink:#f8b6d2;
@@ -88,27 +87,6 @@ button{
 
 button:disabled{opacity:.5}
 
-.grid{
- display:grid;
- grid-template-columns:repeat(5,1fr);
- gap:8px;
- margin-top:12px;
-}
-
-.cell{
- aspect-ratio:1/1;
- border-radius:14px;
- background:rgba(255,255,255,.8);
- display:flex;
- align-items:center;
- justify-content:center;
- font-size:22px;
- cursor:pointer;
-}
-
-.cell.open.safe{background:var(--green)}
-.cell.open.mine{background:var(--red)}
-
 canvas{
  width:100%;
  background:rgba(255,255,255,.8);
@@ -120,49 +98,14 @@ canvas{
 
 <body>
 <div class="app">
-
-<h1>🎮 Johan game</h1>
-
-<div class="balance">
- Balance: <span id="balance">10.00</span> TON (demo)
-</div>
+<h1>🎮 Johan Game</h1>
+<div class="balance">Balance: <span id="balance">10.00</span> TON</div>
 
 <div class="tabs">
- <div class="tab active" onclick="show('mines')">Mines</div>
- <div class="tab" onclick="show('blinko')">Blinko</div>
+ <div class="tab active" onclick="show('blinko')">Blinko</div>
 </div>
 
-<!-- MINES -->
-<div id="mines" class="section active">
-
-<div class="controls">
- <div class="control-row">
-  <label>Bet (min 0.1)</label>
-  <input id="betInput" type="number" min="0.1" step="0.1" value="0.1">
- </div>
- <div class="control-row">
-  <label>Mines</label>
-  <select id="minesSelect">
-   <option>1</option><option>3</option><option selected>5</option>
-   <option>7</option><option>10</option>
-  </select>
- </div>
- <button onclick="startMines()">Start</button>
-</div>
-
-<div class="grid" id="grid"></div>
-
-<div style="text-align:center;margin-top:8px">
- Multiplier: <span id="multiplier">1.00</span>x
-</div>
-
-<button onclick="cashout()" id="cashoutBtn" disabled>Cash Out</button>
-
-</div>
-
-<!-- BLINKO -->
-<div id="blinko" class="section">
-
+<div id="blinko" class="section active">
 <div class="controls">
  <div class="control-row">
   <label>Bet (min 0.1)</label>
@@ -172,16 +115,13 @@ canvas{
 </div>
 
 <canvas id="plinko" width="360" height="420"></canvas>
-
 </div>
-
 </div>
 
 <script>
-let balance=10;
-const balanceEl=document.getElementById("balance");
-
-function updateBalance(){balanceEl.textContent=balance.toFixed(2)}
+let balance = 10;
+const balanceEl = document.getElementById("balance");
+function updateBalance(){ balanceEl.textContent = balance.toFixed(2); }
 updateBalance();
 
 /* tabs */
@@ -192,90 +132,79 @@ function show(id){
  event.target.classList.add("active");
 }
 
-/* MINES */
-let mines=[],opened=0,bet=0,mineCount=0,active=false;
-
-function startMines(){
- bet=+betInput.value;
- mineCount=+minesSelect.value;
- if(bet<0.1||bet>balance)return alert("Invalid bet");
- balance-=bet;updateBalance();
- active=true;opened=0;mines=[];
- grid.innerHTML="";
- cashoutBtn.disabled=false;
-
- while(mines.length<mineCount){
-  let r=Math.floor(Math.random()*25);
-  if(!mines.includes(r))mines.push(r);
- }
-
- for(let i=0;i<25;i++){
-  let c=document.createElement("div");
-  c.className="cell";
-  c.onclick=()=>clickCell(c,i);
-  grid.appendChild(c);
- }
-}
-
-function clickCell(cell,i){
- if(!active||cell.classList.contains("open"))return;
- cell.classList.add("open");
- if(mines.includes(i)){
-  cell.classList.add("mine");cell.textContent="💣";
-  active=false;cashoutBtn.disabled=true;
- }else{
-  cell.classList.add("safe");cell.textContent="💎";
-  opened++;
-  let multi=Math.pow(25/(25-mineCount),opened);
-  multiplier.textContent=multi.toFixed(2);
- }
-}
-
-function cashout(){
- let multi=+multiplier.textContent;
- balance+=bet*multi;
- active=false;
- cashoutBtn.disabled=true;
- updateBalance();
-}
-
 /* BLINKO */
-const canvas=document.getElementById("plinko");
-const ctx=canvas.getContext("2d");
-const slots=[0,0.8,1.5,2.5,1.5,0.8,0];
+const canvas = document.getElementById("plinko");
+const ctx = canvas.getContext("2d");
+
+// Загрузка изображения для шарика
+const ballImg = new Image();
+ballImg.src = '/mnt/data/a858e602-baa2-4b19-b130-c179c0ee704a.png';
+
+const slotMultipliers = [0, 0.8, 1.5, 2.5, 1.5, 0.8, 0];
+const pegRows = [];
+const cols = 7;
+const rows = 5;
+
+// генерируем координаты пегов
+for(let y=80; y<=260; y+=40){
+ let row = [];
+ for(let x=30; x<=330; x+=60){
+   row.push({x:x, y:y});
+ }
+ pegRows.push(row);
+}
 
 function drawBoard(){
  ctx.clearRect(0,0,360,420);
- ctx.fillStyle="#f29bc1";
- for(let y=80;y<260;y+=50){
-  for(let x=40;x<360;x+=60){
-   ctx.beginPath();
-   ctx.arc(x,y,6,0,Math.PI*2);
-   ctx.fill();
-  }
+ // рисуем пеги
+ ctx.fillStyle = "#f29bc1";
+ for(let row of pegRows){
+   for(let peg of row){
+     ctx.beginPath();
+     ctx.arc(peg.x, peg.y, 6, 0, Math.PI*2);
+     ctx.fill();
+   }
+ }
+ // рисуем слот линии
+ for(let i=0; i<=cols; i++){
+   ctx.fillStyle = "#fde7f1";
+   ctx.fillRect(i*360/cols-2, 380, 4, 40);
  }
 }
 
 function dropBall(){
- let b=+blinkoBet.value;
- if(b<0.1||b>balance)return alert("Invalid bet");
- balance-=b;updateBalance();
+ let bet = +document.getElementById("blinkoBet").value;
+ if(bet<0.1 || bet>balance){ return alert("Invalid bet"); }
+ balance -= bet;
+ updateBalance();
 
- let x=180,y=20,vx=0;
- let interval=setInterval(()=>{
-  drawBoard();
-  vx+=(Math.random()-.5)*2;
-  x+=vx;y+=4;
-  ctx.beginPath();
-  ctx.arc(x,y,8,0,Math.PI*2);
-  ctx.fillStyle="#fff";ctx.fill();
-  if(y>380){
-   clearInterval(interval);
-   let slot=Math.floor(x/(360/7));
-   let win=b*slots[slot];
-   balance+=win;
-   updateBalance();
-  }
+ let x = 180, y = 20, vx = 0, vy = 4;
+ let path = []; // для точного попадания в слоты
+
+ const interval = setInterval(()=>{
+   drawBoard();
+   // случайное отклонение при падении
+   if(Math.floor(y/40)<pegRows.length){
+     let row = pegRows[Math.floor(y/40)];
+     let closest = row.reduce((a,b)=>Math.abs(b.x-x)<Math.abs(a.x-x)?b:a);
+     vx += (Math.random()-0.5)*2;
+     if(Math.abs(x-closest.x)<5) vx = 0;
+   }
+   x += vx;
+   y += vy;
+
+   ctx.drawImage(ballImg, x-8, y-8, 16,16);
+
+   if(y>=380){
+     clearInterval(interval);
+     let slot = Math.floor(x/(360/cols));
+     if(slot<0) slot=0;
+     if(slot>=cols) slot=cols-1;
+     let win = bet * slotMultipliers[slot];
+     balance += win;
+     updateBalance();
+     alert("You won " + win.toFixed(2) + " TON!");
+   }
  },30);
 }
 
