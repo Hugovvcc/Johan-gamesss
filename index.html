@@ -2,221 +2,258 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Johan Game</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Johan game – Mines</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
     :root {
-      --pink: #ffd6e8;
-      --pink2: #ffb3d9;
-      --purple: #e6ccff;
+      --pink: #f8b6d2;
+      --pink-soft: #fde7f1;
+      --pink-dark: #f29bc1;
       --white: #ffffff;
-      --glass: rgba(255,255,255,0.5);
+      --green: #7dd3a7;
+      --red: #ff6b6b;
     }
 
     * {
       box-sizing: border-box;
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
     }
 
     body {
       margin: 0;
-      background: linear-gradient(135deg, var(--pink), var(--purple));
-      min-height: 100vh;
+      background: linear-gradient(180deg, #fde7f1, #f8b6d2);
       color: #333;
+      display: flex;
+      justify-content: center;
     }
 
-    .screen {
-      display: none;
-      padding: 20px;
-      animation: fade 0.4s ease;
-    }
-
-    .active {
-      display: block;
-    }
-
-    @keyframes fade {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .card {
-      background: var(--glass);
-      backdrop-filter: blur(12px);
-      border-radius: 20px;
+    .app {
+      width: 100%;
+      max-width: 420px;
       padding: 16px;
+    }
+
+    h1 {
+      text-align: center;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .balance {
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(8px);
+      border-radius: 16px;
+      padding: 12px;
+      text-align: center;
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+
+    .controls {
+      background: rgba(255,255,255,0.6);
+      border-radius: 16px;
+      padding: 12px;
       margin-bottom: 16px;
     }
 
-    h1, h2 {
-      text-align: center;
-      margin-top: 0;
+    .control-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    input, select {
+      border-radius: 12px;
+      border: none;
+      padding: 6px 10px;
+      font-size: 14px;
     }
 
     button {
       width: 100%;
-      padding: 14px;
-      border-radius: 14px;
       border: none;
-      background: var(--pink2);
+      border-radius: 16px;
+      padding: 12px;
       font-size: 16px;
-      margin-top: 10px;
+      font-weight: 600;
       cursor: pointer;
+      background: var(--pink-dark);
+      color: white;
+      transition: 0.2s;
     }
 
-    .nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      display: flex;
-      background: var(--white);
-      border-top-left-radius: 20px;
-      border-top-right-radius: 20px;
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
-    .nav button {
-      flex: 1;
-      background: none;
-    }
-
-    .balance {
-      text-align: center;
-      font-size: 18px;
-      margin-bottom: 10px;
-    }
-
-    /* Mines */
     .grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
       gap: 8px;
-      margin-top: 10px;
+      margin-top: 16px;
     }
 
     .cell {
-      aspect-ratio: 1/1;
-      background: var(--white);
-      border-radius: 12px;
+      aspect-ratio: 1 / 1;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.7);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
+      font-size: 22px;
       cursor: pointer;
+      transition: 0.2s;
     }
 
-    .cell.open {
-      background: #ffe6f2;
+    .cell.open.safe {
+      background: var(--green);
+      color: white;
     }
 
-    /* Admin */
-    .admin {
-      font-size: 12px;
-      opacity: 0.6;
+    .cell.open.mine {
+      background: var(--red);
+      color: white;
+    }
+
+    .info {
+      margin-top: 12px;
       text-align: center;
-      margin-top: 10px;
+      font-weight: 600;
+    }
+
+    .cashout {
+      margin-top: 12px;
+      background: var(--green);
     }
   </style>
 </head>
-
 <body>
 
-<!-- LOADING -->
-<div id="loading" class="screen active">
-  <h1>Johan game</h1>
-  <p style="text-align:center;">Loading...</p>
-</div>
+<div class="app">
+  <h1>💣 Johan Mines</h1>
 
-<!-- LOBBY -->
-<div id="lobby" class="screen">
-  <div class="balance">Balance: <b id="balance">10.00</b> TON (demo)</div>
-
-  <div class="card">
-    <button onclick="openMines()">💣 Mines</button>
-    <button onclick="alert('Blinko coming next')">🔮 Blinko</button>
-    <button onclick="alert('Ball Escape coming next')">⚪ Ball Escape</button>
+  <div class="balance">
+    Balance: <span id="balance">10.00</span> TON (demo)
   </div>
 
-  <div class="admin" onclick="adminTap()">Johan Game ©</div>
-</div>
-
-<!-- MINES -->
-<div id="mines" class="screen">
-  <h2>Mines</h2>
-  <div class="balance">Bet: 0.1 TON</div>
+  <div class="controls">
+    <div class="control-row">
+      <label>Bet</label>
+      <input id="betInput" type="number" step="0.01" min="0.01" value="0.1">
+    </div>
+    <div class="control-row">
+      <label>Mines</label>
+      <select id="minesSelect">
+        <option>1</option>
+        <option>3</option>
+        <option selected>5</option>
+        <option>10</option>
+        <option>15</option>
+        <option>20</option>
+        <option>24</option>
+      </select>
+    </div>
+    <button id="startBtn">Start Game</button>
+  </div>
 
   <div class="grid" id="grid"></div>
 
-  <button onclick="back()">Back</button>
-</div>
+  <div class="info">
+    Multiplier: <span id="multiplier">1.00</span>x
+  </div>
 
-<!-- NAV -->
-<div class="nav">
-  <button onclick="show('lobby')">🏠</button>
-  <button onclick="alert('Profile demo')">👤</button>
-  <button onclick="alert('Wallet demo')">💎</button>
+  <button class="cashout" id="cashoutBtn" disabled>
+    Cash Out
+  </button>
 </div>
 
 <script>
-  let balance = 10.0;
-  let adminClicks = 0;
+  const gridEl = document.getElementById("grid");
+  const balanceEl = document.getElementById("balance");
+  const multiplierEl = document.getElementById("multiplier");
+  const startBtn = document.getElementById("startBtn");
+  const cashoutBtn = document.getElementById("cashoutBtn");
 
-  function show(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
+  let balance = 10;
+  let bet = 0;
+  let mines = 0;
+  let opened = 0;
+  let minePositions = [];
+  let active = false;
+  let multiplier = 1;
+
+  function updateUI() {
+    balanceEl.textContent = balance.toFixed(2);
+    multiplierEl.textContent = multiplier.toFixed(2);
   }
 
-  setTimeout(() => show('lobby'), 1200);
-
-  function openMines() {
-    show('mines');
-    createGrid();
+  function calculateMultiplier() {
+    const total = 25;
+    multiplier = Math.pow(total / (total - mines), opened);
+    updateUI();
   }
 
-  function back() {
-    show('lobby');
-  }
+  function startGame() {
+    bet = parseFloat(document.getElementById("betInput").value);
+    mines = parseInt(document.getElementById("minesSelect").value);
 
-  function createGrid() {
-    const grid = document.getElementById('grid');
-    grid.innerHTML = '';
-    const mines = new Set();
-    while (mines.size < 5) {
-      mines.add(Math.floor(Math.random() * 25));
+    if (bet <= 0 || bet > balance) return alert("Invalid bet");
+
+    balance -= bet;
+    updateUI();
+
+    opened = 0;
+    multiplier = 1;
+    minePositions = [];
+    active = true;
+
+    gridEl.innerHTML = "";
+    cashoutBtn.disabled = false;
+
+    while (minePositions.length < mines) {
+      const r = Math.floor(Math.random() * 25);
+      if (!minePositions.includes(r)) minePositions.push(r);
     }
 
     for (let i = 0; i < 25; i++) {
-      const cell = document.createElement('div');
-      cell.className = 'cell';
-      cell.onclick = () => {
-        if (cell.classList.contains('open')) return;
-        cell.classList.add('open');
-        if (mines.has(i)) {
-          cell.textContent = '💣';
-          alert('Game over');
-          back();
-        } else {
-          cell.textContent = '⭐';
-          balance += 0.02;
-          document.getElementById('balance').textContent = balance.toFixed(2);
-        }
-      };
-      grid.appendChild(cell);
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.onclick = () => clickCell(cell, i);
+      gridEl.appendChild(cell);
     }
   }
 
-  function adminTap() {
-    adminClicks++;
-    if (adminClicks >= 5) {
-      const v = prompt('Admin balance set:');
-      if (v) {
-        balance = parseFloat(v);
-        document.getElementById('balance').textContent = balance.toFixed(2);
-      }
-      adminClicks = 0;
+  function clickCell(cell, index) {
+    if (!active || cell.classList.contains("open")) return;
+
+    cell.classList.add("open");
+
+    if (minePositions.includes(index)) {
+      cell.classList.add("mine");
+      cell.textContent = "💣";
+      active = false;
+      cashoutBtn.disabled = true;
+    } else {
+      cell.classList.add("safe");
+      cell.textContent = "💎";
+      opened++;
+      calculateMultiplier();
     }
   }
+
+  cashoutBtn.onclick = () => {
+    if (!active) return;
+    balance += bet * multiplier;
+    active = false;
+    cashoutBtn.disabled = true;
+    updateUI();
+  };
+
+  startBtn.onclick = startGame;
+  updateUI();
 </script>
 
 </body>
