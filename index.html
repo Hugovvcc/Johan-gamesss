@@ -1,213 +1,206 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Johan Game – Mines</title>
+<meta charset="UTF-8">
+<title>Mines – Johan Game</title>
 <style>
-    body {
-        background: linear-gradient(135deg, #ffd4f5, #ffecfd);
-        font-family: Arial;
-        text-align: center;
-        color: #444;
-    }
+body {
+    background: linear-gradient(120deg, #ffd6f6, #ffe9ff);
+    font-family: Arial;
+    text-align: center;
+}
 
-    #balanceBox {
-        margin-top: 20px;
-        background: white;
-        padding: 10px;
-        width: 260px;
-        border-radius: 12px;
-        margin-left: auto;
-        margin-right: auto;
-        font-size: 20px;
-        border: 2px solid #ff9de6;
-    }
+#balanceBox {
+    margin-top: 20px;
+    font-size: 28px;
+    background: white;
+    border-radius: 12px;
+    padding: 10px 30px;
+    display: inline-block;
+}
 
-    #controls {
-        margin-top: 15px;
-    }
+.crystalIcon {
+    width: 26px;
+    vertical-align: -5px;
+}
 
-    input, select {
-        padding: 6px;
-        border-radius: 6px;
-        border: 1px solid #ff9de6;
-        font-size:16px;
-        outline:none;
-    }
+input, select {
+    padding: 8px;
+    border-radius: 6px;
+    border: 2px solid #ff9be6;
+    font-size: 18px;
+}
 
-    button {
-        padding: 8px 14px;
-        background: #ff74e6;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size:16px;
-    }
+button {
+    margin: 10px;
+    padding: 12px 25px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+    background: #ff73d9;
+    color: white;
+    font-size: 19px;
+    font-weight: bold;
+}
 
-    #grid {
-        width: 320px;
-        margin: 20px auto;
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 4px;
-    }
+button:hover {
+    background:#ff4fce;
+}
 
-    .tile {
-        width: 60px;
-        height: 60px;
-        background: white;
-        border-radius: 10px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        cursor:pointer;
-        transition:0.2s;
-        border: 2px solid #ffb8f1;
-        overflow:hidden;
-    }
+#grid {
+    margin-top: 30px;
+    width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+}
 
-    .tonImg {
-        width: 40px;
-    }
+.cell {
+    width: 85px;
+    height: 85px;
+    background:white;
+    border-radius: 10px;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+.cell:hover {
+    transform: scale(1.05);
+}
+
+.safeCell {
+    background:#c9ffe0 !important;
+}
+
+.mineCell {
+    background:#ff8fa3 !important;
+}
 
 </style>
 </head>
-
 <body>
 
 <div id="balanceBox">
-    💎 Balance: <span id="balance">100</span> TON
+💎 Balance: <span id="balance">73</span> TON
 </div>
 
-<div id="controls">
+<br><br>
 
-    Bet TON:
-    <input id="bet" type="number" step="0.1" min="0.1" value="0.1" />
+Bet TON: 
+<input type="number" id="bet" value="0.1" min="0.1" max="10" step="0.1">
 
-    <br><br>
+&nbsp;&nbsp;&nbsp;
 
-    Mines:
-    <select id="mineCount">
-        <option>5</option><option>6</option><option>7</option>
-        <option>8</option><option>9</option><option>10</option>
-        <option>11</option><option>12</option><option>13</option>
-        <option>14</option><option>15</option>
-    </select>
+Mines:
+<select id="mineCount">
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option selected>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+</select>
 
-    <br><br>
+<br>
 
-    <button onclick="startGame()">Start Game</button>
-    <button onclick="cashout()">Cashout</button>
-
-</div>
+<button onclick="startGame()">Start Game</button>
+<button onclick="cashout()">Cashout</button>
 
 <div id="grid"></div>
 
 <script>
 
-let balance = 100;
-let bet = 0;
+let balance = 73;
 let gameActive = false;
 let mines = [];
-let clicks = 0;
-
-function updateBalance() {
-    document.getElementById("balance").innerText = balance.toFixed(2);
-}
+let opened = 0;
 
 function startGame() {
 
-    if (gameActive) return;
-
-    bet = Number(document.getElementById("bet").value);
-
-    if (bet < 0.1) { alert("Min bet = 0.1 TON"); return; }
-    if (bet > 10) { alert("Max bet = 10 TON"); return; }
-    if (bet > balance) { alert("Not enough balance"); return; }
-
-    let m = Number(document.getElementById("mineCount").value);
-    if (m < 5) m = 5;
+    let bet = parseFloat(document.getElementById("bet").value);
+    if(bet < 0.1){ alert("Min 0.1 TON"); return; }
+    if(bet > balance){ alert("Not enough balance"); return; }
 
     balance -= bet;
-    updateBalance();
+    document.getElementById("balance").innerText = balance.toFixed(2);
 
     gameActive = true;
-    clicks = 0;
+    opened = 0;
 
     mines = [];
-    while (mines.length < m) {
+    let bombCount = parseInt(document.getElementById("mineCount").value);
+
+    while(mines.length < bombCount){
         let r = Math.floor(Math.random()*25);
-        if (!mines.includes(r)) mines.push(r);
+        if(!mines.includes(r)) mines.push(r);
     }
 
     drawGrid();
 }
 
-function drawGrid() {
-    let box = document.getElementById("grid");
-    box.innerHTML = "";
+function drawGrid(){
+    let grid = document.getElementById("grid");
+    grid.innerHTML = "";
 
-    for (let i=0;i<25;i++){
-        let tile = document.createElement("div");
-        tile.className = "tile";
-        tile.dataset.id = i;
-        tile.onclick = () => clickTile(i,tile);
-        box.appendChild(tile);
+    for(let i=0;i<25;i++){
+        let cell = document.createElement("div");
+        cell.className = "cell";
+        cell.id = "cell"+i;
+        cell.onclick = function(){ clickCell(i); };
+        grid.appendChild(cell);
     }
 }
 
-function clickTile(id,tile){
+function clickCell(i){
 
-    if (!gameActive) return;
+    if(!gameActive) return;
 
-    if (mines.includes(id)) {
-        tile.style.background="#ff4a7e";
-        tile.innerHTML="💣";
+    if(mines.includes(i)){
+        document.getElementById("cell"+i).classList.add("mineCell");
         endGame(false);
-        return;
+    } else {
+        document.getElementById("cell"+i).classList.add("safeCell");
+        opened++;
     }
+}
 
-    clicks++;
+function endGame(win){
 
-    tile.style.background="#8cffc9";
-    tile.innerHTML="<img src='ton.png' class='tonImg'>";
-    tile.onclick="";
+    gameActive = false;
 
+    mines.forEach(i=>{
+        document.getElementById("cell"+i).classList.add("mineCell");
+    });
+
+    if(win == false) {
+        alert("💥 Mine hit!");
+    }
 }
 
 function cashout(){
 
-    if (!gameActive) return;
+    if(opened == 0 || !gameActive) return;
 
-    let multiplier = 1 + (clicks * 0.25);
-    let win = bet * multiplier;
+    let bet = parseFloat(document.getElementById("bet").value);
+    let win = bet * (1 + (opened*0.25));
 
     balance += win;
-    updateBalance();
+    document.getElementById("balance").innerText = balance.toFixed(2);
 
-    revealAll();
+    alert("You won " + win.toFixed(2) + " TON!");
+
     gameActive = false;
 }
 
-function endGame(loss){
-    gameActive = false;
-    if (loss) {}
-    revealAll();
-}
-
-function revealAll(){
-
-    [...document.getElementsByClassName("tile")].forEach(t=>{
-        let id = Number(t.dataset.id);
-        if (mines.includes(id)){
-            t.style.background="#ff4a7e";
-            t.innerHTML="💣";
-        }
-    });
-
-}
+drawGrid();
 
 </script>
+
 </body>
 </html>
