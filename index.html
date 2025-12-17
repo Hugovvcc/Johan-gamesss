@@ -58,14 +58,19 @@
         height: 60px;
         background: white;
         border-radius: 10px;
-        font-size: 34px;
         display:flex;
         align-items:center;
         justify-content:center;
         cursor:pointer;
         transition:0.2s;
         border: 2px solid #ffb8f1;
+        overflow:hidden;
     }
+
+    .tonImg {
+        width: 40px;
+    }
+
 </style>
 </head>
 
@@ -84,10 +89,10 @@
 
     Mines:
     <select id="mineCount">
-        <option>1</option><option>2</option><option>3</option>
-        <option>4</option><option>5</option><option>6</option>
-        <option>7</option><option>8</option><option>9</option>
-        <option>10</option>
+        <option>5</option><option>6</option><option>7</option>
+        <option>8</option><option>9</option><option>10</option>
+        <option>11</option><option>12</option><option>13</option>
+        <option>14</option><option>15</option>
     </select>
 
     <br><br>
@@ -117,10 +122,12 @@ function startGame() {
 
     bet = Number(document.getElementById("bet").value);
 
-    if (bet < 0.1) { alert("Min bet is 0.1 TON"); return; }
+    if (bet < 0.1) { alert("Min bet = 0.1 TON"); return; }
+    if (bet > 10) { alert("Max bet = 10 TON"); return; }
     if (bet > balance) { alert("Not enough balance"); return; }
 
     let m = Number(document.getElementById("mineCount").value);
+    if (m < 5) m = 5;
 
     balance -= bet;
     updateBalance();
@@ -164,7 +171,7 @@ function clickTile(id,tile){
     clicks++;
 
     tile.style.background="#8cffc9";
-    tile.innerHTML="💎";
+    tile.innerHTML="<img src='ton.png' class='tonImg'>";
     tile.onclick="";
 
 }
