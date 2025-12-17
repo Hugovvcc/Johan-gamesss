@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Plinko — Johan Game</title>
+<style>
+    body {
+        background: #ffd6f6;
+        font-family: Arial;
+        text-align:center;
+        margin:0;
+        padding:0;
+    }
+
+    h1 {
+        color:#ff2aa1;
+        margin-top:20px;
+    }
+
+    canvas {
+        background: #ffeafc;
+        margin-top:10px;
+        border-radius:20px;
+    }
+
+    #btn {
+        padding:12px 25px;
+        margin-top:20px;
+        border:none;
+        background:#ff5fc3;
+        color:white;
+        font-size:20px;
+        border-radius:15px;
+        cursor:pointer;
+    }
+
+    #score {
+        font-size:22px;
+        margin-top:15px;
+        color:#c4008c;
+    }
+</style>
+</head>
+
+<body>
+
+<h1>Plinko</h1>
+
+<canvas id="plinko" width="400" height="450"></canvas>
+
+<button id="btn">Drop Ball</button>
+
+<div id="score">Points: 100</div>
+
+<script>
+let canvas = document.getElementById("plinko");
+let ctx = canvas.getContext("2d");
+
+let points = 100;  
+let pegs = [];
+let slots = [];
+
+let rows = 8;
+let spacing = 40;
+
+// build pegs
+for(let r=0;r<rows;r++){
+    for(let c=0;c<r+4;c++){
+        pegs.push({
+            x: 60 + c*spacing - r*18,
+            y: 60 + r*spacing
+        });
+    }
+}
+
+// build slots zones
+let slotWidth = canvas.width / 6;
+let multipliers = [-1,0,1,1,0,-1];
+
+for(let i=0;i<6;i++){
+    slots.push({
+        x:i*slotWidth,
+        result:multipliers[i]
+    });
+}
+
+let ball = null;
+
+function draw(){
+    ctx.clearRect(0,0,400,450);
+
+    // draw pegs
+    ctx.fillStyle="#ff2aa1";
+    pegs.forEach(p=>{
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,6,0,Math.PI*2);
+        ctx.fill();
+    });
+
+    // draw slots
+    slots.forEach((s,i)=>{
+        ctx.fillStyle = s.result < 0 ? "#ff88c4" : "#93ff9d";
+        ctx.fillRect(s.x,420,slotWidth,30);
+    });
+
+    if(ball){
+        ctx.fillStyle="#000";
+        ctx.beginPath();
+        ctx.arc(ball.x,ball.y,8,0,Math.PI*2);
+        ctx.fill();
+
+        ball.y += 1.5;
+
+        pegs.forEach(p=>{
+            let dx = ball.x - p.x;
+            let dy = ball.y - p.y;
+            let d = Math.sqrt(dx*dx+dy*dy);
+            if(d<10){
+                ball.vx = (Math.random()-0.5)*3;
+                ball.y += 3;
+            }
+        });
+
+        ball.x += ball.vx;
+
+        if(ball.y > 420){
+            let id = Math.floor(ball.x / slotWidth);
+
+            points += slots[id].result * 10;
+            document.getElementById("score").innerHTML = "Points: " + points;
+
+            ball = null;
+        }
+    }
+}
+
+setInterval(draw,10);
+
+document.getElementById("btn").onclick = ()=>{
+    if(ball!=null)return;
+
+    points -= 5;
+    document.getElementById("score").innerHTML = "Points: " + points;
+
+    ball = {
+        x: 200,
+        y: 10,
+        vx: 0
+    };
+};
+</script>
+
+</body>
+</html>
