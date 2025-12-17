@@ -1,387 +1,287 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
 <title>Johan Game</title>
 
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
-body{
-  background: linear-gradient(180deg, #ffc7e8, #ffecfb);
-  margin:0;
-  font-family:Arial;
-  color:#333;
-  overflow:hidden;
-  text-align:center;
+
+body {
+    background: linear-gradient(135deg,#ff9ee2,#ffc6ef,#ffe9f8);
+    font-family: Arial, sans-serif;
+    text-align:center;
+    margin:0;
+    padding:0;
+    color:#ff008c;
 }
 
-.gameSwitcher{
-  display:flex;
-  justify-content:center;
-  gap:15px;
-  margin-top:20px;
+/* navigation tabs */
+
+#nav {
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    margin-top:15px;
 }
 
-.gameSwitcher button{
-  padding:12px 18px;
-  background:white;
-  border-radius:12px;
-  border:none;
-  font-weight:bold;
-  cursor:pointer;
-  box-shadow:0 0 8px rgba(0,0,0,0.1);
+.navbtn{
+    padding:10px 20px;
+    background:#ff34c3;
+    border:none;
+    border-radius:8px;
+    color:white;
+    cursor:pointer;
+    font-size:17px;
 }
 
-.hidden{
- display:none;
+#balanceBox {
+    margin-top:10px;
+    font-size:22px;
+    color:#a30061;
 }
 
-/* MINES AREA */
-
-#minesArea{
- margin-top:25px;
+/* game containers */
+.gamePage{
+    display:none;
+    margin-top:20px;
 }
 
-#mineGrid{
-  display:grid;
-  width:340px;
-  height:340px;
-  margin:15px auto;
-  grid-template-columns:repeat(5,1fr);
-  gap:4px;
+/* ----- MINES ----- */
+
+#minesBoard{
+    width:290px;
+    height:290px;
+    margin:auto;
+    display:grid;
+    grid-template-columns: repeat(5,1fr);
+    gap:5px;
 }
 
-.mineTile{
-  background:white;
-  border-radius:8px;
-  cursor:pointer;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:25px;
-  font-weight:bold;
-  box-shadow:0 0 6px rgba(0,0,0,0.2);
+.mineCell{
+    background:#ff79d1;
+    border-radius:6px;
+    cursor:pointer;
 }
 
-.mineTile.open{
-  background:#ffe2f3;
+.mineRevealed {
+    background:white !important;
+    color:black;
 }
 
-.mineTile.boom{
-  background:red;
+/* ----- PLINKO ----- */
+
+#plinkoCanvas{
+    background:#ffeafc;
+    border-radius:15px;
 }
 
-/* BLINKO */
-
-#blinkoArea{
- margin-top:10px;
-}
-
-#blinkoCanvas{
- background:white;
- border-radius:15px;
- margin:auto;
- display:block;
- box-shadow:0 0 6px rgba(0,0,0,0.15);
-}
-
-/* UI components */
-
-.ton{
-font-size:25px;
-font-weight:bold;
-margin-top:5px;
+#plinkoStartBtn{
+    padding:12px 25px;
+    border:none;
+    background:#ff34c3;
+    color:white;
+    font-size:18px;
+    border-radius:10px;
+    cursor:pointer;
+    margin-top:10px;
 }
 
 </style>
-
 </head>
 
 <body>
 
-<h1>JOHAN GAME</h1>
+<h1 style="margin-top:20px;">Johan Game</h1>
 
-<div class="ton">
-Balance: <span id="balance">5.00</span> TON
+<div id="balanceBox">Points: 100</div>
+
+<div id="nav">
+<button class="navbtn" onclick="showMines()">Mines</button>
+<button class="navbtn" onclick="showPlinko()">Plinko</button>
 </div>
 
-<div class="gameSwitcher">
-<button onclick="openMines()">MINES</button>
-<button onclick="openBlinko()">BLINKO</button>
-</div>
-
-<!-- ███ MINES GAME ███ -->
-
-<div id="minesArea">
+<!-- MINES GAME -->
+<div id="minesPage" class="gamePage">
 
 <h2>Mines</h2>
 
-<label>Bet TON:</label>
-<input id="mineBet" type="number" value="0.1" step="0.1">
+<p>Find safe tiles and earn points</p>
 
-<br>
+<div id="minesBoard"></div>
 
-<label>Mines Count:</label>
-<input id="mineCount" type="number" value="3" min="1" max="10">
-
-<br><br>
-
-<button onclick="startMines()">START</button>
-<button onclick="cashoutMines()">CASHOUT</button>
-
-<div id="mineGrid"></div>
-
-<h3 id="mineStatus"></h3>
-</div>
-
-<!-- ███ BLINKO GAME ███ -->
-
-<div id="blinkoArea" class="hidden">
-
-<h2>Blinko</h2>
-
-<label>Bet TON:</label>
-<input id="blinkoBet" type="number" value="0.1" step="0.1">
-
-<br><br>
-
-<canvas id="blinkoCanvas" width="300" height="460"></canvas>
-
-<button onclick="dropBall()">PLAY</button>
-
-<h3 id="blinkoResult"></h3>
+<button class="navbtn" onclick="restartMines()">Restart Mines</button>
 
 </div>
 
+<!-- PLINKO GAME -->
+<div id="plinkoPage" class="gamePage">
 
+<h2>Plinko</h2>
 
+<canvas id="plinkoCanvas" width="360" height="450"></canvas>
+
+<button id="plinkoStartBtn">DROP</button>
+
+</div>
 
 <script>
-/*********** GLOBAL ***********/
-let balance = 5.00;
 
-/*********** SCREEN SWITCH ***********/
-function openMines(){
- document.getElementById("minesArea").classList.remove("hidden");
- document.getElementById("blinkoArea").classList.add("hidden");
+let balance = 100;
+
+// ----------- Page switching ----------
+
+document.getElementById("minesPage").style.display="block";
+
+function showMines(){
+    document.getElementById("minesPage").style.display="block";
+    document.getElementById("plinkoPage").style.display="none";
 }
 
-function openBlinko(){
- document.getElementById("minesArea").classList.add("hidden");
- document.getElementById("blinkoArea").classList.remove("hidden");
+function showPlinko(){
+    document.getElementById("plinkoPage").style.display="block";
+    document.getElementById("minesPage").style.display="none";
 }
 
+// ========== MINES GAME =============
+
+let minesCount = 6;
+let minePositions = [];
+let minesBoard = document.getElementById("minesBoard");
+
+function restartMines(){
+    minesBoard.innerHTML = "";
+    minePositions = [];
+
+    while(minePositions.length < minesCount){
+        let r = Math.floor(Math.random()*25);
+        if(!minePositions.includes(r)) minePositions.push(r);
+    }
+
+    for(let i=0;i<25;i++){
+        let cell = document.createElement("div");
+        cell.className="mineCell";
+        cell.dataset.id=i;
+        cell.onclick = revealMine;
+        minesBoard.appendChild(cell);
+    }
+}
+
+function revealMine(){
+    let id = Number(this.dataset.id);
+
+    this.classList.add("mineRevealed");
+
+    if(minePositions.includes(id)){
+        this.style.background="red";
+        balance -= 5;
+        updateBalance();
+        setTimeout(()=>restartMines(),500);
+    } 
+    else {
+        this.innerHTML="★";
+        balance += 5;
+        updateBalance();
+    }
+}
+
+restartMines();
+
+// ========== PLINKO GAME =============
+
+let pCanvas = document.getElementById("plinkoCanvas");
+let pCtx = pCanvas.getContext("2d");
+
+let pBall = null;
+let pPegs = [];
+let pSlots = [];
+let pRows = 8;
+let pSpacing = 38;
+
+for(let r=0;r<pRows;r++){
+    for(let c=0;c<r+4;c++){
+        pPegs.push({
+            x: 70 + c*pSpacing - r*18,
+            y: 60 + r*pSpacing
+        });
+    }
+}
+
+let slotCount = 6;
+let slotWidth = pCanvas.width / slotCount;
+let slotMulti = [-2,-1,1,1,-1,-2];
+
+for(let i=0;i<slotCount;i++){
+    pSlots.push({
+        x:i*slotWidth,
+        result:slotMulti[i]
+    });
+}
+
+function pDraw(){
+    pCtx.clearRect(0,0,360,450);
+
+    pCtx.fillStyle="#ff00c3";
+    pPegs.forEach(p=>{
+        pCtx.beginPath();
+        pCtx.arc(p.x,p.y,5,0,Math.PI*2);
+        pCtx.fill();
+    });
+
+    pSlots.forEach((s,i)=>{
+        pCtx.fillStyle = s.result < 0 ? "#ff88c4" : "#8dffc0";
+        pCtx.fillRect(s.x,420,slotWidth,30);
+    });
+
+    if(pBall){
+        pCtx.beginPath();
+        pCtx.fillStyle="black";
+        pCtx.arc(pBall.x,pBall.y,7,0,Math.PI*2);
+        pCtx.fill();
+
+        pBall.y += 1.4;
+
+        pPegs.forEach(p=>{
+            let dx = pBall.x - p.x;
+            let dy = pBall.y - p.y;
+            let d = Math.sqrt(dx*dx+dy*dy);
+
+            if(d<9){
+                pBall.vx = (Math.random()-0.5)*3;
+                pBall.y += 3;
+            }
+        });
+
+        pBall.x += pBall.vx;
+
+        if(pBall.y > 420){
+            let id = Math.floor(pBall.x / slotWidth);
+            balance += pSlots[id].result * 10;
+            updateBalance();
+            pBall = null;
+        }
+    }
+}
+
+setInterval(pDraw,12);
+
+document.getElementById("plinkoStartBtn").onclick = ()=>{
+    if(pBall!=null)return;
+
+    balance -=5;
+    updateBalance();
+
+    pBall = {
+        x: pCanvas.width/2,
+        y: 10,
+        vx: 0
+    };
+};
+
+// balance update
 function updateBalance(){
- document.getElementById("balance").innerText = balance.toFixed(2);
-}
-
-updateBalance();
-
-/************* MINES GAME ****************/
-
-let mineBombs = [];
-let openedTiles = 0;
-let mineRunning = false;
-
-function startMines(){
-
- let bet = Number(document.getElementById("mineBet").value);
- let amount = Number(document.getElementById("mineCount").value);
-
- if(bet < 0.1){
-   alert("min bet 0.1 TON");
-   return;
- }
-
- if(balance < bet){
-  alert("Not enough TON");
-  return;
- }
-
- mineRunning=true;
- openedTiles=0;
- balance -= bet;
- updateBalance();
-
- document.getElementById("mineStatus").innerText = "Pick tiles!";
-
- let grid = document.getElementById("mineGrid");
- grid.innerHTML="";
-
- mineBombs=[];
-
- while(mineBombs.length < amount){
-   let r = Math.floor(Math.random()*25);
-   if(!mineBombs.includes(r)) mineBombs.push(r);
- }
-
- for(let i=0;i<25;i++){
-   let tile = document.createElement("div");
-   tile.className="mineTile";
-   tile.dataset.id=i;
-   tile.onclick=openTile;
-   grid.appendChild(tile);
- }
-
-}
-
-function openTile(){
- if(!mineRunning) return;
-
- let id = Number(this.dataset.id);
-
- if(mineBombs.includes(id)){
-   this.classList.add("boom");
-   document.getElementById("mineStatus").innerText = "LOST!";
-   mineRunning=false;
-   return;
- }
-
- this.classList.add("open");
- this.innerHTML="⭐";
- openedTiles++;
-
- let win = (openedTiles * 0.125);
-
- document.getElementById("mineStatus").innerText = "safe! +" + win.toFixed(2);
-
-}
-
-function cashoutMines(){
-
- if(openedTiles == 0){ alert("Open tiles first!"); return; }
-
- let bet = Number(document.getElementById("mineBet").value);
-
- let profit = bet * (1 + openedTiles*0.125);
-
- balance += profit;
- updateBalance();
-
- document.getElementById("mineStatus").innerText = "CASHOUT " + profit.toFixed(2);
- mineRunning=false;
-}
-
-/************* BLINKO ****************/
-
-const canvas = document.getElementById("blinkoCanvas");
-const ctx = canvas.getContext("2d");
-
-let pins = [];
-let balls = [];
-
-createPins();
-
-// ---- create 8 rows ---- 
-
-function createPins(){
-
- let rows = 8;
- let spacingX = 30;
- let spacingY = 45;
-
- for(let r=0;r<rows;r++){
-   for(let c=0;c<=r;c++){
-
-     let x = 150 - (r*spacingX/2) + c*spacingX;
-     let y = 60 + r*spacingY;
-
-     pins.push({x,y});
-   }
- }
-}
-
-function dropBall(){
-
- let bet = Number(document.getElementById("blinkoBet").value);
-
- if(bet < 0.1){
-  alert("min bet 0.1 TON");
-  return;
- }
-
- if(balance < bet){
-  alert("Not enough TON");
-  return;
- }
-
- balance -= bet;
- updateBalance();
-
- balls.push({
-  x:150,
-  y:20,
-  vy:0,
-  path:[]
- });
-
- document.getElementById("blinkoResult").innerText="";
-}
-
-function loop(){
-
- ctx.clearRect(0,0,300,460);
-
- for(let p of pins){
-   ctx.beginPath();
-   ctx.arc(p.x,p.y,5,0,7);
-   ctx.fillStyle="#c079ff";
-   ctx.fill();
- }
-
- for(let b of balls){
-
-   b.vy += 0.25;
-   b.y += b.vy;
-
-   for(let p of pins){
-
-     let dx = b.x-p.x;
-     let dy = b.y-p.y;
-     let dist = Math.sqrt(dx*dx + dy*dy);
-
-     if(dist < 10){
-
-      if(Math.random()>0.5) b.x += 4;
-      else b.x -= 4;
-
-      b.vy *= 0.6;
-     }
-   }
-
-   ctx.beginPath();
-   ctx.arc(b.x,b.y,8,0,7);
-   ctx.fillStyle="#ff45bf";
-   ctx.fill();
-
-   if(b.y > 430){
-
-    finishBlinko(b);
-    balls.splice(balls.indexOf(b),1);
-   }
-
- }
-
- requestAnimationFrame(loop);
-
-}
-
-loop();
-
-function finishBlinko(b){
-
- let zone = Math.floor(b.x / (300/7));
-
- let mult = [0,0.8,1.5,2.5,1.5,0.8,0][zone];
-
- let bet = Number(document.getElementById("blinkoBet").value);
-
- let win = bet * mult;
-
- balance += win;
- updateBalance();
-
- document.getElementById("blinkoResult").innerText =
-"Ball result: x"+mult.toFixed(1)+" → +"+win.toFixed(2)+"TON";
+    document.getElementById("balanceBox").innerHTML ="Points: " + balance;
 }
 
 </script>
