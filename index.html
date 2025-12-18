@@ -2,244 +2,323 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Demo Mines + Plinko</title>
+<title>Demo Casino</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+
 body{
-    background:#111;
-    font-family:Arial;
-    color:white;
+    background:#fafafa;
     margin:0;
+    font-family:Arial;
     text-align:center;
 }
-.wrapper{
-    width:100%;
-    max-width:400px;
+
+.container{
+    max-width:420px;
     margin:auto;
+    margin-top:20px;
+    padding:15px;
+    background:white;
+    border-radius:10px;
+    box-shadow:0px 0px 10px #00000020;
 }
-button{
+
+h2{
+    margin:5px 0 15px 0;
+}
+
+button,input{
+    padding:8px;
     margin:5px;
-    padding:10px;
+    border-radius:6px;
+    border:1px solid #ccc;
+}
+
+button{
     cursor:pointer;
-    background:#333;
-    color:white;
-    border:1px solid #666;
+    background:#eee;
 }
-input{
-    width:80px;
-    padding:6px;
-    margin:6px;
-    background:#222;
-    color:white;
-    border:1px solid #555;
+
+#bal{
+    font-weight:bold;
+    color:#2c7d00;
+    font-size:22px;
 }
+
 #minesField{
     display:grid;
     grid-template-columns:repeat(5,1fr);
-    gap:5px;
-    margin-top:15px;
+    gap:4px;
+    margin-top:10px;
 }
-.mine{
-    width:60px;
-    height:60px;
-    background:#222;
+
+.tile{
+    height:55px;
+    background:#e8e8e8;
+    border-radius:6px;
+    cursor:pointer;
     display:flex;
     justify-content:center;
     align-items:center;
-    cursor:pointer;
     font-size:20px;
 }
-.mine.open{background:#37b25b;}
-.mine.dead{background:#b23636;}
-#plinko{
-    margin-top:25px;
+
+.tile.safe{
+    background:#78ff8c;
 }
-.row{
-    display:flex;
-    justify-content:center;
+
+.tile.boom{
+    background:#ff7878;
+    color:white;
 }
-.slot{
-    width:28px;
-    height:28px;
+
+#cashoutBtn{
+    display:none;
+    background:#ffd800;
+    font-weight:bold;
+}
+
+/* PLINKO */
+
+#plinkoArea{
+    position:relative;
+    height:350px;
+    margin-top:20px;
+}
+
+.pin{
+    width:10px;
+    height:10px;
     background:#444;
     border-radius:50%;
-    margin:4px;
+    position:absolute;
 }
+
 #ball{
-    width:26px;
-    height:26px;
-    background:white;
+    width:16px;
+    height:16px;
+    background:red;
     border-radius:50%;
     position:absolute;
+    top:10px;
     left:50%;
-    top:90px;
-    transform:translateX(-50%);
+    margin-left:-8px;
     display:none;
 }
-#bottomRow{
-    display:flex;
-    justify-content:center;
-    margin-top:220px;
-}
-.bottomSlot{
-    width:60px;
-    height:60px;
-    background:#222;
-    margin:3px;
+
+.slot{
+    width:45px;
+    height:40px;
+    background:#ddd;
+    position:absolute;
+    bottom:0;
+    border-radius:6px;
     display:flex;
     justify-content:center;
     align-items:center;
-    border:1px solid #555;
+    font-size:14px;
 }
 </style>
+
 </head>
 <body>
 
-<div class="wrapper">
-<h2>DEMO GAME</h2>
+<div class="container">
 
-Баланс: <span id="bal">100</span><br>
-Ставка: <input id="bet" value="1" type="number" step="0.1" min="0.1" max="10">
+<h2>DEMO BALANCE: <span id="bal">100</span> TON</h2>
 
-<br>
-Мин: <span id="mcount">5</span><br>
-<button onclick="minusM()">-</button>
-<button onclick="plusM()">+</button>
-<button onclick="playMines()">Играть Мины</button>
-<div id="minesField"></div>
+Ставка:<br>
+<input id="bet" type="number" min="0.1" max="10" value="1" step="0.1">
 
 <br><br>
 
-<button onclick="playPlinko()">Играть Blinko</button>
-<div id="plinko">
-    <div id="ball"></div>
-</div>
-<div id="bottomRow"></div>
+<!-- MINES -->
+
+<h3>Mines</h3>
+
+Мин количества: <span id="mineCount">5</span><br>
+<button onclick="minusMine()">-</button>
+<button onclick="plusMine()">+</button>
+<button onclick="startMines()">Start Mines</button>
+<button id="cashoutBtn" onclick="cashout()">Cashout</button>
+
+<div id="minesField"></div>
+
+<hr>
+
+<!-- PLINKO -->
+<h3>Plinko</h3>
+
+<button onclick="startPlinko()">Play Plinko</button>
+
+<div id="plinkoArea"></div>
+
+<div id="result" style="font-size:18px;margin-top:10px;"></div>
 
 </div>
 
 <script>
+
 let balance = 100;
-let mines = 5;
-let openCount = 0;
-let dead = false;
-let field = [];
-let pay = 0;
 
-// MINES --------------------------
-function minusM(){if(mines>5){mines--;document.getElementById("mcount").innerText=mines;}}
-function plusM(){if(mines<10){mines++;document.getElementById("mcount").innerText=mines;}}
+/* BALANCE */
+function updateBalance(){
+    document.getElementById("bal").innerText = balance.toFixed(1);
+}
 
-function playMines(){
-    resetMines();
-    const bet = readBet();
+/* GET BET */
+function getBet(){
+    let bet = parseFloat(document.getElementById("bet").value);
+    if(bet < 0.1 || bet > 10){return false;}
+    if(bet > balance){return false;}
+    return bet;
+}
+
+/* ----- MINES GAME ----- */
+
+let mineAmt = 5;
+let mineBombs = [];
+let mineTiles = [];
+let opened = 0;
+let active = false;
+let gameBet = 0;
+
+function minusMine(){ if(mineAmt > 5){mineAmt--; document.getElementById("mineCount").innerText = mineAmt;} }
+function plusMine(){ if(mineAmt < 10){mineAmt++; document.getElementById("mineCount").innerText = mineAmt;} }
+
+function startMines(){
+
+    let bet = getBet();
     if(!bet) return;
+
     balance -= bet;
-    updateBal();
-    dead = false;
-    let arr = [];
-    for(let i=0;i<25;i++) arr.push(i);
+    updateBalance();
+
+    gameBet = bet;
+
+    active = true;
+    opened = 0;
+
+    document.getElementById("cashoutBtn").style.display="inline-block";
+
+    let field = document.getElementById("minesField");
+    field.innerHTML="";
+
+    let arr=[];
+    for(let i=0;i<25;i++){arr.push(i);}
     arr.sort(()=>Math.random()-.5);
-    field = arr.slice(0,mines);
-}
+    mineBombs = arr.slice(0,mineAmt);
 
-function resetMines(){
-    document.getElementById("minesField").innerHTML="";
+    mineTiles=[];
+
     for(let i=0;i<25;i++){
-        let d = document.createElement("div");
-        d.className = "mine";
-        d.onclick = ()=>openMine(i,d);
-        document.getElementById("minesField").appendChild(d);
+        let t=document.createElement("div");
+        t.className="tile";
+        t.onclick = ()=> openTile(i,t);
+        field.appendChild(t);
+        mineTiles.push(t);
     }
-    openCount=0;
 }
 
-function openMine(i,cell){
-    if(dead) return;
-    if(field.includes(i)){
-        cell.className="mine dead";
-        dead=true;
+function openTile(i, el){
+
+    if(!active) return;
+
+    if(mineBombs.includes(i)){
+        el.classList.add("boom");
+        active=false;
+        document.getElementById("cashoutBtn").style.display="none";
         return;
     }
-    cell.className="mine open";
-    openCount++;
-    if(openCount>=25-mines) winMines();
+
+    el.classList.add("safe");
+    opened++;
+
 }
 
-function winMines(){
-    let bet = readBet();
-    let coef = mines<=6?1.5:mines<=8?2.2:4;
-    balance += bet*coef;
-    updateBal();
+function cashout(){
+    if(!active) return;
+
+    let coef =
+        mineAmt==5? opened*0.2 + 1 :
+        mineAmt==6? opened*0.26 + 1 :
+        mineAmt==7? opened*0.33 + 1 :
+        mineAmt==8? opened*0.41 + 1 :
+        mineAmt==9? opened*0.52 + 1 :
+        opened*0.65 + 1;
+
+    let win = gameBet * coef;
+
+    balance += win;
+    updateBalance();
+
+    document.getElementById("cashoutBtn").style.display="none";
+    active=false;
 }
 
-// PLINKO ------------------------
-function playPlinko(){
-    const bet = readBet();
-    if(!bet)return;
+/* ---------- PLINKO ---------- */
+
+function startPlinko(){
+
+    let bet = getBet();
+    if(!bet) return;
+
     balance -= bet;
-    updateBal();
+    updateBalance();
+
     runPlinko(bet);
 }
 
 function runPlinko(bet){
-    let ball = document.getElementById("ball");
-    ball.style.left="50%";
-    ball.style.top="90px";
+
+    document.getElementById("plinkoArea").innerHTML="";
+
+    let ball=document.createElement("div");
+    ball.id="ball";
     ball.style.display="block";
-    let x = 50;
-    let y = 90;
-    let steps = 8;
-    let drift = 0;
 
-    function frame(){
-        y+=12;
-        drift += (Math.random()-.5)*6;
-        x+=drift;
-        ball.style.left = x+"%";
+    let area=document.getElementById("plinkoArea");
+    area.appendChild(ball);
+
+    let x = 160;
+    let y = 10;
+
+    let dx = 0;
+
+    let rows = 8;
+    let radius = 25;
+
+    let slots = [
+        0, bet*2, bet*1.5, bet*0.7, bet*0.5,
+        bet*0.7, bet*1.5, bet*2, 0
+    ];
+
+    function animate(){
+
+        y += 5;
+        dx += (Math.random()-.5)*2;
+        x += dx;
+
         ball.style.top = y+"px";
+        ball.style.left = x+"px";
 
-        if(steps<=0){
-            finishPlinko(bet,x);
+        if(y >= 300){
+            let index = Math.floor((x-10)/40);
+            let w = slots[index]||0;
+
+            balance += w;
+            updateBalance();
+
             return;
         }
 
-        if(y>140+steps*15){
-            steps--;
-        }
-        requestAnimationFrame(frame);
+        requestAnimationFrame(animate);
     }
-    frame();
+
+    animate();
 }
 
-function finishPlinko(bet,x){
-    let index = Math.floor((x-10)/10);
-    let zones = [
-        0,
-        bet*2,
-        bet*1.5,
-        bet*0.7,
-        bet*0.5,
-        bet*0.7,
-        bet*1.5,
-        bet*2,
-        0
-    ];
-    let win = zones[index]||0;
-    balance+=win;
-    updateBal();
-}
-
-function updateBal(){
-    document.getElementById("bal").innerText = balance.toFixed(1);
-}
-
-function readBet(){
-    let bet = parseFloat(document.getElementById("bet").value);
-    if(bet<0.1 || bet>10) return false;
-    return bet;
-}
 </script>
 
 </body>
