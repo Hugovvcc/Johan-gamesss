@@ -55,6 +55,11 @@ button:hover{
 button:active{
   transform: translateY(1px);
 }
+button:disabled{
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
 input[type="number"]{
   padding: 10px;
   border-radius: 10px;
@@ -178,7 +183,7 @@ canvas{
   <p>Tiles opened: <span id="opened">0</span></p>
   <p>Multiplier: <span id="multi">1.00x</span></p>
   <div id="mines-message" class="message"></div>
-  <button onclick="cashout()" style="background:#ff6bb5;">Cash Out 💰</button>
+  <button id="mines-cashout" onclick="cashout()" style="background:#ff6bb5;">Cash Out 💰</button>
   <div id="minesGrid"></div>
   <button onclick="backToLobby('mines')">← Back to Lobby</button>
 </div>
@@ -250,13 +255,14 @@ function showMessage(id, text, type){
 }
 
 /**********************
-   MINES GAME - СНИЖЕННЫЕ МНОЖИТЕЛИ
+   MINES GAME
 **********************/
 let mines = [];
 let revealed = 0;
 let multiplier = 1;
 let currentBet = 1;
 let mineCount = 5;
+let gameOver = false; // Флаг конца игры
 
 function startMines(){
   currentBet = parseFloat(document.getElementById("mines-bet").value);
@@ -269,8 +275,10 @@ function startMines(){
   mines = [];
   revealed = 0;
   multiplier = 1;
+  gameOver = false;
   document.getElementById("opened").textContent = 0;
   document.getElementById("multi").textContent = "1.00x";
+  document.getElementById("mines-cashout").disabled = false;
 
   while(mines.length < mineCount){
     let r = Math.floor(Math.random() * 25);
@@ -292,18 +300,19 @@ function startMines(){
 }
 
 function reveal(i, cell){
-  if(cell.dataset.open) return;
+  if(cell.dataset.open || gameOver) return;
 
   if(mines.includes(i)){
     cell.style.background = "var(--red-lose)";
     cell.textContent = "💣";
+    gameOver = true;
+    document.getElementById("mines-cashout").disabled = true;
     showMessage("mines", `💥 BOOM! Lost ${currentBet.toFixed(1)} TON 😿`, "lose");
     setTimeout(() => backToLobby('mines'), 3000);
     return;
   }
 
   revealed++;
-  // Значительно снижен рост множителя: базовый + небольшой бонус от количества мин
   multiplier = 1 + (revealed * 0.08) + (mineCount * 0.01);
   cell.dataset.open = 1;
   cell.style.background = "var(--green-win)";
@@ -315,17 +324,21 @@ function reveal(i, cell){
 }
 
 function cashout(){
-  if(revealed === 0) return showMessage("mines", "Open at least one tile first!", "lose");
+  if(revealed === 0 || gameOver) {
+    showMessage("mines", "Cannot cash out now!", "lose");
+    return;
+  }
 
   let win = (currentBet * multiplier).toFixed(1);
   ton += parseFloat(win);
   document.getElementById("ton").textContent = ton.toFixed(1);
   showMessage("mines", `🎉 Cashed out at ${multiplier.toFixed(2)}x! Won ${win} TON! 🏆`, "win");
+  document.getElementById("mines-cashout").disabled = true;
   setTimeout(() => backToLobby('mines'), 3000);
 }
 
 /**********************
-   PLINKO GAME
+   PLINKO GAME - Шарик меньше и физика более "по столбикам"
 **********************/
 let plinkoBet = 1;
 let multipliers = [2, 1.2, 0.8, 0.5, 0.8, 1.2, 2];
@@ -354,24 +367,24 @@ function dropBall(){
   let canvas = document.getElementById("plinkoCanvas");
   let ctx = canvas.getContext("2d");
   let pegs = [];
-  let rows = 9;
+  let rows = 10; // чуть больше рядов
 
   for(let r = 0; r < rows; r++){
-    let pegsInRow = r + 5;
-    let offset = (canvas.width - (pegsInRow * 25)) / 2;
+    let pegsInRow = r + 4; // уже пирамида
+    let offset = (canvas.width - (pegsInRow * 32)) / 2;
     for(let p = 0; p < pegsInRow; p++){
       pegs.push({
-        x: offset + p * 25 + 12,
-        y: 60 + r * 40
+        x: offset + p * 32 + 16,
+        y: 70 + r * 42
       });
     }
   }
 
   let ball = {x: canvas.width / 2, y: 20, vx: 0, vy: 0};
-  let gravity = 0.3;
-  let bounce = 0.6;
-  let friction = 0.98;
-  let ballRadius = 8;
+  let gravity = 0.35; // быстрее падает
+  let bounce = 0.4;   // меньше горизонтального отскока
+  let friction = 0.99;
+  let ballRadius = 5; // очень маленький шарик
   let slotWidth = canvas.width / multipliers.length;
 
   function animate(){
@@ -380,7 +393,7 @@ function dropBall(){
     ctx.fillStyle = "#333";
     pegs.forEach(p => {
       ctx.beginPath();
-      ctx.arc(p.x, p.y, 5, 0, Math.PI*2);
+      ctx.arc(p.x, p.y, 6, 0, Math.PI*2);
       ctx.fill();
     });
 
@@ -399,17 +412,18 @@ function dropBall(){
       let dx = ball.x - p.x;
       let dy = ball.y - p.y;
       let dist = Math.sqrt(dx*dx + dy*dy);
-      if(dist < ballRadius + 5){
+      if(dist < ballRadius + 6){
         let angle = Math.atan2(dy, dx);
         let speed = Math.sqrt(ball.vx**2 + ball.vy**2);
-        ball.vx = -Math.cos(angle) * speed * bounce + (Math.random() - 0.5) * 1;
+        // Очень слабый боковой отскок → шар чаще идёт вниз по "столбикам"
+        ball.vx = -Math.cos(angle) * speed * bounce + (Math.random() - 0.5) * 0.5;
         ball.vy = -Math.sin(angle) * speed * bounce;
       }
     });
 
-    if(ball.x < ballRadius || ball.x > canvas.width - ballRadius) ball.vx *= -bounce;
+    if(ball.x < ballRadius || ball.x > canvas.width - ballRadius) ball.vx *= -0.5;
 
-    if(ball.y > canvas.height - ballRadius - 20){
+    if(ball.y > canvas.height - ballRadius - 30){
       let slotIndex = Math.floor(ball.x / slotWidth);
       slotIndex = Math.max(0, Math.min(multipliers.length - 1, slotIndex));
       let mult = multipliers[slotIndex];
