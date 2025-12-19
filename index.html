@@ -11,6 +11,7 @@
   --pink-bg: #ffe6f3;
   --green-win: #afffa6;
   --red-lose: #ff6b6b;
+  --slot-bg: #f0f0f0;
 }
 body{
   margin:0;
@@ -86,16 +87,32 @@ canvas{
   margin: 15px auto;
   display: block;
 }
-#score{
+#ton{
   font-size: 28px;
   font-weight: bold;
   color: var(--pink-dark);
+}
+.slot{
+  width: calc(320px / 7);
+  height: 40px;
+  background: var(--slot-bg);
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
+  font-weight: bold;
+  border: 1px solid #ddd;
+}
+#slots{
+  display: flex;
+  justify-content: center;
+  margin-top: -20px;
 }
 </style>
 </head>
 <body>
 <h1>Johan Game</h1>
-<h3>Score: <span id="score">100</span></h3>
+<h3>TON: <span id="ton">100</span></h3>
 
 <!-- MENU -->
 <div id="menu" class="active">
@@ -120,6 +137,7 @@ canvas{
   <h2>Plinko</h2>
   <button onclick="startPlinko()">Drop Ball 🎾</button>
   <canvas id="plinkoCanvas" width="320" height="520"></canvas>
+  <div id="slots"></div>
   <button onclick="back()">← Back</button>
 </div>
 
@@ -141,8 +159,8 @@ function back(){
   document.getElementById("menu").classList.add("active");
 }
 
-let score = 100;
-document.getElementById("score").textContent = score;
+let ton = 100;
+document.getElementById("ton").textContent = ton;
 
 /**********************
    MINES GAME
@@ -158,7 +176,6 @@ function startMines(){
   document.getElementById("opened").textContent = 0;
   document.getElementById("multi").textContent = "1.00x";
 
-  // 8 мин из 25 клеток
   while(mines.length < 8){
     let r = Math.floor(Math.random() * 25);
     if(!mines.includes(r)) mines.push(r);
@@ -179,20 +196,18 @@ function reveal(i, cell){
   if(cell.dataset.open) return;
 
   if(mines.includes(i)){
-    // Бум!
     cell.style.background = "var(--red-lose)";
     cell.textContent = "💣";
-    alert("💥 BOOM! You hit a mine!\nLost 5 points 😿");
-    score -= 5;
-    if(score < 0) score = 0;
-    document.getElementById("score").textContent = score;
+    alert("💥 BOOM! You hit a mine!\nLost 5 TON 😿");
+    ton -= 5;
+    if(ton < 0) ton = 0;
+    document.getElementById("ton").textContent = ton;
     startMines();
     return;
   }
 
-  // Безопасно
   revealed++;
-  multiplier = 1 + (revealed * 0.20); // лучше растёт
+  multiplier = 1 + (revealed * 0.20);
   cell.dataset.open = 1;
   cell.style.background = "var(--green-win)";
   cell.textContent = "💎";
@@ -206,9 +221,9 @@ function cashout(){
   if(revealed === 0) return alert("Open at least one tile first!");
 
   let win = Math.round(10 * multiplier);
-  alert(`🎉 Cashed out at ${multiplier.toFixed(2)}x!\nYou won ${win} points! 🏆`);
-  score += win;
-  document.getElementById("score").textContent = score;
+  alert(`🎉 Cashed out at ${multiplier.toFixed(2)}x!\nYou won ${win} TON! 🏆`);
+  ton += win;
+  document.getElementById("ton").textContent = ton;
   startMines();
 }
 
@@ -220,20 +235,35 @@ function startPlinko(){
   let ctx = canvas.getContext("2d");
   let pegs = [];
   let rows = 9;
+  let multipliers = [2, 1.2, 0.8, 0.5, 0.8, 1.2, 2]; // x2 x1.2 x0.8 x0.5 x0.8 x1.2 x2
+  let slotWidth = canvas.width / multipliers.length;
 
-  // Создаём пирамиду пегов
+  // Отображаем ячейки
+  let slotsDiv = document.getElementById("slots");
+  slotsDiv.innerHTML = "";
+  multipliers.forEach(m => {
+    let slot = document.createElement("div");
+    slot.className = "slot";
+    slot.textContent = `x${m}`;
+    slotsDiv.appendChild(slot);
+  });
+
+  // Пеги
   for(let r = 0; r < rows; r++){
-    let pegsInRow = r + 4;
-    let offset = (canvas.width - (pegsInRow * 30)) / 2;
+    let pegsInRow = r + 5; // шире для лучшей физики
+    let offset = (canvas.width - (pegsInRow * 25)) / 2;
     for(let p = 0; p < pegsInRow; p++){
       pegs.push({
-        x: offset + p * 30 + 15,
-        y: 80 + r * 45
+        x: offset + p * 25 + 12,
+        y: 60 + r * 40
       });
     }
   }
 
-  let ball = {x: canvas.width/2, y: 30, vx: 0, vy: 0};
+  let ball = {x: canvas.width / 2, y: 20, vx: 0, vy: 0};
+  let gravity = 0.2;
+  let bounce = 0.6; // меньше отскока
+  let friction = 0.98; // трение для стабильности
   let dropped = false;
 
   function animate(){
@@ -243,49 +273,54 @@ function startPlinko(){
     ctx.fillStyle = "#333";
     pegs.forEach(p => {
       ctx.beginPath();
-      ctx.arc(p.x, p.y, 6, 0, Math.PI*2);
+      ctx.arc(p.x, p.y, 5, 0, Math.PI*2);
       ctx.fill();
     });
 
     // Шарик
     ctx.fillStyle = "#ff6bb5";
     ctx.beginPath();
-    ctx.arc(ball.x, ball.y, 12, 0, Math.PI*2);
+    ctx.arc(ball.x, ball.y, 10, 0, Math.PI*2);
     ctx.fill();
 
-    if(!dropped){
-      dropped = true;
-      ball.vy = 2;
-    }
+    if(dropped){
+      ball.vy += gravity;
+      ball.vy *= friction;
+      ball.vx *= friction;
+      ball.y += ball.vy;
+      ball.x += ball.vx;
 
-    ball.vy += 0.15; // гравитация
-    ball.y += ball.vy;
-    ball.x += ball.vx;
+      // Столкновения
+      pegs.forEach(p => {
+        let dx = ball.x - p.x;
+        let dy = ball.y - p.y;
+        let dist = Math.sqrt(dx*dx + dy*dy);
+        if(dist < 15){
+          // Нормальная физика отскока
+          let angle = Math.atan2(dy, dx);
+          let speed = Math.sqrt(ball.vx**2 + ball.vy**2);
+          ball.vx = -Math.cos(angle) * speed * bounce + (Math.random() - 0.5) * 1; // минимальный рандом
+          ball.vy = -Math.sin(angle) * speed * bounce;
+        }
+      });
 
-    // Столкновения с пегами
-    pegs.forEach(p => {
-      let dx = ball.x - p.x;
-      let dy = ball.y - p.y;
-      if(Math.sqrt(dx*dx + dy*dy) < 18){
-        ball.vx += (Math.random() - 0.5) * 6;
-        ball.vy = -ball.vy * 0.7 + 2;
+      // Стены
+      if(ball.x < 10 || ball.x > canvas.width - 10) ball.vx *= -bounce;
+
+      // Дно
+      if(ball.y > canvas.height - 30){
+        let slotIndex = Math.floor(ball.x / slotWidth);
+        slotIndex = Math.max(0, Math.min(multipliers.length - 1, slotIndex));
+        let mult = multipliers[slotIndex];
+        let points = Math.round(mult * 10); // базовый выигрыш 10 TON * mult
+        ton += points;
+        document.getElementById("ton").textContent = ton;
+        alert(`🎊 Landed on x${mult}!\n+${points} TON!`);
+        return;
       }
-    });
-
-    // Отражение от стен
-    if(ball.x < 15 || ball.x > canvas.width - 15) ball.vx *= -0.8;
-
-    // Достиг дна
-    if(ball.y > 480){
-      let slots = [8, 4, 2, 1, 0.5, 1, 2, 4, 8];
-      let slotIndex = Math.floor(ball.x / (canvas.width / slots.length));
-      slotIndex = Math.max(0, Math.min(slots.length - 1, slotIndex));
-      let mult = slots[slotIndex];
-      let points = Math.round(mult * 2);
-      score += points;
-      document.getElementById("score").textContent = score;
-      alert(`🎊 Landed on ${mult}x!\n+${points} points!`);
-      return;
+    } else {
+      dropped = true;
+      ball.vy = 1; // начальный импульс
     }
 
     requestAnimationFrame(animate);
@@ -307,31 +342,26 @@ function startEscape(){
   function animate(){
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Круглая арена
     ctx.strokeStyle = "#ccc";
     ctx.lineWidth = 20;
     ctx.beginPath();
     ctx.arc(160, 220, 130, 0, Math.PI*2);
     ctx.stroke();
 
-    // Зелёная дыра (вращается)
     ctx.strokeStyle = "#4caf50";
     ctx.lineWidth = 25;
     ctx.beginPath();
     ctx.arc(160, 220, 130, holeStart + rotation, holeStart + rotation + holeSize);
     ctx.stroke();
 
-    // Шарик
     ctx.fillStyle = "#ff6bb5";
     ctx.beginPath();
     ctx.arc(ball.x, ball.y, 15, 0, Math.PI*2);
     ctx.fill();
 
-    // Движение шарика
     ball.x += ball.vx;
     ball.y += ball.vy;
 
-    // Отскок от стен
     let dx = ball.x - 160;
     let dy = ball.y - 220;
     let dist = Math.sqrt(dx*dx + dy*dy);
@@ -341,13 +371,12 @@ function startEscape(){
       ball.vy = -Math.sin(angle) * 6;
     }
 
-    // Побег через дыру
     let ballAngle = Math.atan2(dy, dx);
     let normalizedBall = (ballAngle - holeStart - rotation + Math.PI*4) % (Math.PI*2);
     if(dist > 125 && normalizedBall < holeSize){
-      score += 15;
-      document.getElementById("score").textContent = score;
-      alert("⚡ BALL ESCAPED! +15 points! 🏆");
+      ton += 15;
+      document.getElementById("ton").textContent = ton;
+      alert("⚡ BALL ESCAPED! +15 TON! 🏆");
       return;
     }
 
