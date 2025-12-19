@@ -1,285 +1,247 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Johan Game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
+:root{
+ --pink:#ff9ccd;
+ --pink2:#ffe6f3;
+ --dark:#222;
+}
+
 body{
-    margin:0;
-    font-family:sans-serif;
-    background:#13111c;
-    color:white;
-    overflow:hidden;
+ margin:0;
+ background:var(--pink2);
+ font-family:Arial;
+ color:#000;
 }
+
+/* MENU */
 #menu{
-    width:100%;
-    display:flex;
-    justify-content:space-around;
-    background:#1d1b28;
-    padding:10px;
+ text-align:center;
+ padding-top:40px;
 }
-.button{
-    padding:10px 20px;
-    background:#ff2ebd;
-    border-radius:10px;
-    cursor:pointer;
+
+.menuBtn{
+ width:200px;
+ margin:12px auto;
+ padding:16px;
+ font-size:20px;
+ border-radius:15px;
+ border:0;
+ background:var(--pink);
+ cursor:pointer;
+ display:block;
 }
+
+/* HIDDEN SCREENS */
 .screen{
-    width:100vw;
-    height:90vh;
-    display:none;
-    justify-content:center;
-    align-items:center;
+ display:none;
 }
 
-/* ===================== MINES ====================== */
-
-#minesField{
-    display:grid;
-    grid-template-columns:repeat(5,70px);
-    grid-gap:10px;
+/**********************
+ MINES 
+**********************/
+#minesBoard{
+ display:grid;
+ grid-template-columns:repeat(5,60px);
+ gap:4px;
+ justify-content:center;
+ margin-top:20px;
 }
-.mineTile{
-    width:70px;
-    height:70px;
-    border-radius:10px;
-    background:#2d2a3a;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    cursor:pointer;
-    font-size:25px;
-}
-.mineTile.open{
-    background:#16ff80;
-}
-
-#mineSettings{
-    position:absolute;
-    top:15px;
-    left:15px;
+.mine{
+ width:60px;
+ height:60px;
+ background:#fff;
+ border-radius:8px;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ font-size:22px;
+ cursor:pointer;
 }
 
-/* ===================== PLINKO ====================== */
-
+/**********************
+ PLINKO 
+**********************/
 #plinkoCanvas{
-    background:#100e17;
-    border-radius:20px;
+ background:#fff;
+ display:block;
+ margin:20px auto;
+ border-radius:10px;
 }
 
-/* ===================== BALL ESCAPE ====================== */
-
+/**********************
+ BALL ESCAPE 
+**********************/
 #escapeCanvas{
-    background:#100e17;
-    border-radius:20px;
+ background:#fff;
+ display:block;
+ margin:20px auto;
+ border-radius:10px;
 }
 
-/* UI */
-input,select{
-    background:#2d2a3a;
-    border:none;
-    border-radius:5px;
-    color:white;
-    padding:5px;
+.backBtn{
+ background:#ccc;
+ padding:14px;
+ border-radius:12px;
+ border:0;
+ margin:20px auto;
+ display:block;
+ cursor:pointer;
+ width:200px;
+ font-size:18px;
 }
 </style>
 </head>
-
 <body>
 
+<!-- MENU -->
 <div id="menu">
-    <div class="button" onclick="showMines()">Mines</div>
-    <div class="button" onclick="showPlinko()">Plinko</div>
-    <div class="button" onclick="showEscape()">Ball Escape</div>
+ <h1>Johan Game</h1>
+ <button class="menuBtn" onclick="openMines()">Mines</button>
+ <button class="menuBtn" onclick="openPlinko()">Plinko</button>
+ <button class="menuBtn" onclick="openEscape()">Ball Escape</button>
 </div>
 
 <!-- MINES -->
 <div id="mines" class="screen">
-    <div>
-        <div id="mineSettings">
-            Mines:
-            <select id="mineCount">
-                <option>5</option>
-                <option>6</option>
-                <option>7</option>
-                <option>8</option>
-                <option>9</option>
-                <option>10</option>
-            </select>
-            Stake:
-            <select id="mineStake">
-                <option>1</option>
-                <option>2</option>
-                <option>3</option>
-                <option>4</option>
-                <option>5</option>
-            </select>
-        </div>
-
-        <div id="minesField"></div>
-    </div>
+ <h2 style="text-align:center">Mines</h2>
+ <div id="minesBoard"></div>
+ <button class="backBtn" onclick="goMenu()">Back</button>
 </div>
 
 <!-- PLINKO -->
 <div id="plinko" class="screen">
-    <canvas id="plinkoCanvas" width="500" height="600"></canvas>
+ <h2 style="text-align:center">Plinko</h2>
+ <canvas id="plinkoCanvas" width="300" height="400"></canvas>
+ <button class="backBtn" onclick="goMenu()">Back</button>
 </div>
 
 <!-- BALL ESCAPE -->
 <div id="escape" class="screen">
-    <canvas id="escapeCanvas" width="500" height="600"></canvas>
+ <h2 style="text-align:center">Ball Escape</h2>
+ <canvas id="escapeCanvas" width="300" height="400"></canvas>
+ <button class="backBtn" onclick="goMenu()">Back</button>
 </div>
 
 <script>
-
-/*************** MENU ***************/
-
-function hideAll(){
-    document.querySelectorAll(".screen").forEach(s=>s.style.display="none");
+function hide(){
+ document.querySelectorAll('.screen').forEach(s=>s.style.display="none");
+ document.querySelector("#menu").style.display="none";
 }
-function showMines(){ hideAll(); document.getElementById("mines").style.display="flex"; }
-function showPlinko(){ hideAll(); document.getElementById("plinko").style.display="flex"; }
-function showEscape(){ hideAll(); document.getElementById("escape").style.display="flex"; }
-
-showMines();
-
-/*************** MINES GAME ***************/
-
-let mineTiles=[];
-function generateMines(){
-    mineTiles=[];
-    let field = document.getElementById("minesField");
-    field.innerHTML="";
-    let mineCount = Number(document.getElementById("mineCount").value);
-    let mines = [];
-
-    while(mines.length < mineCount){
-        let r = Math.floor(Math.random()*25);
-        if(!mines.includes(r)) mines.push(r);
-    }
-
-    for(let i=0;i<25;i++){
-        let d=document.createElement("div");
-        d.className="mineTile";
-        d.onclick=()=>{
-
-            if(mines.includes(i)){
-                d.style.background="#ff0033";
-                setTimeout(generateMines,900);
-            }else{
-                d.classList.add("open");
-            }
-        };
-        field.appendChild(d);
-    }
+function goMenu(){
+ hide();
+ document.querySelector("#menu").style.display="block";
 }
-generateMines();
 
-/*************** PLINKO ***************/
-
-let pcanvas=document.getElementById("plinkoCanvas");
-let pctx=pcanvas.getContext("2d");
-
-let balls=[];
-let pegs=[];
-
-function initPlinko(){
-    pegs=[];
-    for(let y=50;y<500;y+=60){
-        for(let x=60;x<440;x+=60){
-            if((y/60)%2==0 && x>90 && x<410) continue;
-            pegs.push({x,y});
-        }
-    }
+/***************
+ OPEN GAMES
+***************/
+function openMines(){
+ hide();
+ document.querySelector("#mines").style.display="block";
+ startMines();
 }
-initPlinko();
 
-function spawnBall(){
-    balls.push({x:250,y:10,dx:0,dy:1});
+function openPlinko(){
+ hide();
+ document.querySelector("#plinko").style.display="block";
+ startPlinko();
 }
-setInterval(spawnBall,2000);
 
-function updatePlinko(){
-    pctx.clearRect(0,0,pcanvas.width,pcanvas.height);
-
-    for(let peg of pegs){
-        pctx.beginPath();
-        pctx.arc(peg.x,peg.y,8,0,Math.PI*2);
-        pctx.fillStyle="#ff2ebd";
-        pctx.fill();
-    }
-
-    for(let b of balls){
-        b.dy+=0.05;
-        b.x+=b.dx;
-        b.y+=b.dy;
-
-        for(let peg of pegs){
-            let dx=b.x-peg.x;
-            let dy=b.y-peg.y;
-            let d=Math.sqrt(dx*dx+dy*dy);
-            if(d<14){
-                b.dy*=-1;
-                b.dx=(Math.random()-0.5)*2;
-            }
-        }
-
-        pctx.beginPath();
-        pctx.arc(b.x,b.y,10,0,Math.PI*2);
-        pctx.fillStyle="white";
-        pctx.fill();
-    }
-    requestAnimationFrame(updatePlinko);
+function openEscape(){
+ hide();
+ document.querySelector("#escape").style.display="block";
+ startEscape();
 }
-updatePlinko();
 
-/*************** BALL ESCAPE ***************/
-
-let ecanvas=document.getElementById("escapeCanvas");
-let ectx=ecanvas.getContext("2d");
-
-let angle=0;
-let bx=250,by=250,bdx=3,bdy=4;
-
-function updateEscape(){
-    ectx.clearRect(0,0,500,600);
-
-    angle+=0.02;
-
-    ectx.save();
-    ectx.translate(250,250);
-    ectx.rotate(angle);
-
-    ectx.beginPath();
-    ectx.arc(0,0,200,0,Math.PI*2);
-    ectx.strokeStyle="#ff2ebd";
-    ectx.lineWidth=20;
-    ectx.stroke();
-
-    ectx.strokeStyle="#00ff66";
-    ectx.beginPath();
-    ectx.arc(0,0,200,0,0.7);
-    ectx.stroke();
-
-    ectx.restore();
-
-    bx+=bdx;
-    by+=bdy;
-
-    if(Math.hypot(bx-250,by-250)>180){
-        bdx*=-1;
-        bdy*=-1;
-    }
-
-    ectx.beginPath();
-    ectx.arc(bx,by,15,0,Math.PI*2);
-    ectx.fillStyle="white";
-    ectx.fill();
-
-    requestAnimationFrame(updateEscape);
+/********************
+ MINES SIMPLE
+********************/
+function startMines(){
+ let wrap=document.getElementById("minesBoard");
+ let bombs=[3,7,12,17,22];
+ wrap.innerHTML="";
+ for(let i=1;i<=25;i++){
+   let cell=document.createElement("div");
+   cell.className="mine";
+   cell.innerHTML="?";
+   cell.onclick=()=>{
+     if(bombs.includes(i)){cell.innerHTML="💣";cell.style.background="red";}
+     else{cell.innerHTML="+1";cell.style.background="#b2ffa2";}
+   }
+   wrap.appendChild(cell);
+ }
 }
-updateEscape();
 
+/********************
+ PLINKO SIMPLE
+********************/
+function startPlinko(){
+ let c=document.getElementById("plinkoCanvas");
+ let ctx=c.getContext("2d");
+ let y=0;
+ let x=150;
+ function loop(){
+   ctx.clearRect(0,0,300,400);
+   ctx.beginPath();
+   ctx.arc(x,y,10,0,Math.PI*2);
+   ctx.fillStyle="black";
+   ctx.fill();
+   y+=3;
+   x+=Math.sin(y/20)*2;
+   if(y>400)y=0;
+   requestAnimationFrame(loop);
+ }
+ loop();
+}
+
+/********************
+ BALL ESCAPE SIMPLE
+********************/
+function startEscape(){
+ let c=document.getElementById("escapeCanvas");
+ let ctx=c.getContext("2d");
+
+ let x=150;
+ let y=20;
+ let vx=3;
+ let vy=3;
+
+ function loop(){
+   ctx.clearRect(0,0,300,400);
+
+   ctx.beginPath();
+   ctx.rect(0,350,130,50);
+   ctx.rect(170,350,130,50);
+   ctx.fillStyle="lightgreen";
+   ctx.fill();
+
+   ctx.beginPath();
+   ctx.arc(x,y,10,0,Math.PI*2);
+   ctx.fillStyle="black";
+   ctx.fill();
+
+   x+=vx;
+   y+=vy;
+
+   if(x<10||x>290)vx*=-1;
+   if(y<10)vy*=-1;
+
+   if(y>360){
+     if(x<150){alert("WIN");}
+     else{alert("LOSE");}
+     x=150;y=20;
+   }
+   requestAnimationFrame(loop);
+ }
+ loop();
+}
 </script>
+
 </body>
 </html>
