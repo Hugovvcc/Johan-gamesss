@@ -250,7 +250,7 @@ function showMessage(id, text, type){
 }
 
 /**********************
-   MINES GAME
+   MINES GAME - СНИЖЕННЫЕ МНОЖИТЕЛИ
 **********************/
 let mines = [];
 let revealed = 0;
@@ -303,7 +303,8 @@ function reveal(i, cell){
   }
 
   revealed++;
-  multiplier = 1 + (revealed * (0.20 + (mineCount / 50)));
+  // Значительно снижен рост множителя: базовый + небольшой бонус от количества мин
+  multiplier = 1 + (revealed * 0.08) + (mineCount * 0.01);
   cell.dataset.open = 1;
   cell.style.background = "var(--green-win)";
   cell.textContent = "💎";
@@ -482,7 +483,7 @@ function startEscape(){
     let ballAngle = Math.atan2(dy, dx);
     let normalizedBall = (ballAngle - holeStart - rotation + Math.PI*4) % (Math.PI*2);
     if(dist > 125 && normalizedBall < holeSize){
-      let mult = 3; // Fixed multiplier for escape
+      let mult = 3;
       let win = (escapeBet * mult).toFixed(1);
       ton += parseFloat(win);
       document.getElementById("ton").textContent = ton.toFixed(1);
