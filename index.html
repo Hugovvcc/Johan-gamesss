@@ -2,368 +2,351 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Johan game</title>
+<title>Johan Game</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-:root{
- --pink:#f8b6d2;
- --pink-soft:#fde7f1;
- --pink-dark:#f29bc1;
- --green:#7dd3a7;
- --red:#ff6b6b;
+body {
+  background:#ffb6d9;
+  font-family:Arial;
+  margin:0;
+  padding:0;
+  text-align:center;
+  color:#fff;
 }
 
-*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto}
-
-body{
- margin:0;
- background:linear-gradient(180deg,#fde7f1,#f8b6d2);
- display:flex;
- justify-content:center;
+/* NAV BAR */
+.navbar {
+  display:flex;
+  justify-content:space-around;
+  background:#ff8cc7;
+  padding:12px;
+  font-weight:bold;
+  font-size:18px;
 }
 
-.app{width:100%;max-width:420px;padding:16px}
-h1{text-align:center}
+/* Screens hidden */
+.screen { display:none; }
 
-.balance{
- background:rgba(255,255,255,.7);
- border-radius:16px;
- padding:12px;
- text-align:center;
- font-weight:600;
- margin-bottom:12px;
-}
-
-.tabs{
- display:flex;
- gap:8px;
- margin-bottom:12px;
-}
-
-.tab{
- flex:1;
- padding:10px;
- border-radius:14px;
- background:rgba(255,255,255,.6);
- text-align:center;
- cursor:pointer;
- font-weight:600;
-}
-
-.tab.active{background:var(--pink-dark);color:white}
-
-.section{display:none}
-.section.active{display:block}
-
-.controls{
- background:rgba(255,255,255,.6);
- border-radius:16px;
- padding:12px;
- margin-bottom:12px;
-}
-
-.control-row{
- display:flex;
- justify-content:space-between;
- margin-bottom:8px;
-}
-
-input,select{
- border:none;
- border-radius:12px;
- padding:6px 10px;
-}
-
+/* game buttons */
 button{
- width:100%;
- border:none;
- border-radius:16px;
- padding:12px;
- font-weight:600;
- background:var(--pink-dark);
- color:white;
- cursor:pointer;
- margin-top:8px;
+  background:#ff5fb9;
+  border:none;
+  padding:15px 25px;
+  font-size:20px;
+  margin:8px;
+  border-radius:10px;
+  color:white;
+  cursor:pointer;
 }
 
-button:disabled{opacity:.5}
-
-.grid{
- display:grid;
- grid-template-columns:repeat(5,1fr);
- gap:8px;
- margin-top:12px;
+.tiles{
+  display:grid;
+  grid-template-columns:repeat(5,60px);
+  justify-content:center;
+  gap:6px;
 }
 
-.cell{
- aspect-ratio:1/1;
- border-radius:14px;
- background:rgba(255,255,255,.8);
- display:flex;
- align-items:center;
- justify-content:center;
- font-size:22px;
- cursor:pointer;
+.tile{
+  width:60px;
+  height:60px;
+  background:#ff90cc;
+  border-radius:7px;
+  cursor:pointer;
+  font-size:25px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  user-select:none;
 }
 
-.cell.open.safe{background:var(--green)}
-.cell.open.mine{background:var(--red)}
-
-canvas{
- width:100%;
- background:rgba(255,255,255,.8);
- border-radius:16px;
- margin-top:12px;
- display:block;
- margin-left:auto;
- margin-right:auto;
+/* Blinko */
+.blinkoBox{
+  background:#ffaddc;
+  height:430px;
+  width:300px;
+  border-radius:20px;
+  margin:auto;
+  position:relative;
 }
+
+/* Ball Escape */
+.circleBox{
+  margin:auto;
+  width:330px;
+  height:330px;
+  border-radius:50%;
+  border:24px solid #ff0096;
+  position:relative;
+  overflow:hidden;
+}
+
+.ball{
+  width:35px;
+  height:35px;
+  background:#00ffcc;
+  border-radius:50%;
+  position:absolute;
+  left:145px;
+  top:145px;
+}
+
+.hole{
+  width:80px;
+  height:50px;
+  background:#00ff00;
+  position:absolute;
+  left:120px;
+  top:-20px;
+}
+
+.winLoseBox{
+  width:100%;
+  height:100px;
+  background:#00000055;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-size:40px;
+  border-radius:10px;
+  margin-top:10px;
+}
+
 </style>
 </head>
 
+
+
 <body>
-<div class="app">
 
-<h1>🎮 Johan game</h1>
-
-<div class="balance">
- Balance: <span id="balance">10.00</span> TON (demo)
+<div class="navbar">
+  <div onclick="openLobby()">Lobby</div>
+  <div onclick="openMines()">Mines</div>
+  <div onclick="openBlinko()">Blinko</div>
+  <div onclick="openEscape()">Ball Escape</div>
 </div>
 
-<div class="tabs">
- <div class="tab active" onclick="show('mines')">Mines</div>
- <div class="tab" onclick="show('blinko')">Blinko</div>
- <div class="tab" onclick="show('ballEscape')">Ball Escape</div>
+<h2>Balance: <span id="bal">100</span></h2>
+
+
+<!-- =============== LOBBY =============== -->
+<div id="lobby" class="screen">
+  <h1>Johan Games</h1>
+  <button onclick="openMines()">Play Mines</button>
+  <button onclick="openBlinko()">Play Blinko</button>
+  <button onclick="openEscape()">Play Ball Escape</button>
 </div>
 
-<!-- MINES -->
-<div id="mines" class="section active">
 
-<div class="controls">
- <div class="control-row">
-  <label>Bet (min 0.1)</label>
-  <input id="betInput" type="number" min="0.1" step="0.1" value="0.1">
- </div>
- <div class="control-row">
-  <label>Mines</label>
-  <select id="minesSelect">
-   <option>1</option><option>3</option><option selected>5</option>
-   <option>7</option><option>10</option>
-  </select>
- </div>
- <button onclick="startMines()">Start</button>
+
+<!-- =============== MINES =============== -->
+<div id="mines" class="screen">
+  <h1>Mines</h1>
+  <h3>Bet: 1 coin</h3>
+
+  <button onclick="startMines()">Start Game</button>
+  <h2 id="mineResult"></h2>
+
+  <div class="tiles" id="mineField"></div>
 </div>
 
-<div class="grid" id="grid"></div>
 
-<div style="text-align:center;margin-top:8px">
- Multiplier: <span id="multiplier">1.00</span>x
+
+<!-- =============== BLINKO =============== -->
+<div id="blinko" class="screen">
+  <h1>Blinko</h1>
+  <h3>Bet: 1 coin</h3>
+  <button onclick="startBlinko()">Drop Ball</button>
+
+  <div class="blinkoBox" id="blinkoBox"></div>
+  <h2 id="blinkoOut"></h2>
 </div>
 
-<button onclick="cashout()" id="cashoutBtn" disabled>Cash Out</button>
 
+
+<!-- =============== BALL ESCAPE =============== -->
+<div id="escape" class="screen">
+  <h1>Ball Escape</h1>
+  <h3>Bet: 1 coin</h3>
+  <button onclick="startEscape()">Start</button>
+
+  <div class="circleBox" id="circle">
+      <div class="hole" id="hole"></div>
+      <div class="ball" id="escapeBall"></div>
+  </div>
+
+  <div class="winLoseBox" id="escapeOut"></div>
 </div>
 
-<!-- BLINKO -->
-<div id="blinko" class="section">
 
-<div class="controls">
- <div class="control-row">
-  <label>Bet (min 0.1)</label>
-  <input id="blinkoBet" type="number" min="0.1" step="0.1" value="0.1">
- </div>
- <button onclick="dropBall()">Drop Ball</button>
-</div>
 
-<canvas id="plinko" width="360" height="420"></canvas>
-
-</div>
-
-<!-- BALL ESCAPE -->
-<div id="ballEscape" class="section">
-
-<div class="controls">
- <div class="control-row">
-  <label>Bet (1-10 TON)</label>
-  <input id="escapeBet" type="number" min="1" max="10" step="1" value="1">
- </div>
- <button onclick="startEscape()">Start</button>
-</div>
-
-<canvas id="escapeCanvas" width="300" height="300"></canvas>
-
-<div style="text-align:center;margin-top:8px">
- Escape Multiplier: <span id="escapeMultiplier">1.0</span>x
-</div>
-
-</div>
-
-</div>
 
 <script>
-let balance=10;
-const balanceEl=document.getElementById("balance");
 
-function updateBalance(){balanceEl.textContent=balance.toFixed(2)}
-updateBalance();
+/*********************** NAVIGATION ***********************/
 
-/* tabs */
-function show(id){
- document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
- document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
- document.getElementById(id).classList.add("active");
- event.target.classList.add("active");
+function hideAll(){
+  lobby.style.display="none";
+  mines.style.display="none";
+  blinko.style.display="none";
+  escape.style.display="none";
 }
 
-/* MINES */
-let mines=[],opened=0,bet=0,mineCount=0,active=false;
+function openLobby(){ hideAll(); lobby.style.display="block"; }
+function openMines(){ hideAll(); mines.style.display="block"; }
+function openBlinko(){ hideAll(); blinko.style.display="block"; }
+function openEscape(){ hideAll(); escape.style.display="block"; }
+
+openLobby();
+
+
+/*********************** BALANCE ***********************/
+let bal = 100;
+function updateBal(){ balElem.innerHTML=bal; }
+const balElem=document.getElementById("bal");
+
+
+
+
+/*********************** MINES ***************************/
+let mineBoard=[];
+let mineGameOn=false;
 
 function startMines(){
- bet=+betInput.value;
- mineCount=+minesSelect.value;
- if(bet<0.1||bet>balance)return alert("Invalid bet");
- balance-=bet;updateBalance();
- active=true;opened=0;mines=[];
- grid.innerHTML="";
- cashoutBtn.disabled=false;
+  if(bal<1){alert("no money"); return;}
+  bal-=1; updateBal();
+  mineGameOn=true;
+  mineBoard=[];
+  mineField.innerHTML="";
 
- while(mines.length<mineCount){
-  let r=Math.floor(Math.random()*25);
-  if(!mines.includes(r))mines.push(r);
- }
-
- for(let i=0;i<25;i++){
-  let c=document.createElement("div");
-  c.className="cell";
-  c.onclick=()=>clickCell(c,i);
-  grid.appendChild(c);
- }
-}
-
-function clickCell(cell,i){
- if(!active||cell.classList.contains("open"))return;
- cell.classList.add("open");
- if(mines.includes(i)){
-  cell.classList.add("mine");cell.textContent="💣";
-  active=false;cashoutBtn.disabled=true;
- }else{
-  cell.classList.add("safe");cell.textContent="💎";
-  opened++;
-  let multi=Math.pow(25/(25-mineCount),opened);
-  multiplier.textContent=multi.toFixed(2);
- }
-}
-
-function cashout(){
- let multi=+multiplier.textContent;
- balance+=bet*multi;
- active=false;
- cashoutBtn.disabled=true;
- updateBalance();
-}
-
-/* BLINKO */
-const canvas=document.getElementById("plinko");
-const ctx=canvas.getContext("2d");
-const slots=[0,0.8,1.5,2.5,1.5,0.8,0];
-
-function drawBoard(){
- ctx.clearRect(0,0,360,420);
- ctx.fillStyle="#f29bc1";
- for(let y=80;y<260;y+=50){
-  for(let x=40;x<360;x+=60){
-   ctx.beginPath();
-   ctx.arc(x,y,6,0,Math.PI*2);
-   ctx.fill();
+  for(let i=0;i<25;i++){
+    const tile=document.createElement("div");
+    tile.className="tile";
+    tile.onclick=function(){pickMine(i,tile)};
+    mineField.append(tile);
+    mineBoard.push(Math.random()<0.2); 
   }
- }
+  mineResult.innerHTML="Find stars!";
 }
 
-function dropBall(){
- let b=+blinkoBet.value;
- if(b<0.1||b>balance)return alert("Invalid bet");
- balance-=b;updateBalance();
+function pickMine(i,tile){
+  if(!mineGameOn)return;
 
- let x=180,y=20,vx=0;
- let interval=setInterval(()=>{
-  drawBoard();
-  vx+=(Math.random()-.5)*2;
-  x+=vx;y+=4;
-  ctx.beginPath();
-  ctx.arc(x,y,8,0,Math.PI*2);
-  ctx.fillStyle="#fff";ctx.fill();
-  if(y>380){
-   clearInterval(interval);
-   let slot=Math.floor(x/(360/7));
-   let win=b*slots[slot];
-   balance+=win;
-   updateBalance();
+  if(mineBoard[i]){
+    tile.style.background="red";
+    mineResult.innerHTML="💥 Lose";
+    mineGameOn=false;
+  } else {
+    tile.style.background="lime";
+    bal+=2; updateBal();
+    mineResult.innerHTML="+2 win!";
   }
- },30);
 }
 
-drawBoard();
 
-/* BALL ESCAPE */
-const escapeCanvas=document.getElementById("escapeCanvas");
-const eCtx=escapeCanvas.getContext("2d");
-let eActive=false,ball={x:150,y:250,angle:-Math.PI/2,r:10},ring={r:120,angle:0};
-let escapeBet=0,escapeMultiplier=1;
 
-function drawEscape(){
- eCtx.clearRect(0,0,300,300);
- // ring
- eCtx.beginPath();
- eCtx.strokeStyle="#f29bc1";
- eCtx.lineWidth=10;
- eCtx.arc(150,150,ring.r,0,2*Math.PI);
- eCtx.stroke();
- // green zone
- eCtx.beginPath();
- eCtx.strokeStyle="#7dd3a7";
- eCtx.lineWidth=10;
- eCtx.arc(150,150,ring.r,-0.2,0.2);
- eCtx.stroke();
- // ball
- eCtx.beginPath();
- eCtx.fillStyle="#fff";
- eCtx.arc(ball.x,ball.y,ball.r,0,2*Math.PI);
- eCtx.fill();
+/*********************** BLINKO ***************************/
+function startBlinko(){
+  if(bal<1){alert("no money"); return;}
+  bal-=1; updateBal();
+  blinkoOut.innerHTML="";
+
+  const box=document.getElementById("blinkoBox");
+  box.innerHTML="";
+
+  const ball=document.createElement("div");
+  ball.style.width="25px";
+  ball.style.height="25px";
+  ball.style.borderRadius="50%";
+  ball.style.background="#00ffea";
+  ball.style.position="absolute";
+  ball.style.left="140px";
+  ball.style.top="10px";
+
+  box.append(ball);
+
+  let x=140;
+  let y=10;
+  let dir=0;
+
+  let fall=setInterval(()=>{
+    y+=7;
+    x+=Math.random()*14-7;
+    ball.style.top=y+"px";
+    ball.style.left=x+"px";
+
+    if(y>370){
+      clearInterval(fall);
+
+      let zone=Math.floor((x-10)/40);
+      if(zone==3){
+        bal+=3;
+        blinkoOut.innerHTML="2x WIN!";
+      } else if(zone==2 || zone==4){
+        bal+=2;
+        blinkoOut.innerHTML="1.5x Win!";
+      } else {
+        blinkoOut.innerHTML="Lose";
+      }
+      updateBal();
+    }
+  },40);
 }
+
+
+
+
+
+/*********************** BALL ESCAPE ***************************/
+let angle=0;
+let spin;
 
 function startEscape(){
- escapeBet=+escapeBet.value;
- if(escapeBet<1||escapeBet>10||escapeBet>balance)return alert("Invalid bet");
- balance-=escapeBet;updateBalance();
- eActive=true;
- escapeMultiplier=1;
- ball.x=150;ball.y=250;ball.angle=-Math.PI/2;
- ring.angle=0;
- escapeMultiplierEl=document.getElementById("escapeMultiplier");
- animateEscape();
+  if(bal<1){alert("no money"); return;}
+  bal-=1; updateBal();
+
+  escapeOut.innerHTML="";
+
+  angle=0;
+  clearInterval(spin);
+
+  spin=setInterval(()=>{
+    angle+=3;
+    hole.style.transform="rotate("+angle+"deg)";
+  },40);
+
+  let bX=145,bY=145;
+  let dX=4,dY=4;
+
+  let bounce=setInterval(()=>{
+    let ball=document.getElementById("escapeBall");
+    bX+=dX;
+    bY+=dY;
+
+    if(bX<10 || bX>280) dX*=-1;
+    if(bY<10 || bY>280) dY*=-1;
+
+    ball.style.left=bX+"px";
+    ball.style.top=bY+"px";
+
+    if(bY<0 && Math.abs(bX-145)<60){
+      clearInterval(bounce);
+      clearInterval(spin);
+      bal+=3;
+      updateBal();
+      escapeOut.innerHTML="WIN!";
+    }
+
+    if(bX<0 || bX>300 || bY<0 || bY>300){
+      clearInterval(bounce);
+      clearInterval(spin);
+      escapeOut.innerHTML="LOSE";
+    }
+
+  },30);
 }
 
-function animateEscape(){
- if(!eActive)return;
- ring.angle+=0.05;
- ball.x=150+Math.cos(ball.angle)*ring.r;
- ball.y=150+Math.sin(ball.angle)*ring.r;
- drawEscape();
-
- // collision
- if(ball.y<160 && (ball.x<150-20 || ball.x>150+20)){
-   // hit red
-   eActive=false;
-   alert("Lost!");
- } else if(ball.y<160 && ball.x>=150-20 && ball.x<=150+20){
-   // green success
-   escapeMultiplier+=0.5;
-   escapeMultiplierEl.textContent=escapeMultiplier.toFixed(2);
- }
-
- requestAnimationFrame(animateEscape);
-}
 </script>
+
 </body>
 </html>
