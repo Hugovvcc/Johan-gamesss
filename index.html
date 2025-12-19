@@ -55,6 +55,23 @@ button:hover{
 button:active{
   transform: translateY(1px);
 }
+input[type="number"]{
+  padding: 10px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid var(--pink);
+  font-size: 18px;
+  margin: 10px;
+  width: 100px;
+}
+select{
+  padding: 10px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid var(--pink);
+  font-size: 18px;
+  margin: 10px;
+}
 .screen{display:none;}
 .active{display:block;}
 .minecell{
@@ -106,7 +123,23 @@ canvas{
 #slots{
   display: flex;
   justify-content: center;
-  margin-top: -20px;
+  margin-top: -50px;
+  z-index: 1;
+  position: relative;
+}
+.message{
+  font-size: 20px;
+  margin: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  color: #fff;
+}
+.message-win{
+  background: var(--green-win);
+  color: #000;
+}
+.message-lose{
+  background: var(--red-lose);
 }
 </style>
 </head>
@@ -116,51 +149,105 @@ canvas{
 
 <!-- MENU -->
 <div id="menu" class="active">
-  <button onclick="openScreen('mines')">Mines</button><br>
-  <button onclick="openScreen('plinko')">Plinko</button><br>
-  <button onclick="openScreen('escape')">Ball Escape</button>
+  <button onclick="openLobby('mines')">Mines</button><br>
+  <button onclick="openLobby('plinko')">Plinko</button><br>
+  <button onclick="openLobby('escape')">Ball Escape</button>
 </div>
 
-<!-- MINES -->
-<div id="mines" class="screen">
+<!-- MINES LOBBY -->
+<div id="mines-lobby" class="screen">
+  <h2>Mines Lobby</h2>
+  <label>Bet (0.1-10 TON):</label>
+  <input type="number" id="mines-bet" min="0.1" max="10" step="0.1" value="1"><br>
+  <label>Number of Mines (5-10):</label>
+  <select id="mines-count">
+    <option value="5">5 Mines</option>
+    <option value="6">6 Mines</option>
+    <option value="7">7 Mines</option>
+    <option value="8">8 Mines</option>
+    <option value="9">9 Mines</option>
+    <option value="10">10 Mines</option>
+  </select><br>
+  <button onclick="startMines()">Start Game</button>
+  <button onclick="backToMenu()">← Back</button>
+</div>
+
+<!-- MINES GAME -->
+<div id="mines-game" class="screen">
   <h2>Mines</h2>
   <p>Tiles opened: <span id="opened">0</span></p>
   <p>Multiplier: <span id="multi">1.00x</span></p>
-  <button onclick="startMines()">New Game</button>
+  <div id="mines-message" class="message"></div>
   <button onclick="cashout()" style="background:#ff6bb5;">Cash Out 💰</button>
   <div id="minesGrid"></div>
-  <button onclick="back()">← Back</button>
+  <button onclick="backToLobby('mines')">← Back to Lobby</button>
 </div>
 
-<!-- PLINKO -->
-<div id="plinko" class="screen">
+<!-- PLINKO LOBBY -->
+<div id="plinko-lobby" class="screen">
+  <h2>Plinko Lobby</h2>
+  <label>Bet (0.1-10 TON):</label>
+  <input type="number" id="plinko-bet" min="0.1" max="10" step="0.1" value="1"><br>
+  <button onclick="startPlinko()">Start Game</button>
+  <button onclick="backToMenu()">← Back</button>
+</div>
+
+<!-- PLINKO GAME -->
+<div id="plinko-game" class="screen">
   <h2>Plinko</h2>
-  <button onclick="startPlinko()">Drop Ball 🎾</button>
+  <div id="plinko-message" class="message"></div>
+  <button onclick="dropBall()">Drop Ball 🎾</button>
   <canvas id="plinkoCanvas" width="320" height="520"></canvas>
   <div id="slots"></div>
-  <button onclick="back()">← Back</button>
+  <button onclick="backToLobby('plinko')">← Back to Lobby</button>
 </div>
 
-<!-- BALL ESCAPE -->
-<div id="escape" class="screen">
+<!-- ESCAPE LOBBY -->
+<div id="escape-lobby" class="screen">
+  <h2>Ball Escape Lobby</h2>
+  <label>Bet (0.1-10 TON):</label>
+  <input type="number" id="escape-bet" min="0.1" max="10" step="0.1" value="1"><br>
+  <button onclick="startEscape()">Start Game</button>
+  <button onclick="backToMenu()">← Back</button>
+</div>
+
+<!-- ESCAPE GAME -->
+<div id="escape-game" class="screen">
   <h2>Ball Escape</h2>
-  <button onclick="startEscape()">Play ⚡</button>
+  <div id="escape-message" class="message"></div>
   <canvas id="escapeCanvas" width="320" height="440"></canvas>
-  <button onclick="back()">← Back</button>
+  <button onclick="backToLobby('escape')">← Back to Lobby</button>
 </div>
 
 <script>
-function openScreen(id){
-  document.getElementById("menu").classList.remove("active");
-  document.getElementById(id).classList.add("active");
+let ton = 100;
+document.getElementById("ton").textContent = ton.toFixed(1);
+
+function openLobby(id){
+  hideAll();
+  document.getElementById(id + "-lobby").classList.add("active");
 }
-function back(){
-  document.querySelectorAll(".screen").forEach(x => x.classList.remove("active"));
+
+function backToMenu(){
+  hideAll();
   document.getElementById("menu").classList.add("active");
 }
 
-let ton = 100;
-document.getElementById("ton").textContent = ton;
+function backToLobby(id){
+  hideAll();
+  document.getElementById(id + "-lobby").classList.add("active");
+}
+
+function hideAll(){
+  document.querySelectorAll(".screen, #menu").forEach(x => x.classList.remove("active"));
+}
+
+function showMessage(id, text, type){
+  let msg = document.getElementById(id + "-message");
+  msg.innerHTML = text;
+  msg.className = "message " + (type === "win" ? "message-win" : "message-lose");
+  setTimeout(() => { msg.innerHTML = ""; }, 5000);
+}
 
 /**********************
    MINES GAME
@@ -168,15 +255,24 @@ document.getElementById("ton").textContent = ton;
 let mines = [];
 let revealed = 0;
 let multiplier = 1;
+let currentBet = 1;
+let mineCount = 5;
 
 function startMines(){
+  currentBet = parseFloat(document.getElementById("mines-bet").value);
+  if(currentBet < 0.1 || currentBet > 10 || isNaN(currentBet)) return showMessage("mines", "Invalid bet! 0.1-10 TON.", "lose");
+  mineCount = parseInt(document.getElementById("mines-count").value);
+  if(ton < currentBet) return showMessage("mines", "Not enough TON!", "lose");
+  ton -= currentBet;
+  document.getElementById("ton").textContent = ton.toFixed(1);
+
   mines = [];
   revealed = 0;
   multiplier = 1;
   document.getElementById("opened").textContent = 0;
   document.getElementById("multi").textContent = "1.00x";
 
-  while(mines.length < 8){
+  while(mines.length < mineCount){
     let r = Math.floor(Math.random() * 25);
     if(!mines.includes(r)) mines.push(r);
   }
@@ -190,6 +286,9 @@ function startMines(){
     cell.onclick = () => reveal(i, cell);
     grid.appendChild(cell);
   }
+
+  hideAll();
+  document.getElementById("mines-game").classList.add("active");
 }
 
 function reveal(i, cell){
@@ -198,16 +297,13 @@ function reveal(i, cell){
   if(mines.includes(i)){
     cell.style.background = "var(--red-lose)";
     cell.textContent = "💣";
-    alert("💥 BOOM! You hit a mine!\nLost 5 TON 😿");
-    ton -= 5;
-    if(ton < 0) ton = 0;
-    document.getElementById("ton").textContent = ton;
-    startMines();
+    showMessage("mines", `💥 BOOM! Lost ${currentBet.toFixed(1)} TON 😿`, "lose");
+    setTimeout(() => backToLobby('mines'), 3000);
     return;
   }
 
   revealed++;
-  multiplier = 1 + (revealed * 0.20);
+  multiplier = 1 + (revealed * (0.20 + (mineCount / 50)));
   cell.dataset.open = 1;
   cell.style.background = "var(--green-win)";
   cell.textContent = "💎";
@@ -218,27 +314,28 @@ function reveal(i, cell){
 }
 
 function cashout(){
-  if(revealed === 0) return alert("Open at least one tile first!");
+  if(revealed === 0) return showMessage("mines", "Open at least one tile first!", "lose");
 
-  let win = Math.round(10 * multiplier);
-  alert(`🎉 Cashed out at ${multiplier.toFixed(2)}x!\nYou won ${win} TON! 🏆`);
-  ton += win;
-  document.getElementById("ton").textContent = ton;
-  startMines();
+  let win = (currentBet * multiplier).toFixed(1);
+  ton += parseFloat(win);
+  document.getElementById("ton").textContent = ton.toFixed(1);
+  showMessage("mines", `🎉 Cashed out at ${multiplier.toFixed(2)}x! Won ${win} TON! 🏆`, "win");
+  setTimeout(() => backToLobby('mines'), 3000);
 }
 
 /**********************
    PLINKO GAME
 **********************/
-function startPlinko(){
-  let canvas = document.getElementById("plinkoCanvas");
-  let ctx = canvas.getContext("2d");
-  let pegs = [];
-  let rows = 9;
-  let multipliers = [2, 1.2, 0.8, 0.5, 0.8, 1.2, 2]; // x2 x1.2 x0.8 x0.5 x0.8 x1.2 x2
-  let slotWidth = canvas.width / multipliers.length;
+let plinkoBet = 1;
+let multipliers = [2, 1.2, 0.8, 0.5, 0.8, 1.2, 2];
 
-  // Отображаем ячейки
+function startPlinko(){
+  plinkoBet = parseFloat(document.getElementById("plinko-bet").value);
+  if(plinkoBet < 0.1 || plinkoBet > 10 || isNaN(plinkoBet)) return showMessage("plinko", "Invalid bet! 0.1-10 TON.", "lose");
+  if(ton < plinkoBet) return showMessage("plinko", "Not enough TON!", "lose");
+  ton -= plinkoBet;
+  document.getElementById("ton").textContent = ton.toFixed(1);
+
   let slotsDiv = document.getElementById("slots");
   slotsDiv.innerHTML = "";
   multipliers.forEach(m => {
@@ -248,9 +345,18 @@ function startPlinko(){
     slotsDiv.appendChild(slot);
   });
 
-  // Пеги
+  hideAll();
+  document.getElementById("plinko-game").classList.add("active");
+}
+
+function dropBall(){
+  let canvas = document.getElementById("plinkoCanvas");
+  let ctx = canvas.getContext("2d");
+  let pegs = [];
+  let rows = 9;
+
   for(let r = 0; r < rows; r++){
-    let pegsInRow = r + 5; // шире для лучшей физики
+    let pegsInRow = r + 5;
     let offset = (canvas.width - (pegsInRow * 25)) / 2;
     for(let p = 0; p < pegsInRow; p++){
       pegs.push({
@@ -261,15 +367,15 @@ function startPlinko(){
   }
 
   let ball = {x: canvas.width / 2, y: 20, vx: 0, vy: 0};
-  let gravity = 0.2;
-  let bounce = 0.6; // меньше отскока
-  let friction = 0.98; // трение для стабильности
-  let dropped = false;
+  let gravity = 0.3;
+  let bounce = 0.6;
+  let friction = 0.98;
+  let ballRadius = 8;
+  let slotWidth = canvas.width / multipliers.length;
 
   function animate(){
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Пеги
     ctx.fillStyle = "#333";
     pegs.forEach(p => {
       ctx.beginPath();
@@ -277,50 +383,41 @@ function startPlinko(){
       ctx.fill();
     });
 
-    // Шарик
     ctx.fillStyle = "#ff6bb5";
     ctx.beginPath();
-    ctx.arc(ball.x, ball.y, 10, 0, Math.PI*2);
+    ctx.arc(ball.x, ball.y, ballRadius, 0, Math.PI*2);
     ctx.fill();
 
-    if(dropped){
-      ball.vy += gravity;
-      ball.vy *= friction;
-      ball.vx *= friction;
-      ball.y += ball.vy;
-      ball.x += ball.vx;
+    ball.vy += gravity;
+    ball.vy *= friction;
+    ball.vx *= friction;
+    ball.y += ball.vy;
+    ball.x += ball.vx;
 
-      // Столкновения
-      pegs.forEach(p => {
-        let dx = ball.x - p.x;
-        let dy = ball.y - p.y;
-        let dist = Math.sqrt(dx*dx + dy*dy);
-        if(dist < 15){
-          // Нормальная физика отскока
-          let angle = Math.atan2(dy, dx);
-          let speed = Math.sqrt(ball.vx**2 + ball.vy**2);
-          ball.vx = -Math.cos(angle) * speed * bounce + (Math.random() - 0.5) * 1; // минимальный рандом
-          ball.vy = -Math.sin(angle) * speed * bounce;
-        }
-      });
-
-      // Стены
-      if(ball.x < 10 || ball.x > canvas.width - 10) ball.vx *= -bounce;
-
-      // Дно
-      if(ball.y > canvas.height - 30){
-        let slotIndex = Math.floor(ball.x / slotWidth);
-        slotIndex = Math.max(0, Math.min(multipliers.length - 1, slotIndex));
-        let mult = multipliers[slotIndex];
-        let points = Math.round(mult * 10); // базовый выигрыш 10 TON * mult
-        ton += points;
-        document.getElementById("ton").textContent = ton;
-        alert(`🎊 Landed on x${mult}!\n+${points} TON!`);
-        return;
+    pegs.forEach(p => {
+      let dx = ball.x - p.x;
+      let dy = ball.y - p.y;
+      let dist = Math.sqrt(dx*dx + dy*dy);
+      if(dist < ballRadius + 5){
+        let angle = Math.atan2(dy, dx);
+        let speed = Math.sqrt(ball.vx**2 + ball.vy**2);
+        ball.vx = -Math.cos(angle) * speed * bounce + (Math.random() - 0.5) * 1;
+        ball.vy = -Math.sin(angle) * speed * bounce;
       }
-    } else {
-      dropped = true;
-      ball.vy = 1; // начальный импульс
+    });
+
+    if(ball.x < ballRadius || ball.x > canvas.width - ballRadius) ball.vx *= -bounce;
+
+    if(ball.y > canvas.height - ballRadius - 20){
+      let slotIndex = Math.floor(ball.x / slotWidth);
+      slotIndex = Math.max(0, Math.min(multipliers.length - 1, slotIndex));
+      let mult = multipliers[slotIndex];
+      let points = (plinkoBet * mult).toFixed(1);
+      ton += parseFloat(points);
+      document.getElementById("ton").textContent = ton.toFixed(1);
+      showMessage("plinko", `🎊 Landed on x${mult}! +${points} TON!`, "win");
+      setTimeout(() => backToLobby('plinko'), 3000);
+      return;
     }
 
     requestAnimationFrame(animate);
@@ -331,13 +428,24 @@ function startPlinko(){
 /**********************
    BALL ESCAPE GAME
 **********************/
+let escapeBet = 1;
+
 function startEscape(){
+  escapeBet = parseFloat(document.getElementById("escape-bet").value);
+  if(escapeBet < 0.1 || escapeBet > 10 || isNaN(escapeBet)) return showMessage("escape", "Invalid bet! 0.1-10 TON.", "lose");
+  if(ton < escapeBet) return showMessage("escape", "Not enough TON!", "lose");
+  ton -= escapeBet;
+  document.getElementById("ton").textContent = ton.toFixed(1);
+
   let canvas = document.getElementById("escapeCanvas");
   let ctx = canvas.getContext("2d");
   let ball = {x: 160, y: 220, vx: 3, vy: -4};
   let rotation = 0;
   let holeStart = Math.random() * Math.PI * 2;
   let holeSize = 0.8;
+
+  hideAll();
+  document.getElementById("escape-game").classList.add("active");
 
   function animate(){
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -374,9 +482,12 @@ function startEscape(){
     let ballAngle = Math.atan2(dy, dx);
     let normalizedBall = (ballAngle - holeStart - rotation + Math.PI*4) % (Math.PI*2);
     if(dist > 125 && normalizedBall < holeSize){
-      ton += 15;
-      document.getElementById("ton").textContent = ton;
-      alert("⚡ BALL ESCAPED! +15 TON! 🏆");
+      let mult = 3; // Fixed multiplier for escape
+      let win = (escapeBet * mult).toFixed(1);
+      ton += parseFloat(win);
+      document.getElementById("ton").textContent = ton.toFixed(1);
+      showMessage("escape", `⚡ BALL ESCAPED! +${win} TON! 🏆`, "win");
+      setTimeout(() => backToLobby('escape'), 3000);
       return;
     }
 
