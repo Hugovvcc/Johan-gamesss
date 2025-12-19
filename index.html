@@ -6,19 +6,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+:root{
+ --pink:#ff9ccd;
+ --pink-bg:#ffe6f3;
+}
+
 body{
  margin:0;
- background:#ffe6f3;
- font-family:Arial;
+ background:var(--pink-bg);
+ font-family:Arial, sans-serif;
  text-align:center;
  user-select:none;
 }
+
+h1,h2{margin:12px 0;}
 
 button{
  padding:12px 20px;
  border-radius:10px;
  border:0;
- background:#ff9ccd;
+ background:var(--pink);
+ color:#000;
  margin:10px;
  cursor:pointer;
  font-size:18px;
@@ -28,14 +36,10 @@ button{
 .active{display:block;}
 
 .minecell{
- width:55px;
- height:55px;
- background:white;
- border-radius:8px;
+ width:55px;height:55px;
+ background:white;border-radius:8px;
  font-size:22px;
- display:flex;
- justify-content:center;
- align-items:center;
+ display:flex;justify-content:center;align-items:center;
  cursor:pointer;
 }
 
@@ -59,6 +63,8 @@ button{
 
 <h1>Johan Game</h1>
 
+<h3>Score: <span id="score">100</span></h3>
+
 <!-- MENU -->
 <div id="menu" class="active">
  <button onclick="openScreen('mines')">Mines</button>
@@ -70,26 +76,10 @@ button{
 <div id="mines" class="screen">
  <h2>Mines</h2>
 
-Bet:
-<select id="betM">
- <option>0.1</option>
- <option>0.5</option>
- <option>1</option>
- <option>5</option>
-</select>
+Tiles opened: <span id="opened">0</span><br>
+Multiplier: <span id="multi">1.00x</span><br><br>
 
-Mines:
-<select id="mineCount">
- <option>5</option>
- <option>6</option>
- <option>7</option>
- <option>8</option>
- <option>9</option>
- <option>10</option>
-</select>
-
-<br><br>
-<button onclick="startMines()">Start Game</button>
+<button onclick="startMines()">New Game</button>
 <button onclick="cashout()">Cash Out</button>
 
 <div id="minesGrid"></div>
@@ -101,14 +91,6 @@ Mines:
 <div id="plinko" class="screen">
  <h2>Plinko</h2>
 
-Bet:
-<select id="betP">
- <option>0.1</option>
- <option>0.5</option>
- <option>1</option>
-</select>
-
-<br>
 <button onclick="startPlinko()">Drop Ball</button>
 
 <canvas id="plinkoCanvas" width="300" height="500"></canvas>
@@ -120,15 +102,7 @@ Bet:
 <div id="escape" class="screen">
  <h2>Ball Escape</h2>
 
-Bet:
-<select id="betE">
- <option>1</option>
- <option>2</option>
- <option>5</option>
-</select>
-
-<br>
-<button onclick="startEscape()">Start</button>
+<button onclick="startEscape()">Play</button>
 
 <canvas id="escapeCanvas" width="300" height="420"></canvas>
 
@@ -137,7 +111,6 @@ Bet:
 
 
 <script>
-
 function openScreen(id){
  document.getElementById("menu").classList.remove("active");
  document.getElementById(id).classList.add("active");
@@ -148,9 +121,12 @@ function back(){
  document.getElementById("menu").classList.add("active");
 }
 
-/***********
- MINES
-************/
+let score = 100;
+document.getElementById("score").textContent = score;
+
+/**********************
+   MINES GAME
+**********************/
 let mines=[];
 let revealed=0;
 let multiplier=1;
@@ -159,15 +135,15 @@ function startMines(){
  mines=[];
  revealed=0;
  multiplier=1;
+ document.getElementById("opened").textContent=0;
+ document.getElementById("multi").textContent="1.00x";
 
- let count = Number(document.getElementById("mineCount").value);
-
- while(mines.length<count){
-   let r = Math.floor(Math.random()*25);
-   if(!mines.includes(r))mines.push(r);
+ while(mines.length<8){
+  let r=Math.floor(Math.random()*25);
+  if(!mines.includes(r))mines.push(r);
  }
 
- let g = document.getElementById("minesGrid");
+ let g=document.getElementById("minesGrid");
  g.innerHTML="";
 
  for(let i=0;i<25;i++){
@@ -185,30 +161,38 @@ function reveal(i,cell){
  if(mines.includes(i)){
   cell.style.background="red";
   cell.textContent="💣";
-  alert("You Lose!");
+  alert("Boom! Lost 5 points!");
+  score-=5;
+  document.getElementById("score").textContent=score;
   startMines();
   return;
  }
 
- cell.dataset.open=1;
  revealed++;
- multiplier += 0.25;
- cell.style.background="#baffc1";
- cell.textContent="💎";
+ multiplier+=0.15;
+ cell.dataset.open=1;
+ cell.style.background="#afffa6";
+ cell.textContent="★";
+
+ document.getElementById("opened").textContent=revealed;
+ document.getElementById("multi").textContent=multiplier.toFixed(2)+"x";
 }
 
 function cashout(){
  if(revealed===0)return;
 
- let win = Number(document.getElementById("betM").value) * multiplier;
- alert("You cashed out " + win.toFixed(2) + " TON");
+ let win = Math.round(5*multiplier);
+ alert("You won "+win+" points!");
+
+ score+=win;
+ document.getElementById("score").textContent=score;
 
  startMines();
 }
 
-/***********
- PLINKO
-************/
+/**********************
+   PLINKO GAME
+**********************/
 function startPlinko(){
  let c=document.getElementById("plinkoCanvas");
  let ctx=c.getContext("2d");
@@ -228,7 +212,7 @@ function startPlinko(){
  function loop(){
   ctx.clearRect(0,0,300,500);
 
-  ctx.fillStyle="#000";
+  ctx.fillStyle="black";
   pegs.forEach(p=>{
     ctx.beginPath();
     ctx.arc(p.x,p.y,5,0,6.28);
@@ -244,43 +228,41 @@ function startPlinko(){
   pegs.forEach(p=>{
     let dx=ball.x-p.x;
     let dy=ball.y-p.y;
-    let d = Math.sqrt(dx*dx + dy*dy);
+    let d=Math.sqrt(dx*dx+dy*dy);
     if(d<13){
-     ball.vx = (Math.random()-0.5)*4;
-     ball.x += ball.vx;
+     ball.vx=(Math.random()-0.5)*4;
     }
   });
 
+  ball.x+=ball.vx;
+
   if(ball.y>470){
-   let slot = Math.floor(ball.x/50);
-   let mult = [3,1.5,0.8,0,0.8,1.5,3][slot] || 0;
-   let win = mult*Number(document.getElementById("betP").value);
-   alert("WIN: " + win.toFixed(2) + " TON");
+   let slot=Math.floor(ball.x/50);
+   let mult=[5,2,1,0,1,2,5][slot]||0;
+   score+=mult;
+   document.getElementById("score").textContent=score;
+   alert("+"+mult+" points!");
    return;
   }
-
-  ball.x += ball.vx;
 
   requestAnimationFrame(loop);
  }
  loop();
 }
 
-/***********
- BALL ESCAPE
-************/
+/**********************
+ BALL ESCAPE GAME
+**********************/
 function startEscape(){
-
  let c=document.getElementById("escapeCanvas");
  let ctx=c.getContext("2d");
 
  let angle=0;
- let speed=0.02;
-
+ let speed=0.03;
  let ball={x:150,y:150,vx:2,vy:3};
 
- let holeStart = Math.random()*3.14;
- let holeEnd = holeStart+0.7;
+ let holeStart=Math.random()*3.14;
+ let holeEnd=holeStart+0.7;
 
  function loop(){
   ctx.clearRect(0,0,300,420);
@@ -294,6 +276,7 @@ function startEscape(){
   ctx.strokeStyle="green";
   ctx.lineWidth=10;
   ctx.stroke();
+
   ctx.lineWidth=1;
   ctx.strokeStyle="black";
 
@@ -313,12 +296,11 @@ function startEscape(){
    ball.vy*=-1;
   }
 
-  if(dist>115 &&
-     angle>holeStart &&
-     angle<holeEnd){
-      let win = Number(document.getElementById("betE").value)*2.5;
-      alert("WIN " + win + " TON");
-      return;
+  if(dist>115 && angle>holeStart && angle<holeEnd){
+    score+=10;
+    document.getElementById("score").textContent=score;
+    alert("Ball escaped! +10 points!");
+    return;
   }
 
   angle+=speed;
@@ -327,7 +309,6 @@ function startEscape(){
  }
  loop();
 }
-
 </script>
 
 </body>
