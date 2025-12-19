@@ -4,121 +4,141 @@
 <meta charset="UTF-8">
 <title>Johan Game</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
 :root{
- --pink:#ff9ccd;
- --pink-bg:#ffe6f3;
+  --pink: #ff9ccd;
+  --pink-dark: #ff6bb5;
+  --pink-bg: #ffe6f3;
+  --green-win: #afffa6;
+  --red-lose: #ff6b6b;
 }
-
 body{
- margin:0;
- background:var(--pink-bg);
- font-family:Arial, sans-serif;
- text-align:center;
- user-select:none;
+  margin:0;
+  background:var(--pink-bg);
+  font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
+  text-align:center;
+  user-select:none;
+  color:#333;
 }
-
-h1,h2{margin:12px 0;}
-
+h1{
+  font-size: 48px;
+  color: var(--pink-dark);
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  margin: 20px 0;
+}
+h2{
+  font-size: 32px;
+  color: var(--pink-dark);
+}
+h3{
+  font-size: 24px;
+  margin: 10px;
+}
 button{
- padding:12px 20px;
- border-radius:10px;
- border:0;
- background:var(--pink);
- color:#000;
- margin:10px;
- cursor:pointer;
- font-size:18px;
+  padding: 14px 28px;
+  border-radius: 15px;
+  border: none;
+  background: var(--pink);
+  color: #000;
+  margin: 10px;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transition: all 0.2s;
 }
-
+button:hover{
+  background: var(--pink-dark);
+  transform: translateY(-2px);
+}
+button:active{
+  transform: translateY(1px);
+}
 .screen{display:none;}
 .active{display:block;}
-
 .minecell{
- width:55px;height:55px;
- background:white;border-radius:8px;
- font-size:22px;
- display:flex;justify-content:center;align-items:center;
- cursor:pointer;
+  width: 60px;
+  height: 60px;
+  background: white;
+  border-radius: 12px;
+  font-size: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+  transition: all 0.2s;
 }
-
+.minecell:hover{
+  transform: scale(1.05);
+}
 #minesGrid{
- display:grid;
- grid-template-columns:repeat(5,55px);
- gap:5px;
- justify-content:center;
- margin-top:15px;
+  display: grid;
+  grid-template-columns: repeat(5, 60px);
+  gap: 8px;
+  justify-content: center;
+  margin: 20px auto;
 }
-
-#plinkoCanvas,#escapeCanvas{
- background:#fff;
- display:block;
- margin:10px auto;
- border-radius:10px;
+canvas{
+  background: #fff;
+  border-radius: 15px;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+  margin: 15px auto;
+  display: block;
+}
+#score{
+  font-size: 28px;
+  font-weight: bold;
+  color: var(--pink-dark);
 }
 </style>
 </head>
 <body>
-
 <h1>Johan Game</h1>
-
 <h3>Score: <span id="score">100</span></h3>
 
 <!-- MENU -->
 <div id="menu" class="active">
- <button onclick="openScreen('mines')">Mines</button>
- <button onclick="openScreen('plinko')">Plinko</button>
- <button onclick="openScreen('escape')">Ball Escape</button>
+  <button onclick="openScreen('mines')">Mines</button><br>
+  <button onclick="openScreen('plinko')">Plinko</button><br>
+  <button onclick="openScreen('escape')">Ball Escape</button>
 </div>
 
 <!-- MINES -->
 <div id="mines" class="screen">
- <h2>Mines</h2>
-
-Tiles opened: <span id="opened">0</span><br>
-Multiplier: <span id="multi">1.00x</span><br><br>
-
-<button onclick="startMines()">New Game</button>
-<button onclick="cashout()">Cash Out</button>
-
-<div id="minesGrid"></div>
-
-<button onclick="back()">Back</button>
+  <h2>Mines</h2>
+  <p>Tiles opened: <span id="opened">0</span></p>
+  <p>Multiplier: <span id="multi">1.00x</span></p>
+  <button onclick="startMines()">New Game</button>
+  <button onclick="cashout()" style="background:#ff6bb5;">Cash Out 💰</button>
+  <div id="minesGrid"></div>
+  <button onclick="back()">← Back</button>
 </div>
 
 <!-- PLINKO -->
 <div id="plinko" class="screen">
- <h2>Plinko</h2>
-
-<button onclick="startPlinko()">Drop Ball</button>
-
-<canvas id="plinkoCanvas" width="300" height="500"></canvas>
-
-<button onclick="back()">Back</button>
+  <h2>Plinko</h2>
+  <button onclick="startPlinko()">Drop Ball 🎾</button>
+  <canvas id="plinkoCanvas" width="320" height="520"></canvas>
+  <button onclick="back()">← Back</button>
 </div>
 
 <!-- BALL ESCAPE -->
 <div id="escape" class="screen">
- <h2>Ball Escape</h2>
-
-<button onclick="startEscape()">Play</button>
-
-<canvas id="escapeCanvas" width="300" height="420"></canvas>
-
-<button onclick="back()">Back</button>
+  <h2>Ball Escape</h2>
+  <button onclick="startEscape()">Play ⚡</button>
+  <canvas id="escapeCanvas" width="320" height="440"></canvas>
+  <button onclick="back()">← Back</button>
 </div>
-
 
 <script>
 function openScreen(id){
- document.getElementById("menu").classList.remove("active");
- document.getElementById(id).classList.add("active");
+  document.getElementById("menu").classList.remove("active");
+  document.getElementById(id).classList.add("active");
 }
-
 function back(){
- document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));
- document.getElementById("menu").classList.add("active");
+  document.querySelectorAll(".screen").forEach(x => x.classList.remove("active"));
+  document.getElementById("menu").classList.add("active");
 }
 
 let score = 100;
@@ -127,189 +147,215 @@ document.getElementById("score").textContent = score;
 /**********************
    MINES GAME
 **********************/
-let mines=[];
-let revealed=0;
-let multiplier=1;
+let mines = [];
+let revealed = 0;
+let multiplier = 1;
 
 function startMines(){
- mines=[];
- revealed=0;
- multiplier=1;
- document.getElementById("opened").textContent=0;
- document.getElementById("multi").textContent="1.00x";
+  mines = [];
+  revealed = 0;
+  multiplier = 1;
+  document.getElementById("opened").textContent = 0;
+  document.getElementById("multi").textContent = "1.00x";
 
- while(mines.length<8){
-  let r=Math.floor(Math.random()*25);
-  if(!mines.includes(r))mines.push(r);
- }
+  // 8 мин из 25 клеток
+  while(mines.length < 8){
+    let r = Math.floor(Math.random() * 25);
+    if(!mines.includes(r)) mines.push(r);
+  }
 
- let g=document.getElementById("minesGrid");
- g.innerHTML="";
-
- for(let i=0;i<25;i++){
-  let d=document.createElement("div");
-  d.className="minecell";
-  d.textContent="?";
-  d.onclick=()=>reveal(i,d);
-  g.append(d);
- }
+  let grid = document.getElementById("minesGrid");
+  grid.innerHTML = "";
+  for(let i = 0; i < 25; i++){
+    let cell = document.createElement("div");
+    cell.className = "minecell";
+    cell.textContent = "?";
+    cell.onclick = () => reveal(i, cell);
+    grid.appendChild(cell);
+  }
 }
 
-function reveal(i,cell){
- if(cell.dataset.open)return;
+function reveal(i, cell){
+  if(cell.dataset.open) return;
 
- if(mines.includes(i)){
-  cell.style.background="red";
-  cell.textContent="💣";
-  alert("Boom! Lost 5 points!");
-  score-=5;
-  document.getElementById("score").textContent=score;
-  startMines();
-  return;
- }
+  if(mines.includes(i)){
+    // Бум!
+    cell.style.background = "var(--red-lose)";
+    cell.textContent = "💣";
+    alert("💥 BOOM! You hit a mine!\nLost 5 points 😿");
+    score -= 5;
+    if(score < 0) score = 0;
+    document.getElementById("score").textContent = score;
+    startMines();
+    return;
+  }
 
- revealed++;
- multiplier+=0.15;
- cell.dataset.open=1;
- cell.style.background="#afffa6";
- cell.textContent="★";
+  // Безопасно
+  revealed++;
+  multiplier = 1 + (revealed * 0.20); // лучше растёт
+  cell.dataset.open = 1;
+  cell.style.background = "var(--green-win)";
+  cell.textContent = "💎";
+  cell.style.transform = "scale(1.1)";
 
- document.getElementById("opened").textContent=revealed;
- document.getElementById("multi").textContent=multiplier.toFixed(2)+"x";
+  document.getElementById("opened").textContent = revealed;
+  document.getElementById("multi").textContent = multiplier.toFixed(2) + "x";
 }
 
 function cashout(){
- if(revealed===0)return;
+  if(revealed === 0) return alert("Open at least one tile first!");
 
- let win = Math.round(5*multiplier);
- alert("You won "+win+" points!");
-
- score+=win;
- document.getElementById("score").textContent=score;
-
- startMines();
+  let win = Math.round(10 * multiplier);
+  alert(`🎉 Cashed out at ${multiplier.toFixed(2)}x!\nYou won ${win} points! 🏆`);
+  score += win;
+  document.getElementById("score").textContent = score;
+  startMines();
 }
 
 /**********************
    PLINKO GAME
 **********************/
 function startPlinko(){
- let c=document.getElementById("plinkoCanvas");
- let ctx=c.getContext("2d");
+  let canvas = document.getElementById("plinkoCanvas");
+  let ctx = canvas.getContext("2d");
+  let pegs = [];
+  let rows = 9;
 
- let pegs=[];
- for(let r=0;r<8;r++){
-  for(let p=0;p<r+3;p++){
-   pegs.push({
-     x:150 - (r*15) + p*30,
-     y:80+r*45
-   });
-  }
- }
-
- let ball={x:150,y:20,vx:0,vy:2};
-
- function loop(){
-  ctx.clearRect(0,0,300,500);
-
-  ctx.fillStyle="black";
-  pegs.forEach(p=>{
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,5,0,6.28);
-    ctx.fill();
-  });
-
-  ctx.beginPath();
-  ctx.arc(ball.x,ball.y,8,0,6.28);
-  ctx.fill();
-
-  ball.y+=ball.vy;
-
-  pegs.forEach(p=>{
-    let dx=ball.x-p.x;
-    let dy=ball.y-p.y;
-    let d=Math.sqrt(dx*dx+dy*dy);
-    if(d<13){
-     ball.vx=(Math.random()-0.5)*4;
+  // Создаём пирамиду пегов
+  for(let r = 0; r < rows; r++){
+    let pegsInRow = r + 4;
+    let offset = (canvas.width - (pegsInRow * 30)) / 2;
+    for(let p = 0; p < pegsInRow; p++){
+      pegs.push({
+        x: offset + p * 30 + 15,
+        y: 80 + r * 45
+      });
     }
-  });
-
-  ball.x+=ball.vx;
-
-  if(ball.y>470){
-   let slot=Math.floor(ball.x/50);
-   let mult=[5,2,1,0,1,2,5][slot]||0;
-   score+=mult;
-   document.getElementById("score").textContent=score;
-   alert("+"+mult+" points!");
-   return;
   }
 
-  requestAnimationFrame(loop);
- }
- loop();
+  let ball = {x: canvas.width/2, y: 30, vx: 0, vy: 0};
+  let dropped = false;
+
+  function animate(){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Пеги
+    ctx.fillStyle = "#333";
+    pegs.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 6, 0, Math.PI*2);
+      ctx.fill();
+    });
+
+    // Шарик
+    ctx.fillStyle = "#ff6bb5";
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, 12, 0, Math.PI*2);
+    ctx.fill();
+
+    if(!dropped){
+      dropped = true;
+      ball.vy = 2;
+    }
+
+    ball.vy += 0.15; // гравитация
+    ball.y += ball.vy;
+    ball.x += ball.vx;
+
+    // Столкновения с пегами
+    pegs.forEach(p => {
+      let dx = ball.x - p.x;
+      let dy = ball.y - p.y;
+      if(Math.sqrt(dx*dx + dy*dy) < 18){
+        ball.vx += (Math.random() - 0.5) * 6;
+        ball.vy = -ball.vy * 0.7 + 2;
+      }
+    });
+
+    // Отражение от стен
+    if(ball.x < 15 || ball.x > canvas.width - 15) ball.vx *= -0.8;
+
+    // Достиг дна
+    if(ball.y > 480){
+      let slots = [8, 4, 2, 1, 0.5, 1, 2, 4, 8];
+      let slotIndex = Math.floor(ball.x / (canvas.width / slots.length));
+      slotIndex = Math.max(0, Math.min(slots.length - 1, slotIndex));
+      let mult = slots[slotIndex];
+      let points = Math.round(mult * 2);
+      score += points;
+      document.getElementById("score").textContent = score;
+      alert(`🎊 Landed on ${mult}x!\n+${points} points!`);
+      return;
+    }
+
+    requestAnimationFrame(animate);
+  }
+  animate();
 }
 
 /**********************
- BALL ESCAPE GAME
+   BALL ESCAPE GAME
 **********************/
 function startEscape(){
- let c=document.getElementById("escapeCanvas");
- let ctx=c.getContext("2d");
+  let canvas = document.getElementById("escapeCanvas");
+  let ctx = canvas.getContext("2d");
+  let ball = {x: 160, y: 220, vx: 3, vy: -4};
+  let rotation = 0;
+  let holeStart = Math.random() * Math.PI * 2;
+  let holeSize = 0.8;
 
- let angle=0;
- let speed=0.03;
- let ball={x:150,y:150,vx:2,vy:3};
+  function animate(){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
- let holeStart=Math.random()*3.14;
- let holeEnd=holeStart+0.7;
+    // Круглая арена
+    ctx.strokeStyle = "#ccc";
+    ctx.lineWidth = 20;
+    ctx.beginPath();
+    ctx.arc(160, 220, 130, 0, Math.PI*2);
+    ctx.stroke();
 
- function loop(){
-  ctx.clearRect(0,0,300,420);
+    // Зелёная дыра (вращается)
+    ctx.strokeStyle = "#4caf50";
+    ctx.lineWidth = 25;
+    ctx.beginPath();
+    ctx.arc(160, 220, 130, holeStart + rotation, holeStart + rotation + holeSize);
+    ctx.stroke();
 
-  ctx.beginPath();
-  ctx.arc(150,160,120,0,6.28);
-  ctx.stroke();
+    // Шарик
+    ctx.fillStyle = "#ff6bb5";
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, 15, 0, Math.PI*2);
+    ctx.fill();
 
-  ctx.beginPath();
-  ctx.arc(150,160,120,holeStart,holeEnd);
-  ctx.strokeStyle="green";
-  ctx.lineWidth=10;
-  ctx.stroke();
+    // Движение шарика
+    ball.x += ball.vx;
+    ball.y += ball.vy;
 
-  ctx.lineWidth=1;
-  ctx.strokeStyle="black";
+    // Отскок от стен
+    let dx = ball.x - 160;
+    let dy = ball.y - 220;
+    let dist = Math.sqrt(dx*dx + dy*dy);
+    if(dist > 115){
+      let angle = Math.atan2(dy, dx);
+      ball.vx = -Math.cos(angle) * 6;
+      ball.vy = -Math.sin(angle) * 6;
+    }
 
-  ctx.beginPath();
-  ctx.arc(ball.x,ball.y,10,0,6.28);
-  ctx.fill();
+    // Побег через дыру
+    let ballAngle = Math.atan2(dy, dx);
+    let normalizedBall = (ballAngle - holeStart - rotation + Math.PI*4) % (Math.PI*2);
+    if(dist > 125 && normalizedBall < holeSize){
+      score += 15;
+      document.getElementById("score").textContent = score;
+      alert("⚡ BALL ESCAPED! +15 points! 🏆");
+      return;
+    }
 
-  ball.x+=ball.vx;
-  ball.y+=ball.vy;
-
-  let dx=ball.x-150;
-  let dy=ball.y-160;
-  let dist=Math.sqrt(dx*dx+dy*dy);
-
-  if(dist>110){
-   ball.vx*=-1;
-   ball.vy*=-1;
+    rotation += 0.02;
+    requestAnimationFrame(animate);
   }
-
-  if(dist>115 && angle>holeStart && angle<holeEnd){
-    score+=10;
-    document.getElementById("score").textContent=score;
-    alert("Ball escaped! +10 points!");
-    return;
-  }
-
-  angle+=speed;
-
-  requestAnimationFrame(loop);
- }
- loop();
+  animate();
 }
 </script>
-
 </body>
 </html>
