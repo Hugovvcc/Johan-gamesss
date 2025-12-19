@@ -1,346 +1,259 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Johan Game</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body {
-  background:#ffb6d9;
-  font-family:Arial;
+body{
   margin:0;
-  padding:0;
+  background:#ffb3d9;
+  font-family:Arial;
+  color:white;
   text-align:center;
-  color:#fff;
 }
-
-/* NAV BAR */
-.navbar {
+nav{
   display:flex;
   justify-content:space-around;
-  background:#ff8cc7;
+  background:#ff6fbd;
   padding:12px;
   font-weight:bold;
-  font-size:18px;
 }
-
-/* Screens hidden */
-.screen { display:none; }
-
-/* game buttons */
+.screen{display:none;}
 button{
-  background:#ff5fb9;
+  background:#ff4fb2;
   border:none;
-  padding:15px 25px;
-  font-size:20px;
-  margin:8px;
-  border-radius:10px;
   color:white;
+  padding:15px 22px;
+  margin:8px;
+  font-size:18px;
+  border-radius:8px;
   cursor:pointer;
 }
 
-.tiles{
+/* MINES */
+.grid{
   display:grid;
   grid-template-columns:repeat(5,60px);
-  justify-content:center;
   gap:6px;
+  justify-content:center;
 }
-
-.tile{
-  width:60px;
-  height:60px;
-  background:#ff90cc;
-  border-radius:7px;
+.cell{
+  width:60px;height:60px;
+  background:#ffa0d6;
+  border-radius:8px;
   cursor:pointer;
-  font-size:25px;
   display:flex;
   justify-content:center;
   align-items:center;
-  user-select:none;
+  font-size:22px;
 }
 
-/* Blinko */
-.blinkoBox{
-  background:#ffaddc;
-  height:430px;
+/* BLINKO */
+#blinkoField{
+  margin:auto;
   width:300px;
+  height:400px;
+  background:#ffc9e8;
   border-radius:20px;
-  margin:auto;
-  position:relative;
-}
-
-/* Ball Escape */
-.circleBox{
-  margin:auto;
-  width:330px;
-  height:330px;
-  border-radius:50%;
-  border:24px solid #ff0096;
   position:relative;
   overflow:hidden;
 }
 
-.ball{
-  width:35px;
-  height:35px;
-  background:#00ffcc;
+/* BALL ESCAPE */
+#circle{
+  width:310px;
+  height:310px;
+  border-radius:50%;
+  border:20px solid #ff0095;
+  margin:auto;
+  position:relative;
+  overflow:hidden;
+}
+#escBall{
+  width:28px;
+  height:28px;
+  background:cyan;
   border-radius:50%;
   position:absolute;
-  left:145px;
-  top:145px;
+  left:140px; top:140px;
 }
-
-.hole{
-  width:80px;
-  height:50px;
-  background:#00ff00;
+#hole{
+  width:90px;
+  height:40px;
+  background:lime;
   position:absolute;
-  left:120px;
+  left:110px;
   top:-20px;
 }
-
-.winLoseBox{
-  width:100%;
-  height:100px;
-  background:#00000055;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:40px;
-  border-radius:10px;
-  margin-top:10px;
-}
-
 </style>
+
 </head>
-
-
-
 <body>
 
-<div class="navbar">
-  <div onclick="openLobby()">Lobby</div>
-  <div onclick="openMines()">Mines</div>
-  <div onclick="openBlinko()">Blinko</div>
-  <div onclick="openEscape()">Ball Escape</div>
-</div>
+<nav>
+  <div onclick="show('home')">Lobby</div>
+  <div onclick="show('mines')">Mines</div>
+  <div onclick="show('blinko')">Blinko</div>
+  <div onclick="show('escape')">Ball Escape</div>
+</nav>
 
 <h2>Balance: <span id="bal">100</span></h2>
 
-
-<!-- =============== LOBBY =============== -->
-<div id="lobby" class="screen">
+<!-- HOME -->
+<div id="home" class="screen">
   <h1>Johan Games</h1>
-  <button onclick="openMines()">Play Mines</button>
-  <button onclick="openBlinko()">Play Blinko</button>
-  <button onclick="openEscape()">Play Ball Escape</button>
+  <p>Pick a game below</p>
 </div>
 
-
-
-<!-- =============== MINES =============== -->
+<!-- MINES -->
 <div id="mines" class="screen">
   <h1>Mines</h1>
-  <h3>Bet: 1 coin</h3>
-
-  <button onclick="startMines()">Start Game</button>
-  <h2 id="mineResult"></h2>
-
-  <div class="tiles" id="mineField"></div>
+  <button onclick="startMines()">Start</button>
+  <h3 id="mineMsg"></h3>
+  <div id="mineGrid" class="grid"></div>
 </div>
 
-
-
-<!-- =============== BLINKO =============== -->
+<!-- BLINKO -->
 <div id="blinko" class="screen">
   <h1>Blinko</h1>
-  <h3>Bet: 1 coin</h3>
   <button onclick="startBlinko()">Drop Ball</button>
-
-  <div class="blinkoBox" id="blinkoBox"></div>
-  <h2 id="blinkoOut"></h2>
+  <div id="blinkoField"></div>
+  <h3 id="blinkoMsg"></h3>
 </div>
 
-
-
-<!-- =============== BALL ESCAPE =============== -->
+<!-- BALL ESCAPE -->
 <div id="escape" class="screen">
   <h1>Ball Escape</h1>
-  <h3>Bet: 1 coin</h3>
   <button onclick="startEscape()">Start</button>
-
-  <div class="circleBox" id="circle">
-      <div class="hole" id="hole"></div>
-      <div class="ball" id="escapeBall"></div>
+  <div id="circle">
+    <div id="hole"></div>
+    <div id="escBall"></div>
   </div>
-
-  <div class="winLoseBox" id="escapeOut"></div>
+  <h3 id="escMsg"></h3>
 </div>
-
-
-
 
 <script>
 
-/*********************** NAVIGATION ***********************/
-
-function hideAll(){
-  lobby.style.display="none";
-  mines.style.display="none";
-  blinko.style.display="none";
-  escape.style.display="none";
-}
-
-function openLobby(){ hideAll(); lobby.style.display="block"; }
-function openMines(){ hideAll(); mines.style.display="block"; }
-function openBlinko(){ hideAll(); blinko.style.display="block"; }
-function openEscape(){ hideAll(); escape.style.display="block"; }
-
-openLobby();
-
-
-/*********************** BALANCE ***********************/
 let bal = 100;
-function updateBal(){ balElem.innerHTML=bal; }
-const balElem=document.getElementById("bal");
+function upd(){ document.getElementById("bal").innerHTML = bal; }
+upd();
 
+function show(x){
+  document.querySelectorAll(".screen")
+          .forEach(s=>s.style.display="none");
+  document.getElementById(x).style.display="block";
+}
+show("home");
 
-
-
-/*********************** MINES ***************************/
-let mineBoard=[];
-let mineGameOn=false;
-
+/************* MINES *************/
+let minesMap=[];
 function startMines(){
-  if(bal<1){alert("no money"); return;}
-  bal-=1; updateBal();
-  mineGameOn=true;
-  mineBoard=[];
-  mineField.innerHTML="";
-
+  if(bal<1) return;
+  bal-=1; upd();
+  minesMap=[];
+  document.getElementById("mineMsg").innerHTML="";
+  let grid=document.getElementById("mineGrid");
+  grid.innerHTML="";
   for(let i=0;i<25;i++){
-    const tile=document.createElement("div");
-    tile.className="tile";
-    tile.onclick=function(){pickMine(i,tile)};
-    mineField.append(tile);
-    mineBoard.push(Math.random()<0.2); 
-  }
-  mineResult.innerHTML="Find stars!";
-}
-
-function pickMine(i,tile){
-  if(!mineGameOn)return;
-
-  if(mineBoard[i]){
-    tile.style.background="red";
-    mineResult.innerHTML="💥 Lose";
-    mineGameOn=false;
-  } else {
-    tile.style.background="lime";
-    bal+=2; updateBal();
-    mineResult.innerHTML="+2 win!";
+    minesMap.push(Math.random()<0.2);
+    let c=document.createElement("div");
+    c.className="cell";
+    c.onclick=function(){
+      if(minesMap[i]){
+        c.style.background="red";
+        document.getElementById("mineMsg").innerHTML="Lose";
+      }else{
+        c.style.background="lime";
+        bal+=2; upd();
+        document.getElementById("mineMsg").innerHTML="Win +2";
+      }
+    };
+    grid.append(c);
   }
 }
 
-
-
-/*********************** BLINKO ***************************/
+/************* BLINKO *************/
 function startBlinko(){
-  if(bal<1){alert("no money"); return;}
-  bal-=1; updateBal();
-  blinkoOut.innerHTML="";
+  if(bal<1)return;
+  bal-=1; upd();
 
-  const box=document.getElementById("blinkoBox");
-  box.innerHTML="";
+  let f=document.getElementById("blinkoField");
+  f.innerHTML="";
 
-  const ball=document.createElement("div");
-  ball.style.width="25px";
-  ball.style.height="25px";
-  ball.style.borderRadius="50%";
-  ball.style.background="#00ffea";
-  ball.style.position="absolute";
-  ball.style.left="140px";
-  ball.style.top="10px";
+  let b=document.createElement("div");
+  b.style.width="25px";
+  b.style.height="25px";
+  b.style.borderRadius="50%";
+  b.style.background="cyan";
+  b.style.position="absolute";
+  b.style.left="140px";
+  b.style.top="0px";
 
-  box.append(ball);
+  f.append(b);
 
-  let x=140;
-  let y=10;
-  let dir=0;
+  let x=140,y=0,speed=6;
 
-  let fall=setInterval(()=>{
-    y+=7;
-    x+=Math.random()*14-7;
-    ball.style.top=y+"px";
-    ball.style.left=x+"px";
+  let drop=setInterval(()=>{
+    y+=speed;
+    x+=Math.random()*10-5;
+    b.style.top=y+"px";
+    b.style.left=x+"px";
 
     if(y>370){
-      clearInterval(fall);
-
-      let zone=Math.floor((x-10)/40);
+      clearInterval(drop);
+      let zone=Math.floor((x+20)/50);
       if(zone==3){
-        bal+=3;
-        blinkoOut.innerHTML="2x WIN!";
-      } else if(zone==2 || zone==4){
-        bal+=2;
-        blinkoOut.innerHTML="1.5x Win!";
-      } else {
-        blinkoOut.innerHTML="Lose";
+        bal+=3; upd();
+        blinkoMsg.innerHTML="Win 2x";
       }
-      updateBal();
+      else if(zone==2 || zone==4){
+        bal+=2; upd();
+        blinkoMsg.innerHTML="Win 1.5x";
+      }
+      else blinkoMsg.innerHTML="Lose";
     }
+
   },40);
 }
 
-
-
-
-
-/*********************** BALL ESCAPE ***************************/
-let angle=0;
+/************* BALL ESCAPE *************/
 let spin;
-
 function startEscape(){
-  if(bal<1){alert("no money"); return;}
-  bal-=1; updateBal();
+  if(bal<1)return;
+  bal-=1; upd();
 
-  escapeOut.innerHTML="";
-
-  angle=0;
+  escMsg.innerHTML="";
+  let a=0;
   clearInterval(spin);
 
   spin=setInterval(()=>{
-    angle+=3;
-    hole.style.transform="rotate("+angle+"deg)";
+    a+=3;
+    hole.style.transform="rotate("+a+"deg)";
   },40);
 
-  let bX=145,bY=145;
-  let dX=4,dY=4;
-
+  let bx=140,by=140,dx=4,dy=4;
   let bounce=setInterval(()=>{
-    let ball=document.getElementById("escapeBall");
-    bX+=dX;
-    bY+=dY;
+    bx+=dx; by+=dy;
 
-    if(bX<10 || bX>280) dX*=-1;
-    if(bY<10 || bY>280) dY*=-1;
+    if(bx<0||bx>280) dx*=-1;
+    if(by<0||by>280) dy*=-1;
 
-    ball.style.left=bX+"px";
-    ball.style.top=bY+"px";
+    escBall.style.left=bx+"px";
+    escBall.style.top=by+"px";
 
-    if(bY<0 && Math.abs(bX-145)<60){
+    if(by < 0 && Math.abs(bx-140) < 60){
       clearInterval(bounce);
       clearInterval(spin);
-      bal+=3;
-      updateBal();
-      escapeOut.innerHTML="WIN!";
+      bal+=3; upd();
+      escMsg.innerHTML="WIN!";
     }
 
-    if(bX<0 || bX>300 || bY<0 || bY>300){
+    if(bx<0||bx>300||by<0||by>300){
       clearInterval(bounce);
       clearInterval(spin);
-      escapeOut.innerHTML="LOSE";
+      escMsg.innerHTML="LOSE";
     }
 
   },30);
