@@ -8,7 +8,6 @@
 :root {
   --pink: #ff9ccd;
   --pink-dark: #ff6bb5;
-  --pink-light: #ffe6f3;
   --bg-dark: #0f001a;
   --text: #ff9ccd;
   --win: #00ff9d;
@@ -17,32 +16,34 @@
 
 body {
   margin: 0;
-  padding: 0;
   background: linear-gradient(135deg, #1a0033, #330066);
   color: var(--text);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: system-ui, sans-serif;
   min-height: 100vh;
 }
 
 h1 {
   text-align: center;
-  font-size: 3rem;
-  margin: 20px 0 10px;
-  background: linear-gradient(90deg, var(--pink), var(--pink-dark), #d946ef);
+  font-size: 2.8rem;
+  margin: 15px 0 5px;
+  background: linear-gradient(90deg, var(--pink), var(--pink-dark));
   -webkit-background-clip: text;
-  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.container {
-  max-width: 700px;
-  margin: 0 auto;
+.container { max-width: 700px; margin: 0 auto; padding: 15px; }
+
+.section {
+  background: rgba(20,0,40,0.7);
+  border-radius: 20px;
   padding: 20px;
+  margin: 15px 0;
+  border: 1px solid rgba(255,105,180,0.3);
 }
 
 button {
-  padding: 12px 28px;
-  margin: 10px 4px;
+  padding: 12px 26px;
+  margin: 8px 4px;
   font-size: 1.1rem;
   border: none;
   border-radius: 50px;
@@ -64,21 +65,12 @@ input, select {
   margin: 8px 0;
 }
 
-.section {
-  background: rgba(20,0,40,0.65);
-  border-radius: 20px;
-  padding: 25px;
-  margin: 20px 0;
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255,105,180,0.25);
-}
-
 #minesGrid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 10px;
   max-width: 380px;
-  margin: 25px auto;
+  margin: 20px auto;
 }
 
 .minecell {
@@ -91,15 +83,14 @@ input, select {
   font-size: 2.2rem;
   cursor: pointer;
   transition: all 0.2s;
-  border: 1px solid rgba(255,105,180,0.3);
 }
 
-.minecell:hover { background: rgba(255,105,180,0.25); transform: scale(1.06); }
+.minecell:hover { background: rgba(255,105,180,0.25); transform: scale(1.05); }
 
 #crashCanvas {
   width: 100%;
   max-width: 420px;
-  height: 500px;
+  height: 480px;
   margin: 20px auto;
   display: block;
   border-radius: 16px;
@@ -108,7 +99,7 @@ input, select {
 }
 
 .multiplier {
-  font-size: 3.8rem;
+  font-size: 3.5rem;
   font-weight: bold;
   text-align: center;
   margin: 15px 0;
@@ -122,10 +113,13 @@ input, select {
   padding: 14px;
   border-radius: 12px;
   margin: 15px 0;
+  text-align: center;
 }
 
 .win { background: rgba(0,255,157,0.25); border: 2px solid var(--win); }
 .lose { background: rgba(255,51,102,0.25); border: 2px solid var(--lose); }
+
+.controls { display: flex; justify-content: center; flex-wrap: wrap; margin-top: 15px; }
 </style>
 </head>
 <body>
@@ -135,9 +129,9 @@ input, select {
   <h1>Johan Game</h1>
   <h3>TON: <span id="ton">100.0</span></h3>
 
-  <!-- Главный выбор -->
+  <!-- Выбор режима -->
   <div class="section" id="mode-select">
-    <h2>Выбери режим</h2>
+    <h2>Выбери игру</h2>
     <button onclick="showSection('mines')">Mines</button>
     <button onclick="showSection('crash')">Crash</button>
   </div>
@@ -146,25 +140,31 @@ input, select {
   <div class="section" id="mines-section" style="display:none;">
     <h2>Mines</h2>
     
-    <label>Ставка:</label>
-    <input type="number" id="mines-bet" min="0.1" max="10" step="0.1" value="1">
-    
-    <label style="margin-left:20px;">Мины:</label>
-    <select id="mines-count">
-      <option value="5">5</option>
-      <option value="6">6</option>
-      <option value="7">7</option>
-      <option value="8">8</option>
-      <option value="9">9</option>
-      <option value="10">10</option>
-    </select>
-
-    <div style="margin:20px 0;">
-      <button onclick="startMines()">Старт</button>
-      <button id="mines-cashout" onclick="cashoutMines()" disabled>Забрать</button>
+    <div style="display:flex; gap:15px; flex-wrap:wrap; justify-content:center;">
+      <div>
+        <label>Ставка:</label><br>
+        <input type="number" id="mines-bet" min="0.1" max="10" step="0.1" value="1">
+      </div>
+      <div>
+        <label>Мины:</label><br>
+        <select id="mines-count">
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+          <option value="10">10</option>
+        </select>
+      </div>
     </div>
 
-    <p>Открыто: <span id="opened">0</span> | Множитель: <span id="multi">1.00x</span></p>
+    <div class="controls">
+      <button onclick="startMines()">Старт</button>
+      <button id="mines-cashout" onclick="cashoutMines()" disabled>Забрать</button>
+      <button onclick="showSection('mode-select')">Выйти в лобби</button>
+    </div>
+
+    <p style="margin:15px 0;">Открыто: <span id="opened">0</span> | ×<span id="multi">1.00</span></p>
     <div id="mines-message" class="message"></div>
     <div id="minesGrid"></div>
   </div>
@@ -173,17 +173,22 @@ input, select {
   <div class="section" id="crash-section" style="display:none;">
     <h2>Crash</h2>
     
-    <label>Ставка:</label>
-    <input type="number" id="crash-bet" min="0.1" max="10" step="0.1" value="1">
-    
-    <div style="margin:20px 0;">
-      <button onclick="startCrash()">Запустить ракету</button>
+    <div style="display:flex; gap:15px; justify-content:center;">
+      <div>
+        <label>Ставка:</label><br>
+        <input type="number" id="crash-bet" min="0.1" max="10" step="0.1" value="1">
+      </div>
+    </div>
+
+    <div class="controls">
+      <button onclick="startCrash()">Запустить</button>
       <button id="crash-cashout" onclick="crashCashout()" disabled>Забрать</button>
+      <button onclick="showSection('mode-select')">Выйти в лобби</button>
     </div>
 
     <div class="multiplier" id="crash-multi">1.00x</div>
     <div id="crash-message" class="message"></div>
-    <canvas id="crashCanvas" width="400" height="520"></canvas>
+    <canvas id="crashCanvas" width="400" height="480"></canvas>
   </div>
 
 </div>
@@ -192,15 +197,15 @@ input, select {
 let ton = 100;
 document.getElementById("ton").textContent = ton.toFixed(1);
 
-function showSection(mode) {
+function showSection(id) {
   document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
-  document.getElementById(mode + '-section').style.display = 'block';
+  document.getElementById(id).style.display = 'block';
 }
 
-// MINES
+// ── MINES ───────────────────────────────────────────────
 function startMines() {
-  const bet = parseFloat(document.getElementById('mines-bet').value);
-  const minesCount = parseInt(document.getElementById('mines-count').value);
+  const bet = +document.getElementById('mines-bet').value;
+  const count = +document.getElementById('mines-count').value;
 
   if (isNaN(bet) || bet < 0.1 || bet > 10) return alert("Ставка 0.1–10 TON");
   if (ton < bet) return alert("Недостаточно TON");
@@ -208,42 +213,40 @@ function startMines() {
   ton -= bet;
   document.getElementById("ton").textContent = ton.toFixed(1);
 
-  let minesPos = new Set();
-  while (minesPos.size < minesCount) {
-    minesPos.add(Math.floor(Math.random() * 25));
-  }
+  let mines = new Set();
+  while (mines.size < count) mines.add(Math.floor(Math.random() * 25));
 
   let opened = 0;
-  let multiplier = 1;
+  let mult = 1;
 
   const grid = document.getElementById("minesGrid");
   grid.innerHTML = "";
 
   for (let i = 0; i < 25; i++) {
-    const cell = document.createElement("div");
-    cell.className = "minecell";
-    cell.textContent = "?";
-    cell.onclick = () => {
-      if (cell.dataset.open || cell.dataset.boom) return;
-      
-      if (minesPos.has(i)) {
-        cell.textContent = "💣";
-        cell.style.background = "rgba(255,50,100,0.7)";
-        cell.dataset.boom = "true";
+    const c = document.createElement("div");
+    c.className = "minecell";
+    c.textContent = "?";
+    c.onclick = () => {
+      if (c.dataset.done) return;
+      c.dataset.done = "1";
+
+      if (mines.has(i)) {
+        c.textContent = "💣";
+        c.style.background = "rgba(255,80,120,0.6)";
         document.getElementById("mines-cashout").disabled = true;
-        showMessage("mines", `БУМ! Потеряно ${bet.toFixed(1)} TON`, "lose");
+        document.getElementById("mines-message").innerHTML = `БУМ! -${bet.toFixed(1)} TON`;
+        document.getElementById("mines-message").className = "message lose";
       } else {
         opened++;
-        multiplier *= 1.02;
-        cell.textContent = "💎";
-        cell.style.background = "rgba(100,255,180,0.3)";
-        cell.dataset.open = "true";
+        mult *= 1.02;
+        c.textContent = "💎";
+        c.style.background = "rgba(100,255,180,0.3)";
 
         document.getElementById("opened").textContent = opened;
-        document.getElementById("multi").textContent = multiplier.toFixed(2) + "x";
+        document.getElementById("multi").textContent = mult.toFixed(2);
       }
     };
-    grid.appendChild(cell);
+    grid.appendChild(c);
   }
 
   document.getElementById("mines-cashout").disabled = false;
@@ -251,117 +254,110 @@ function startMines() {
 }
 
 function cashoutMines() {
-  const multi = parseFloat(document.getElementById("multi").textContent);
-  const bet = parseFloat(document.getElementById("mines-bet").value);
-  const win = (bet * multi).toFixed(1);
-  
-  ton += parseFloat(win);
+  const mult = +document.getElementById("multi").textContent;
+  const bet = +document.getElementById("mines-bet").value;
+  const win = (bet * mult).toFixed(1);
+
+  ton += +win;
   document.getElementById("ton").textContent = ton.toFixed(1);
-  
-  showMessage("mines", `Вывод на ${multi.toFixed(2)}x → +${win} TON!`, "win");
+
+  document.getElementById("mines-message").innerHTML = `+${win} TON на ${mult.toFixed(2)}×!`;
+  document.getElementById("mines-message").className = "message win";
   document.getElementById("mines-cashout").disabled = true;
 }
 
-function showMessage(id, text, type) {
-  const el = document.getElementById(id + "-message");
-  el.textContent = text;
-  el.className = "message " + (type === "win" ? "win" : "lose");
-}
-
-// CRASH - улучшенная ракета
+// ── CRASH ───────────────────────────────────────────────
 function startCrash() {
-  const bet = parseFloat(document.getElementById("crash-bet").value);
+  const bet = +document.getElementById("crash-bet").value;
   if (isNaN(bet) || bet < 0.1 || bet > 10) return alert("Ставка 0.1–10 TON");
   if (ton < bet) return alert("Недостаточно TON");
 
   ton -= bet;
   document.getElementById("ton").textContent = ton.toFixed(1);
 
-  let multiplier = 1;
+  let mult = 1;
   let crashed = false;
-  let crashPoint = 1.05 + Math.pow(Math.random(), 2.5) * 60; // красивое распределение
+  const crashAt = 1.05 + Math.pow(Math.random(), 2.8) * 80;
 
   document.getElementById("crash-multi").textContent = "1.00x";
   document.getElementById("crash-cashout").disabled = false;
 
-  const canvas = document.getElementById("crashCanvas");
-  const ctx = canvas.getContext("2d");
-  let y = canvas.height - 100;
-  let shake = 0;
+  const c = document.getElementById("crashCanvas");
+  const ctx = c.getContext("2d");
+  let rocketY = c.height - 100;
   let time = 0;
 
-  function draw() {
+  function loop() {
     if (crashed) return;
 
-    ctx.fillStyle = "rgba(10,0,20,0.2)";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "rgba(10,0,20,0.18)";
+    ctx.fillRect(0,0,c.width,c.height);
 
     time += 0.016;
-    multiplier *= 1.008 + time*0.0002;
-    document.getElementById("crash-multi").textContent = multiplier.toFixed(2) + "x";
+    mult *= 1.004 + time*0.00008; // очень медленный рост
+    document.getElementById("crash-multi").textContent = mult.toFixed(2) + "x";
 
-    if (multiplier >= crashPoint) {
+    if (mult >= crashAt) {
       crashed = true;
       document.getElementById("crash-cashout").disabled = true;
-      alert(`КРАШ на ${multiplier.toFixed(2)}x! Потеряно ${bet.toFixed(1)} TON`);
-      setTimeout(() => location.reload(), 2500);
+      document.getElementById("crash-message").innerHTML = `КРАШ на ${mult.toFixed(2)}x! -${bet.toFixed(1)} TON`;
+      document.getElementById("crash-message").className = "message lose";
       return;
     }
 
-    if (multiplier > 6) shake = (Math.random()-0.5)*8;
-
-    y -= 1.8 + multiplier*0.4;
+    rocketY -= 0.8 + mult * 0.12; // медленнее полёт
 
     ctx.save();
-    ctx.translate(canvas.width/2 + shake, y);
-    ctx.rotate(Math.sin(time*6)*0.1);
+    ctx.translate(c.width/2, rocketY);
+    ctx.rotate(Math.sin(time*4)*0.07);
 
-    // Пламя
-    const flame = 60 + Math.sin(time*18)*18;
+    // Огонь
+    const flame = 50 + Math.sin(time*12)*12;
     const g = ctx.createLinearGradient(0,0,0,flame);
-    g.addColorStop(0,"#ffff00");
-    g.addColorStop(0.3,"#ffaa00");
-    g.addColorStop(1,"#ff0000");
+    g.addColorStop(0,"#ffffaa");
+    g.addColorStop(0.4,"#ffaa00");
+    g.addColorStop(1,"#cc0000");
     ctx.fillStyle = g;
     ctx.beginPath();
-    ctx.moveTo(0,40);
-    ctx.quadraticCurveTo(-40,flame,0,flame+50);
-    ctx.quadraticCurveTo(40,flame,0,40);
+    ctx.moveTo(0,30);
+    ctx.quadraticCurveTo(-35,flame,0,flame+40);
+    ctx.quadraticCurveTo(35,flame,0,30);
     ctx.fill();
 
-    // Корпус
+    // Корпус ракеты
     ctx.fillStyle = "#ff6bb5";
     ctx.beginPath();
-    ctx.moveTo(0,-70);
-    ctx.quadraticCurveTo(-22,0,-18,40);
-    ctx.lineTo(18,40);
-    ctx.quadraticCurveTo(22,0,0,-70);
+    ctx.moveTo(0,-80);
+    ctx.quadraticCurveTo(-25,-10,-20,35);
+    ctx.lineTo(20,35);
+    ctx.quadraticCurveTo(25,-10,0,-80);
     ctx.fill();
 
     // Окно
-    ctx.fillStyle = "#88ddff";
+    ctx.fillStyle = "#aaffff";
     ctx.beginPath();
-    ctx.arc(0,-25,14,0,Math.PI*2);
+    ctx.arc(0,-30,14,0,Math.PI*2);
     ctx.fill();
 
     ctx.restore();
 
-    requestAnimationFrame(draw);
+    requestAnimationFrame(loop);
   }
 
-  draw();
+  loop();
 }
 
 function crashCashout() {
-  const multi = parseFloat(document.getElementById("crash-multi").textContent);
-  const bet = parseFloat(document.getElementById("crash-bet").value);
-  const win = (bet * multi).toFixed(1);
+  const mult = parseFloat(document.getElementById("crash-multi").textContent);
+  const bet = +document.getElementById("crash-bet").value;
+  const win = (bet * mult).toFixed(1);
 
-  ton += parseFloat(win);
+  ton += +win;
   document.getElementById("ton").textContent = ton.toFixed(1);
-  
-  alert(`Забрали на ${multi.toFixed(2)}x! +${win} TON!`);
-  location.reload();
+
+  document.getElementById("crash-message").innerHTML = `+${win} TON на ${mult.toFixed(2)}×!`;
+  document.getElementById("crash-message").className = "message win";
+  document.getElementById("crash-cashout").disabled = true;
 }
 </script>
 </body>
