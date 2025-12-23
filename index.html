@@ -1,367 +1,306 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Johan Game</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-:root {
-  --pink: #ff9ccd;
-  --pink-dark: #ff6bb5;
-  --pink-light: #ffe6f3;
-  --bg-dark: #0f001a;
-  --text: #ff9ccd;
-  --win: #00ff9d;
-  --lose: #ff3366;
+:root{
+  --pink:#ff9ccd;
+  --pink2:#ff6bb5;
+  --bg:#12001f;
+  --card:rgba(255,255,255,0.08);
+  --win:#00ff9d;
+  --lose:#ff4466;
 }
 
-body {
-  margin: 0;
-  padding: 0;
-  background: linear-gradient(135deg, #1a0033, #330066);
-  color: var(--text);
-  font-family: system-ui, -apple-system, sans-serif;
-  min-height: 100vh;
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:system-ui, sans-serif;
+  background:radial-gradient(circle at top,#2b0044,#12001f);
+  color:white;
 }
 
-h1 {
-  text-align: center;
-  font-size: 3rem;
-  margin: 20px 0 10px;
-  background: linear-gradient(90deg, var(--pink), var(--pink-dark), #d946ef);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+h1{
+  text-align:center;
+  margin:20px 0;
+  font-size:2.8rem;
+  background:linear-gradient(90deg,var(--pink),var(--pink2));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
 }
 
-.container {
-  max-width: 700px;
-  margin: 0 auto;
-  padding: 20px;
+.container{
+  max-width:720px;
+  margin:auto;
+  padding:15px;
 }
 
-button {
-  padding: 12px 28px;
-  margin: 10px 4px;
-  font-size: 1.1rem;
-  border: none;
-  border-radius: 50px;
-  background: linear-gradient(45deg, var(--pink), var(--pink-dark));
-  color: white;
-  cursor: pointer;
-  transition: all 0.25s;
+.card{
+  background:var(--card);
+  border-radius:20px;
+  padding:20px;
+  margin:20px 0;
+  border:1px solid rgba(255,150,200,0.25);
+  backdrop-filter:blur(8px);
 }
 
-button:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(255,105,180,0.5); }
-
-input, select {
-  padding: 10px 14px;
-  font-size: 1.1rem;
-  border-radius: 12px;
-  border: 2px solid var(--pink);
-  background: rgba(255,255,255,0.08);
-  color: var(--text);
-  margin: 8px 0;
+button{
+  padding:12px 26px;
+  border:none;
+  border-radius:50px;
+  background:linear-gradient(45deg,var(--pink),var(--pink2));
+  color:white;
+  font-size:1.1rem;
+  cursor:pointer;
+  transition:.2s;
 }
 
-.section {
-  background: rgba(20,0,40,0.65);
-  border-radius: 20px;
-  padding: 25px;
-  margin: 20px 0;
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255,105,180,0.25);
+button:hover{transform:scale(1.05)}
+button:disabled{opacity:.5}
+
+input,select{
+  padding:10px;
+  border-radius:12px;
+  border:2px solid var(--pink);
+  background:transparent;
+  color:white;
+  font-size:1rem;
 }
 
-#minesGrid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 10px;
-  max-width: 380px;
-  margin: 25px auto;
+.nav{
+  display:flex;
+  justify-content:center;
+  gap:10px;
 }
 
-.minecell {
-  aspect-ratio: 1;
-  background: rgba(255,255,255,0.12);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2.2rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: 1px solid rgba(255,105,180,0.3);
+.balance{
+  text-align:center;
+  font-size:1.4rem;
 }
 
-.minecell:hover { background: rgba(255,105,180,0.25); transform: scale(1.06); }
-
-#crashCanvas {
-  width: 100%;
-  max-width: 420px;
-  height: 500px;
-  margin: 20px auto;
-  display: block;
-  border-radius: 16px;
-  border: 3px solid var(--pink-dark);
-  background: #0a0014;
+/* MINES */
+#grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:10px;
+  margin-top:20px;
 }
 
-.multiplier {
-  font-size: 3.8rem;
-  font-weight: bold;
-  text-align: center;
-  margin: 15px 0;
-  background: linear-gradient(90deg, #ff9ccd, #ff6bb5, #d946ef);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.cell{
+  aspect-ratio:1;
+  background:rgba(255,255,255,0.12);
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:2rem;
+  cursor:pointer;
+  transition:.2s;
 }
 
-.message {
-  font-size: 1.3rem;
-  padding: 14px;
-  border-radius: 12px;
-  margin: 15px 0;
-}
+.cell:hover{background:rgba(255,150,200,.25)}
 
-.win { background: rgba(0,255,157,0.25); border: 2px solid var(--win); }
-.lose { background: rgba(255,51,102,0.25); border: 2px solid var(--lose); }
+.win{background:rgba(0,255,160,.25)}
+.lose{background:rgba(255,60,90,.3)}
+
+/* CRASH */
+canvas{
+  width:100%;
+  height:420px;
+  border-radius:18px;
+  background:#080010;
+  border:2px solid var(--pink2);
+}
+.mult{
+  text-align:center;
+  font-size:3.5rem;
+  font-weight:bold;
+  margin:10px 0;
+  background:linear-gradient(90deg,var(--pink),#d946ef);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
 </style>
 </head>
-<body>
 
+<body>
 <div class="container">
 
-  <h1>Johan Game</h1>
-  <h3>TON: <span id="ton">100.0</span></h3>
+<h1>Johan Game</h1>
+<div class="balance">Balance: <span id="bal">100.0</span> pts</div>
 
-  <!-- Главный выбор -->
-  <div class="section" id="mode-select">
-    <h2>Выбери режим</h2>
-    <button onclick="showSection('mines')">Mines</button>
-    <button onclick="showSection('crash')">Crash</button>
-  </div>
+<div class="nav">
+  <button onclick="show('menu')">Menu</button>
+  <button onclick="show('mines')">Mines</button>
+  <button onclick="show('crash')">Crash</button>
+</div>
 
-  <!-- Mines -->
-  <div class="section" id="mines-section" style="display:none;">
-    <h2>Mines</h2>
-    
-    <label>Ставка:</label>
-    <input type="number" id="mines-bet" min="0.1" max="10" step="0.1" value="1">
-    
-    <label style="margin-left:20px;">Мины:</label>
-    <select id="mines-count">
-      <option value="5">5</option>
-      <option value="6">6</option>
-      <option value="7">7</option>
-      <option value="8">8</option>
-      <option value="9">9</option>
-      <option value="10">10</option>
-    </select>
+<!-- MENU -->
+<div id="menu" class="card">
+  <h2>Choose game</h2>
+</div>
 
-    <div style="margin:20px 0;">
-      <button onclick="startMines()">Старт</button>
-      <button id="mines-cashout" onclick="cashoutMines()" disabled>Забрать</button>
-    </div>
+<!-- MINES -->
+<div id="mines" class="card" style="display:none">
+<h2>Mines</h2>
 
-    <p>Открыто: <span id="opened">0</span> | Множитель: <span id="multi">1.00x</span></p>
-    <div id="mines-message" class="message"></div>
-    <div id="minesGrid"></div>
-  </div>
+Bet:
+<input id="mbet" type="number" min="0.1" max="5" step="0.1" value="1">
+Mines:
+<select id="mcount">
+  <option>5</option><option>6</option><option>7</option>
+  <option>8</option><option>9</option><option>10</option>
+</select>
 
-  <!-- Crash -->
-  <div class="section" id="crash-section" style="display:none;">
-    <h2>Crash</h2>
-    
-    <label>Ставка:</label>
-    <input type="number" id="crash-bet" min="0.1" max="10" step="0.1" value="1">
-    
-    <div style="margin:20px 0;">
-      <button onclick="startCrash()">Запустить ракету</button>
-      <button id="crash-cashout" onclick="crashCashout()" disabled>Забрать</button>
-    </div>
+<br><br>
+<button onclick="startMines()">Start</button>
+<button id="cashM" onclick="cashMines()" disabled>Cash Out</button>
 
-    <div class="multiplier" id="crash-multi">1.00x</div>
-    <div id="crash-message" class="message"></div>
-    <canvas id="crashCanvas" width="400" height="520"></canvas>
-  </div>
+<p>Opened: <span id="opened">0</span> | x<span id="mm">1.00</span></p>
+<div id="grid"></div>
+</div>
+
+<!-- CRASH -->
+<div id="crash" class="card" style="display:none">
+<h2>Crash</h2>
+
+Bet:
+<input id="cbet" type="number" min="0.1" max="5" step="0.1" value="1">
+
+<br><br>
+<button onclick="startCrash()">Start</button>
+<button id="cashC" onclick="cashCrash()" disabled>Cash Out</button>
+
+<div class="mult" id="cm">1.00x</div>
+<canvas id="cv" width="400" height="420"></canvas>
+</div>
 
 </div>
 
 <script>
-let ton = 100;
-document.getElementById("ton").textContent = ton.toFixed(1);
+let bal=100;
+const balEl=document.getElementById('bal');
+function upd(){balEl.textContent=bal.toFixed(1)}
+upd();
 
-function showSection(mode) {
-  document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
-  document.getElementById(mode + '-section').style.display = 'block';
+function show(id){
+  ['menu','mines','crash'].forEach(x=>{
+    document.getElementById(x).style.display='none';
+  });
+  document.getElementById(id).style.display='block';
 }
 
-// MINES
-function startMines() {
-  const bet = parseFloat(document.getElementById('mines-bet').value);
-  const minesCount = parseInt(document.getElementById('mines-count').value);
+/* MINES */
+let mines=[],opened=0,multi=1,mbet=0;
 
-  if (isNaN(bet) || bet < 0.1 || bet > 10) return alert("Ставка 0.1–10 TON");
-  if (ton < bet) return alert("Недостаточно TON");
+function startMines(){
+  mbet=+mbetEl.value;
+  if(bal<mbet)return alert("No balance");
+  bal-=mbet;upd();
+  opened=0;multi=1;
+  document.getElementById('opened').textContent=0;
+  document.getElementById('mm').textContent="1.00";
+  document.getElementById('cashM').disabled=false;
 
-  ton -= bet;
-  document.getElementById("ton").textContent = ton.toFixed(1);
-
-  let minesPos = new Set();
-  while (minesPos.size < minesCount) {
-    minesPos.add(Math.floor(Math.random() * 25));
+  mines=[];
+  const mc=+mcount.value;
+  while(mines.length<mc){
+    let r=Math.floor(Math.random()*25);
+    if(!mines.includes(r))mines.push(r);
   }
 
-  let opened = 0;
-  let multiplier = 1;
-
-  const grid = document.getElementById("minesGrid");
-  grid.innerHTML = "";
-
-  for (let i = 0; i < 25; i++) {
-    const cell = document.createElement("div");
-    cell.className = "minecell";
-    cell.textContent = "?";
-    cell.onclick = () => {
-      if (cell.dataset.open || cell.dataset.boom) return;
-      
-      if (minesPos.has(i)) {
-        cell.textContent = "💣";
-        cell.style.background = "rgba(255,50,100,0.7)";
-        cell.dataset.boom = "true";
-        document.getElementById("mines-cashout").disabled = true;
-        showMessage("mines", `БУМ! Потеряно ${bet.toFixed(1)} TON`, "lose");
-      } else {
+  grid.innerHTML="";
+  for(let i=0;i<25;i++){
+    let d=document.createElement('div');
+    d.className="cell";
+    d.textContent="?";
+    d.onclick=()=>{
+      if(d.dataset.open)return;
+      if(mines.includes(i)){
+        d.textContent="💣";
+        d.classList.add('lose');
+        document.getElementById('cashM').disabled=true;
+      }else{
+        d.dataset.open=1;
+        d.textContent="💎";
+        d.classList.add('win');
         opened++;
-        multiplier *= 1.02;
-        cell.textContent = "💎";
-        cell.style.background = "rgba(100,255,180,0.3)";
-        cell.dataset.open = "true";
-
-        document.getElementById("opened").textContent = opened;
-        document.getElementById("multi").textContent = multiplier.toFixed(2) + "x";
+        multi*=1+(mc*0.015);
+        document.getElementById('opened').textContent=opened;
+        document.getElementById('mm').textContent=multi.toFixed(2);
       }
-    };
-    grid.appendChild(cell);
-  }
-
-  document.getElementById("mines-cashout").disabled = false;
-  document.getElementById("mines-message").textContent = "";
-}
-
-function cashoutMines() {
-  const multi = parseFloat(document.getElementById("multi").textContent);
-  const bet = parseFloat(document.getElementById("mines-bet").value);
-  const win = (bet * multi).toFixed(1);
-  
-  ton += parseFloat(win);
-  document.getElementById("ton").textContent = ton.toFixed(1);
-  
-  showMessage("mines", `Вывод на ${multi.toFixed(2)}x → +${win} TON!`, "win");
-  document.getElementById("mines-cashout").disabled = true;
-}
-
-function showMessage(id, text, type) {
-  const el = document.getElementById(id + "-message");
-  el.textContent = text;
-  el.className = "message " + (type === "win" ? "win" : "lose");
-}
-
-// CRASH - улучшенная ракета
-function startCrash() {
-  const bet = parseFloat(document.getElementById("crash-bet").value);
-  if (isNaN(bet) || bet < 0.1 || bet > 10) return alert("Ставка 0.1–10 TON");
-  if (ton < bet) return alert("Недостаточно TON");
-
-  ton -= bet;
-  document.getElementById("ton").textContent = ton.toFixed(1);
-
-  let multiplier = 1;
-  let crashed = false;
-  let crashPoint = 1.05 + Math.pow(Math.random(), 2.5) * 60; // красивое распределение
-
-  document.getElementById("crash-multi").textContent = "1.00x";
-  document.getElementById("crash-cashout").disabled = false;
-
-  const canvas = document.getElementById("crashCanvas");
-  const ctx = canvas.getContext("2d");
-  let y = canvas.height - 100;
-  let shake = 0;
-  let time = 0;
-
-  function draw() {
-    if (crashed) return;
-
-    ctx.fillStyle = "rgba(10,0,20,0.2)";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-
-    time += 0.016;
-    multiplier *= 1.008 + time*0.0002;
-    document.getElementById("crash-multi").textContent = multiplier.toFixed(2) + "x";
-
-    if (multiplier >= crashPoint) {
-      crashed = true;
-      document.getElementById("crash-cashout").disabled = true;
-      alert(`КРАШ на ${multiplier.toFixed(2)}x! Потеряно ${bet.toFixed(1)} TON`);
-      setTimeout(() => location.reload(), 2500);
-      return;
     }
-
-    if (multiplier > 6) shake = (Math.random()-0.5)*8;
-
-    y -= 1.8 + multiplier*0.4;
-
-    ctx.save();
-    ctx.translate(canvas.width/2 + shake, y);
-    ctx.rotate(Math.sin(time*6)*0.1);
-
-    // Пламя
-    const flame = 60 + Math.sin(time*18)*18;
-    const g = ctx.createLinearGradient(0,0,0,flame);
-    g.addColorStop(0,"#ffff00");
-    g.addColorStop(0.3,"#ffaa00");
-    g.addColorStop(1,"#ff0000");
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.moveTo(0,40);
-    ctx.quadraticCurveTo(-40,flame,0,flame+50);
-    ctx.quadraticCurveTo(40,flame,0,40);
-    ctx.fill();
-
-    // Корпус
-    ctx.fillStyle = "#ff6bb5";
-    ctx.beginPath();
-    ctx.moveTo(0,-70);
-    ctx.quadraticCurveTo(-22,0,-18,40);
-    ctx.lineTo(18,40);
-    ctx.quadraticCurveTo(22,0,0,-70);
-    ctx.fill();
-
-    // Окно
-    ctx.fillStyle = "#88ddff";
-    ctx.beginPath();
-    ctx.arc(0,-25,14,0,Math.PI*2);
-    ctx.fill();
-
-    ctx.restore();
-
-    requestAnimationFrame(draw);
+    grid.appendChild(d);
   }
-
-  draw();
 }
 
-function crashCashout() {
-  const multi = parseFloat(document.getElementById("crash-multi").textContent);
-  const bet = parseFloat(document.getElementById("crash-bet").value);
-  const win = (bet * multi).toFixed(1);
+function cashMines(){
+  let win=mbet*multi;
+  bal+=win;upd();
+  document.getElementById('cashM').disabled=true;
+}
 
-  ton += parseFloat(win);
-  document.getElementById("ton").textContent = ton.toFixed(1);
-  
-  alert(`Забрали на ${multi.toFixed(2)}x! +${win} TON!`);
-  location.reload();
+/* CRASH */
+let ctx=cv.getContext("2d");
+let cm=1,cr=false,bet=0,point=0,stars=[];
+
+function startCrash(){
+  bet=+cbet.value;
+  if(bal<bet)return alert("No balance");
+  bal-=bet;upd();
+  cm=1;cr=false;
+  point=1.1+Math.random()*15;
+  document.getElementById('cashC').disabled=false;
+  stars=[];
+  for(let i=0;i<80;i++){
+    stars.push({x:Math.random()*400,y:Math.random()*420,s:Math.random()*2+1});
+  }
+  anim();
+}
+
+function anim(){
+  if(cr)return;
+  ctx.fillStyle="#080010";
+  ctx.fillRect(0,0,400,420);
+
+  stars.forEach(s=>{
+    s.y+=s.s*2;
+    if(s.y>420)s.y=0;
+    ctx.fillStyle="#fff";
+    ctx.fillRect(s.x,s.y,2,2);
+  });
+
+  cm*=1.01;
+  document.getElementById('cm').textContent=cm.toFixed(2)+"x";
+
+  ctx.save();
+  ctx.translate(200,260);
+  ctx.fillStyle=varPink="#ff6bb5";
+  ctx.beginPath();
+  ctx.moveTo(0,-70);
+  ctx.lineTo(-20,40);
+  ctx.lineTo(20,40);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  if(cm>=point){
+    cr=true;
+    document.getElementById('cashC').disabled=true;
+    return;
+  }
+  requestAnimationFrame(anim);
+}
+
+function cashCrash(){
+  let win=bet*cm;
+  bal+=win;upd();
+  cr=true;
+  document.getElementById('cashC').disabled=true;
 }
 </script>
 </body>
