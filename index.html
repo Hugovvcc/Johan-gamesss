@@ -54,6 +54,7 @@ button {
 }
 
 button:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(255,105,180,0.5); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 input, select {
   padding: 10px 14px;
@@ -202,51 +203,61 @@ function showSection(id) {
   document.getElementById(id).style.display = 'block';
 }
 
-// MINES (без изменений)
+// MINES — полностью рабочая версия
 function startMines() {
-  const bet = +document.getElementById('mines-bet').value;
-  const count = +document.getElementById('mines-count').value;
+  const bet = parseFloat(document.getElementById("mines-bet").value);
+  const minesCount = parseInt(document.getElementById("mines-count").value);
 
-  if (isNaN(bet) || bet < 0.1 || bet > 10) return alert("Ставка 0.1–10 TON");
-  if (ton < bet) return alert("Недостаточно TON");
+  if (isNaN(bet) || bet < 0.1 || bet > 10) {
+    document.getElementById("mines-message").textContent = "Ставка должна быть от 0.1 до 10 TON";
+    document.getElementById("mines-message").className = "message lose";
+    return;
+  }
+  if (ton < bet) {
+    document.getElementById("mines-message").textContent = "Недостаточно TON!";
+    document.getElementById("mines-message").className = "message lose";
+    return;
+  }
 
   ton -= bet;
   document.getElementById("ton").textContent = ton.toFixed(1);
 
-  let mines = new Set();
-  while (mines.size < count) mines.add(Math.floor(Math.random() * 25));
+  const mines = new Set();
+  while (mines.size < minesCount) {
+    mines.add(Math.floor(Math.random() * 25));
+  }
 
   let opened = 0;
-  let mult = 1;
+  let multiplier = 1;
 
   const grid = document.getElementById("minesGrid");
   grid.innerHTML = "";
 
   for (let i = 0; i < 25; i++) {
-    const c = document.createElement("div");
-    c.className = "minecell";
-    c.textContent = "?";
-    c.onclick = () => {
-      if (c.dataset.done) return;
-      c.dataset.done = "1";
+    const cell = document.createElement("div");
+    cell.className = "minecell";
+    cell.textContent = "?";
+    cell.onclick = function() {
+      if (cell.dataset.revealed) return;
+      cell.dataset.revealed = "true";
 
       if (mines.has(i)) {
-        c.textContent = "💣";
-        c.style.background = "rgba(255,80,120,0.6)";
+        cell.textContent = "💣";
+        cell.style.background = "rgba(255,80,120,0.6)";
         document.getElementById("mines-cashout").disabled = true;
-        document.getElementById("mines-message").innerHTML = `БУМ! -${bet.toFixed(1)} TON`;
+        document.getElementById("mines-message").textContent = `БУМ! Потеряно ${bet.toFixed(1)} TON`;
         document.getElementById("mines-message").className = "message lose";
       } else {
         opened++;
-        mult *= 1.02;
-        c.textContent = "💎";
-        c.style.background = "rgba(100,255,180,0.3)";
+        multiplier *= 1.02;
+        cell.textContent = "💎";
+        cell.style.background = "rgba(100,255,180,0.3)";
 
         document.getElementById("opened").textContent = opened;
-        document.getElementById("multi").textContent = mult.toFixed(2);
+        document.getElementById("multi").textContent = multiplier.toFixed(2);
       }
     };
-    grid.appendChild(c);
+    grid.appendChild(cell);
   }
 
   document.getElementById("mines-cashout").disabled = false;
@@ -254,109 +265,117 @@ function startMines() {
 }
 
 function cashoutMines() {
-  const mult = +document.getElementById("multi").textContent;
-  const bet = +document.getElementById("mines-bet").value;
-  const win = (bet * mult).toFixed(1);
+  const multiplier = parseFloat(document.getElementById("multi").textContent);
+  const bet = parseFloat(document.getElementById("mines-bet").value);
+  const win = (bet * multiplier).toFixed(1);
 
-  ton += +win;
+  ton += parseFloat(win);
   document.getElementById("ton").textContent = ton.toFixed(1);
 
-  document.getElementById("mines-message").innerHTML = `+${win} TON на ${mult.toFixed(2)}×!`;
+  document.getElementById("mines-message").textContent = `Вывод на ${multiplier.toFixed(2)}x → +${win} TON!`;
   document.getElementById("mines-message").className = "message win";
   document.getElementById("mines-cashout").disabled = true;
 }
 
-// CRASH - ракета теперь точно появляется и летит медленнее
+// CRASH — ракета точно появляется
 function startCrash() {
-  const bet = +document.getElementById("crash-bet").value;
-  if (isNaN(bet) || bet < 0.1 || bet > 10) return alert("Ставка 0.1–10 TON");
-  if (ton < bet) return alert("Недостаточно TON");
+  const bet = parseFloat(document.getElementById("crash-bet").value);
+  if (isNaN(bet) || bet < 0.1 || bet > 10) {
+    document.getElementById("crash-message").textContent = "Ставка от 0.1 до 10 TON";
+    document.getElementById("crash-message").className = "message lose";
+    return;
+  }
+  if (ton < bet) {
+    document.getElementById("crash-message").textContent = "Недостаточно TON!";
+    document.getElementById("crash-message").className = "message lose";
+    return;
+  }
 
   ton -= bet;
   document.getElementById("ton").textContent = ton.toFixed(1);
 
-  let mult = 1;
+  let multiplier = 1;
   let crashed = false;
-  const crashAt = 1.05 + Math.pow(Math.random(), 2.8) * 80;
+  const crashPoint = 1.05 + Math.pow(Math.random(), 2.8) * 80;
 
   document.getElementById("crash-multi").textContent = "1.00x";
   document.getElementById("crash-cashout").disabled = false;
+  document.getElementById("crash-message").textContent = "";
 
-  const c = document.getElementById("crashCanvas");
-  const ctx = c.getContext("2d");
-  let rocketY = c.height - 100;
+  const canvas = document.getElementById("crashCanvas");
+  const ctx = canvas.getContext("2d");
+  let rocketY = canvas.height - 100;
   let time = 0;
 
-  function loop() {
+  function animate() {
     if (crashed) return;
 
     ctx.fillStyle = "rgba(10,0,20,0.18)";
-    ctx.fillRect(0,0,c.width,c.height);
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     time += 0.016;
-    mult *= 1.003 + time*0.00005; // очень медленный и плавный рост
-    document.getElementById("crash-multi").textContent = mult.toFixed(2) + "x";
+    multiplier *= 1.0035; // медленный рост
+    document.getElementById("crash-multi").textContent = multiplier.toFixed(2) + "x";
 
-    if (mult >= crashAt) {
+    if (multiplier >= crashPoint) {
       crashed = true;
       document.getElementById("crash-cashout").disabled = true;
-      document.getElementById("crash-message").innerHTML = `КРАШ на ${mult.toFixed(2)}x! -${bet.toFixed(1)} TON`;
+      document.getElementById("crash-message").textContent = `КРАШ на ${multiplier.toFixed(2)}x! -${bet.toFixed(1)} TON`;
       document.getElementById("crash-message").className = "message lose";
       return;
     }
 
-    rocketY -= 0.6 + mult * 0.08; // ещё медленнее полёт
+    rocketY -= 0.5 + multiplier * 0.06; // очень плавный полёт
 
     ctx.save();
-    ctx.translate(c.width/2, rocketY);
-    ctx.rotate(Math.sin(time*3)*0.06);
+    ctx.translate(canvas.width / 2, rocketY);
+    ctx.rotate(Math.sin(time * 3) * 0.06);
 
-    // Огонь
-    const flame = 50 + Math.sin(time*10)*10;
-    const g = ctx.createLinearGradient(0,0,0,flame);
-    g.addColorStop(0,"#ffffaa");
-    g.addColorStop(0.4,"#ffaa00");
-    g.addColorStop(1,"#cc0000");
-    ctx.fillStyle = g;
+    // Пламя
+    const flameHeight = 50 + Math.sin(time * 10) * 10;
+    const gradient = ctx.createLinearGradient(0, 0, 0, flameHeight);
+    gradient.addColorStop(0, "#ffffaa");
+    gradient.addColorStop(0.4, "#ffaa00");
+    gradient.addColorStop(1, "#cc0000");
+    ctx.fillStyle = gradient;
     ctx.beginPath();
-    ctx.moveTo(0,30);
-    ctx.quadraticCurveTo(-35,flame,0,flame+40);
-    ctx.quadraticCurveTo(35,flame,0,30);
+    ctx.moveTo(0, 30);
+    ctx.quadraticCurveTo(-35, flameHeight, 0, flameHeight + 40);
+    ctx.quadraticCurveTo(35, flameHeight, 0, 30);
     ctx.fill();
 
     // Корпус
     ctx.fillStyle = "#ff6bb5";
     ctx.beginPath();
-    ctx.moveTo(0,-80);
-    ctx.quadraticCurveTo(-25,-10,-20,35);
-    ctx.lineTo(20,35);
-    ctx.quadraticCurveTo(25,-10,0,-80);
+    ctx.moveTo(0, -80);
+    ctx.quadraticCurveTo(-25, -10, -20, 35);
+    ctx.lineTo(20, 35);
+    ctx.quadraticCurveTo(25, -10, 0, -80);
     ctx.fill();
 
     // Окно
     ctx.fillStyle = "#aaffff";
     ctx.beginPath();
-    ctx.arc(0,-30,14,0,Math.PI*2);
+    ctx.arc(0, -30, 14, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();
 
-    requestAnimationFrame(loop);
+    requestAnimationFrame(animate);
   }
 
-  // Запускаем анимацию
-  loop();
+  animate();
 }
 
 function crashCashout() {
-  const mult = parseFloat(document.getElementById("crash-multi").textContent);
-  const bet = +document.getElementById("crash-bet").value;
-  const win = (bet * mult).toFixed(1);
+  const multiplier = parseFloat(document.getElementById("crash-multi").textContent);
+  const bet = parseFloat(document.getElementById("crash-bet").value);
+  const win = (bet * multiplier).toFixed(1);
 
-  ton += +win;
+  ton += parseFloat(win);
   document.getElementById("ton").textContent = ton.toFixed(1);
 
-  document.getElementById("crash-message").innerHTML = `+${win} TON на ${mult.toFixed(2)}×!`;
+  document.getElementById("crash-message").textContent = `+${win} TON на ${multiplier.toFixed(2)}x!`;
   document.getElementById("crash-message").className = "message win";
   document.getElementById("crash-cashout").disabled = true;
 }
