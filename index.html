@@ -1,29 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
 <meta charset="UTF-8">
 <title>Johan Game</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
-:root{
-  --pink:#ff9ccd;
-  --pink2:#ff6bb5;
-  --bg:#12001f;
-  --card:rgba(255,255,255,0.08);
-  --win:#00ff9d;
-  --lose:#ff4466;
+:root {
+  --pink: #ff9ccd;
+  --pink2: #ff6bb5;
+  --bg: #12001f;
+  --card: rgba(255,255,255,0.08);
+  --win: #00ff9d;
+  --lose: #ff4466;
+  --text: #ff9ccd;
 }
-
 *{box-sizing:border-box}
-
 body{
   margin:0;
   font-family:system-ui, sans-serif;
   background:radial-gradient(circle at top,#2b0044,#12001f);
-  color:white;
+  color:var(--text);
 }
-
 h1{
   text-align:center;
   margin:20px 0;
@@ -32,13 +29,11 @@ h1{
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
 }
-
 .container{
   max-width:720px;
   margin:auto;
   padding:15px;
 }
-
 .card{
   background:var(--card);
   border-radius:20px;
@@ -47,7 +42,6 @@ h1{
   border:1px solid rgba(255,150,200,0.25);
   backdrop-filter:blur(8px);
 }
-
 button{
   padding:12px 26px;
   border:none;
@@ -56,32 +50,31 @@ button{
   color:white;
   font-size:1.1rem;
   cursor:pointer;
-  transition:.2s;
+  transition:.25s;
+  margin:6px;
 }
-
 button:hover{transform:scale(1.05)}
-button:disabled{opacity:.5}
-
+button:disabled{opacity:.5;cursor:not-allowed}
 input,select{
   padding:10px;
   border-radius:12px;
   border:2px solid var(--pink);
   background:transparent;
-  color:white;
+  color:var(--text);
   font-size:1rem;
+  margin:6px 0;
 }
-
 .nav{
   display:flex;
   justify-content:center;
   gap:10px;
+  flex-wrap:wrap;
 }
-
 .balance{
   text-align:center;
   font-size:1.4rem;
+  margin:10px 0;
 }
-
 /* MINES */
 #grid{
   display:grid;
@@ -89,7 +82,6 @@ input,select{
   gap:10px;
   margin-top:20px;
 }
-
 .cell{
   aspect-ratio:1;
   background:rgba(255,255,255,0.12);
@@ -97,20 +89,18 @@ input,select{
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:2rem;
+  font-size:2.2rem;
   cursor:pointer;
   transition:.2s;
 }
-
 .cell:hover{background:rgba(255,150,200,.25)}
-
-.win{background:rgba(0,255,160,.25)}
-.lose{background:rgba(255,60,90,.3)}
-
 /* CRASH */
 canvas{
   width:100%;
+  max-width:400px;
   height:420px;
+  margin:20px auto;
+  display:block;
   border-radius:18px;
   background:#080010;
   border:2px solid var(--pink2);
@@ -124,58 +114,61 @@ canvas{
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
 }
+.controls{
+  display:flex;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:15px;
+}
+.message{
+  text-align:center;
+  font-size:1.2rem;
+  margin:10px 0;
+  padding:10px;
+  border-radius:12px;
+}
+.win{background:rgba(0,255,157,0.2);border:1px solid var(--win)}
+.lose{background:rgba(255,68,102,0.2);border:1px solid var(--lose)}
 </style>
 </head>
-
 <body>
 <div class="container">
-
 <h1>Johan Game</h1>
-<div class="balance">Balance: <span id="bal">100.0</span> pts</div>
+<div class="balance">Balance: <span id="bal">100.0</span> TON</div>
 
 <div class="nav">
-  <button onclick="show('menu')">Menu</button>
   <button onclick="show('mines')">Mines</button>
   <button onclick="show('crash')">Crash</button>
 </div>
 
-<!-- MENU -->
-<div id="menu" class="card">
-  <h2>Choose game</h2>
-</div>
-
 <!-- MINES -->
-<div id="mines" class="card" style="display:none">
+<div id="mines" class="card">
 <h2>Mines</h2>
-
-Bet:
-<input id="mbet" type="number" min="0.1" max="5" step="0.1" value="1">
-Mines:
-<select id="mcount">
+Bet: <input id="mbet" type="number" min="0.1" max="10" step="0.1" value="1">
+Mines: <select id="mcount">
   <option>5</option><option>6</option><option>7</option>
   <option>8</option><option>9</option><option>10</option>
 </select>
-
-<br><br>
-<button onclick="startMines()">Start</button>
-<button id="cashM" onclick="cashMines()" disabled>Cash Out</button>
-
+<div class="controls">
+  <button onclick="startMines()">Start</button>
+  <button id="cashM" onclick="cashMines()" disabled>Cash Out</button>
+</div>
 <p>Opened: <span id="opened">0</span> | x<span id="mm">1.00</span></p>
+<div id="minesMsg" class="message"></div>
 <div id="grid"></div>
 </div>
 
 <!-- CRASH -->
 <div id="crash" class="card" style="display:none">
 <h2>Crash</h2>
-
-Bet:
-<input id="cbet" type="number" min="0.1" max="5" step="0.1" value="1">
-
-<br><br>
-<button onclick="startCrash()">Start</button>
-<button id="cashC" onclick="cashCrash()" disabled>Cash Out</button>
-
+Bet: <input id="cbet" type="number" min="0.1" max="10" step="0.1" value="1">
+<div class="controls">
+  <button onclick="startCrash()">Start</button>
+  <button id="cashC" onclick="cashCrash()" disabled>Cash Out</button>
+</div>
 <div class="mult" id="cm">1.00x</div>
+<div id="crashMsg" class="message"></div>
 <canvas id="cv" width="400" height="420"></canvas>
 </div>
 
@@ -188,26 +181,27 @@ function upd(){balEl.textContent=bal.toFixed(1)}
 upd();
 
 function show(id){
-  ['menu','mines','crash'].forEach(x=>{
-    document.getElementById(x).style.display='none';
-  });
+  document.querySelectorAll('.card').forEach(c=>c.style.display='none');
   document.getElementById(id).style.display='block';
 }
 
-/* MINES */
+// MINES
 let mines=[],opened=0,multi=1,mbet=0;
-
+const grid=document.getElementById('grid');
 function startMines(){
-  mbet=+mbetEl.value;
+  mbet=parseFloat(document.getElementById('mbet').value);
+  if(isNaN(mbet)||mbet<0.1||mbet>10)return alert("Bet 0.1-10 TON");
   if(bal<mbet)return alert("No balance");
   bal-=mbet;upd();
+
   opened=0;multi=1;
   document.getElementById('opened').textContent=0;
   document.getElementById('mm').textContent="1.00";
   document.getElementById('cashM').disabled=false;
+  document.getElementById('minesMsg').textContent='';
 
   mines=[];
-  const mc=+mcount.value;
+  const mc=parseInt(document.getElementById('mcount').value);
   while(mines.length<mc){
     let r=Math.floor(Math.random()*25);
     if(!mines.includes(r))mines.push(r);
@@ -224,12 +218,14 @@ function startMines(){
         d.textContent="💣";
         d.classList.add('lose');
         document.getElementById('cashM').disabled=true;
+        document.getElementById('minesMsg').textContent=`BOOM! Lost ${mbet.toFixed(1)} TON`;
+        document.getElementById('minesMsg').className="message lose";
       }else{
-        d.dataset.open=1;
+        d.dataset.open=true;
         d.textContent="💎";
         d.classList.add('win');
         opened++;
-        multi*=1+(mc*0.015);
+        multi*=1.02;
         document.getElementById('opened').textContent=opened;
         document.getElementById('mm').textContent=multi.toFixed(2);
       }
@@ -239,68 +235,98 @@ function startMines(){
 }
 
 function cashMines(){
+  if(multi===1)return alert("Open at least 1 cell");
   let win=mbet*multi;
   bal+=win;upd();
   document.getElementById('cashM').disabled=true;
+  document.getElementById('minesMsg').textContent=`Cashed out! +${win.toFixed(1)} TON`;
+  document.getElementById('minesMsg').className="message win";
 }
 
-/* CRASH */
-let ctx=cv.getContext("2d");
-let cm=1,cr=false,bet=0,point=0,stars=[];
+// CRASH
+const cv=document.getElementById('cv');
+const ctx=cv.getContext("2d");
+let cm=1,cr=false,bet=0,crashPoint=0;
 
 function startCrash(){
-  bet=+cbet.value;
+  bet=parseFloat(document.getElementById('cbet').value);
+  if(isNaN(bet)||bet<0.1||bet>10)return alert("Bet 0.1-10 TON");
   if(bal<bet)return alert("No balance");
   bal-=bet;upd();
+
   cm=1;cr=false;
-  point=1.1+Math.random()*15;
+  crashPoint=1.05+Math.pow(Math.random(),3)*40; // 1.05 → ~40x max
+  document.getElementById('cm').textContent="1.00x";
   document.getElementById('cashC').disabled=false;
-  stars=[];
-  for(let i=0;i<80;i++){
-    stars.push({x:Math.random()*400,y:Math.random()*420,s:Math.random()*2+1});
-  }
-  anim();
+  document.getElementById('crashMsg').textContent='';
+
+  animate();
 }
 
-function anim(){
+function animate(){
   if(cr)return;
-  ctx.fillStyle="#080010";
+
+  ctx.fillStyle="rgba(8,0,16,0.15)";
   ctx.fillRect(0,0,400,420);
 
-  stars.forEach(s=>{
-    s.y+=s.s*2;
-    if(s.y>420)s.y=0;
-    ctx.fillStyle="#fff";
-    ctx.fillRect(s.x,s.y,2,2);
-  });
-
-  cm*=1.01;
+  cm*=1.005; // медленный рост
   document.getElementById('cm').textContent=cm.toFixed(2)+"x";
 
-  ctx.save();
-  ctx.translate(200,260);
-  ctx.fillStyle=varPink="#ff6bb5";
-  ctx.beginPath();
-  ctx.moveTo(0,-70);
-  ctx.lineTo(-20,40);
-  ctx.lineTo(20,40);
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
-
-  if(cm>=point){
+  if(cm>=crashPoint){
     cr=true;
     document.getElementById('cashC').disabled=true;
+    document.getElementById('crashMsg').textContent=`CRASH at ${cm.toFixed(2)}x! Lost ${bet.toFixed(1)} TON`;
+    document.getElementById('crashMsg').className="message lose";
     return;
   }
-  requestAnimationFrame(anim);
+
+  // Ракета
+  const y=420-(cm*8); // медленный подъём
+  ctx.save();
+  ctx.translate(200,y);
+  ctx.rotate(Math.sin(Date.now()*0.002)*0.06);
+
+  // Пламя
+  const fh=50+Math.sin(Date.now()*0.01)*12;
+  const gr=ctx.createLinearGradient(0,0,0,fh);
+  gr.addColorStop(0,"#ffff00");
+  gr.addColorStop(0.4,"#ff8800");
+  gr.addColorStop(1,"#ff0000");
+  ctx.fillStyle=gr;
+  ctx.beginPath();
+  ctx.moveTo(0,30);
+  ctx.quadraticCurveTo(-30,fh,0,fh+30);
+  ctx.quadraticCurveTo(30,fh,0,30);
+  ctx.fill();
+
+  // Корпус
+  ctx.fillStyle="#ff6bb5";
+  ctx.beginPath();
+  ctx.moveTo(0,-60);
+  ctx.lineTo(-18,30);
+  ctx.lineTo(18,30);
+  ctx.closePath();
+  ctx.fill();
+
+  // Окно
+  ctx.fillStyle="#88ddff";
+  ctx.beginPath();
+  ctx.arc(0,-15,10,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.restore();
+
+  requestAnimationFrame(animate);
 }
 
 function cashCrash(){
+  if(cr)return;
   let win=bet*cm;
   bal+=win;upd();
   cr=true;
   document.getElementById('cashC').disabled=true;
+  document.getElementById('crashMsg').textContent=`Cashed out! +${win.toFixed(1)} TON`;
+  document.getElementById('crashMsg').className="message win";
 }
 </script>
 </body>
