@@ -11,14 +11,12 @@
   --pink-bg: #ffe6f3;
   --green-win: #afffa6;
   --red-lose: #ff6b6b;
-  --slot-bg: #f0f0f0;
 }
 body{
   margin:0;
-  background:var(--pink-bg);
+  background:var(--pink-bg) url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJncmlkIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiPjxwYXRoIGQ9Ik0gNDAgMCAwIDAgMCA0MCIgc3Ryb2tlPSIjZmY4N2QwIiBzdHJva2Utd2lkdGg9IjAuNSIgZmlsbD0ibm9uZSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg=='); /* Красивый розовый фон с градиентом */
   font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
   text-align:center;
-  user-select:none;
   color:#333;
 }
 h1{
@@ -26,6 +24,11 @@ h1{
   color: var(--pink-dark);
   text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
   margin: 20px 0;
+  animation: glow 2s infinite alternate;
+}
+@keyframes glow {
+  from { text-shadow: 2px 2px 4px rgba(0,0,0,0.1); }
+  to { text-shadow: 0 0 10px var(--pink), 0 0 20px var(--pink-dark); }
 }
 h2{
   font-size: 32px;
@@ -50,7 +53,7 @@ button{
 }
 button:hover{
   background: var(--pink-dark);
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.05);
 }
 button:active{
   transform: translateY(1px);
@@ -114,24 +117,6 @@ canvas{
   font-weight: bold;
   color: var(--pink-dark);
 }
-.slot{
-  width: calc(320px / 7);
-  height: 40px;
-  background: var(--slot-bg);
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 14px;
-  font-weight: bold;
-  border: 1px solid #ddd;
-}
-#slots{
-  display: flex;
-  justify-content: center;
-  margin-top: -50px;
-  z-index: 1;
-  position: relative;
-}
 .message{
   font-size: 20px;
   margin: 10px;
@@ -146,22 +131,42 @@ canvas{
 .message-lose{
   background: var(--red-lose);
 }
+#lobby {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background: rgba(255,255,255,0.8);
+  border-radius: 20px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+#lobby button {
+  display: block;
+  width: 80%;
+  margin: 20px auto;
+  font-size: 24px;
+}
+#crashCanvas {
+  width: 300px;
+  height: 400px;
+  border: 2px solid var(--pink-dark);
+}
 </style>
 </head>
 <body>
 <h1>Johan Game</h1>
 <h3>TON: <span id="ton">100</span></h3>
 
-<!-- MENU -->
-<div id="menu" class="active">
-  <button onclick="openLobby('mines')">Mines</button><br>
-  <button onclick="openLobby('plinko')">Plinko</button><br>
-  <button onclick="openLobby('escape')">Ball Escape</button>
+<!-- LOBBY -->
+<div id="lobby" class="active">
+  <h2>Welcome to Johan Game!</h2>
+  <p>Choose your game mode:</p>
+  <button onclick="openLobby('mines')">Mines Mode</button>
+  <button onclick="openLobby('crash')">Crash Mode</button>
 </div>
 
 <!-- MINES LOBBY -->
 <div id="mines-lobby" class="screen">
-  <h2>Mines Lobby</h2>
+  <h2>Mines Mode</h2>
   <label>Bet (0.1-10 TON):</label>
   <input type="number" id="mines-bet" min="0.1" max="10" step="0.1" value="1"><br>
   <label>Number of Mines (5-10):</label>
@@ -173,56 +178,38 @@ canvas{
     <option value="9">9 Mines</option>
     <option value="10">10 Mines</option>
   </select><br>
-  <button onclick="startMines()">Start Game</button>
-  <button onclick="backToMenu()">← Back</button>
+  <button onclick="startMines()">Start Mines</button>
+  <button onclick="backToLobby()">← Back to Lobby</button>
 </div>
 
 <!-- MINES GAME -->
 <div id="mines-game" class="screen">
   <h2>Mines</h2>
   <p>Tiles opened: <span id="opened">0</span></p>
-  <p>Current win: <span id="current-win">0.00</span> TON</p>
   <p>Multiplier: <span id="multi">1.00x</span></p>
   <div id="mines-message" class="message"></div>
   <button id="mines-cashout" onclick="cashout()" style="background:#ff6bb5;">Cash Out 💰</button>
   <div id="minesGrid"></div>
-  <button onclick="backToLobby('mines')">← Back to Lobby</button>
+  <button onclick="backToLobbyMain('mines')">← Back to Lobby</button>
 </div>
 
-<!-- PLINKO LOBBY -->
-<div id="plinko-lobby" class="screen">
-  <h2>Plinko Lobby</h2>
+<!-- CRASH LOBBY -->
+<div id="crash-lobby" class="screen">
+  <h2>Crash Mode</h2>
   <label>Bet (0.1-10 TON):</label>
-  <input type="number" id="plinko-bet" min="0.1" max="10" step="0.1" value="1"><br>
-  <button onclick="startPlinko()">Start Game</button>
-  <button onclick="backToMenu()">← Back</button>
+  <input type="number" id="crash-bet" min="0.1" max="10" step="0.1" value="1"><br>
+  <button onclick="startCrash()">Start Crash</button>
+  <button onclick="backToLobby()">← Back to Lobby</button>
 </div>
 
-<!-- PLINKO GAME -->
-<div id="plinko-game" class="screen">
-  <h2>Plinko</h2>
-  <div id="plinko-message" class="message"></div>
-  <button onclick="dropBall()">Drop Ball 🎾</button>
-  <canvas id="plinkoCanvas" width="320" height="520"></canvas>
-  <div id="slots"></div>
-  <button onclick="backToLobby('plinko')">← Back to Lobby</button>
-</div>
-
-<!-- ESCAPE LOBBY -->
-<div id="escape-lobby" class="screen">
-  <h2>Ball Escape Lobby</h2>
-  <label>Bet (0.1-10 TON):</label>
-  <input type="number" id="escape-bet" min="0.1" max="10" step="0.1" value="1"><br>
-  <button onclick="startEscape()">Start Game</button>
-  <button onclick="backToMenu()">← Back</button>
-</div>
-
-<!-- ESCAPE GAME -->
-<div id="escape-game" class="screen">
-  <h2>Ball Escape</h2>
-  <div id="escape-message" class="message"></div>
-  <canvas id="escapeCanvas" width="320" height="440"></canvas>
-  <button onclick="backToLobby('escape')">← Back to Lobby</button>
+<!-- CRASH GAME -->
+<div id="crash-game" class="screen">
+  <h2>Crash</h2>
+  <p>Current Multiplier: <span id="crash-multi">1.00x</span></p>
+  <div id="crash-message" class="message"></div>
+  <canvas id="crashCanvas" width="300" height="400"></canvas>
+  <button id="crash-cashout" onclick="crashCashout()" style="background:#ff6bb5;">Cash Out 💰</button>
+  <button onclick="backToLobbyMain('crash')">← Back to Lobby</button>
 </div>
 
 <script>
@@ -234,18 +221,18 @@ function openLobby(id){
   document.getElementById(id + "-lobby").classList.add("active");
 }
 
-function backToMenu(){
+function backToLobby(){
   hideAll();
-  document.getElementById("menu").classList.add("active");
+  document.getElementById("lobby").classList.add("active");
 }
 
-function backToLobby(id){
+function backToLobbyMain(id){
   hideAll();
-  document.getElementById(id + "-lobby").classList.add("active");
+  document.getElementById("lobby").classList.add("active");
 }
 
 function hideAll(){
-  document.querySelectorAll(".screen, #menu").forEach(x => x.classList.remove("active"));
+  document.querySelectorAll(".screen, #lobby").forEach(x => x.classList.remove("active"));
 }
 
 function showMessage(id, text, type){
@@ -256,13 +243,12 @@ function showMessage(id, text, type){
 }
 
 /**********************
-   MINES GAME - ×1.02 за каждую открытую ячейку
+   MINES GAME
 **********************/
 let mines = [];
 let revealed = 0;
+let multiplier = 1;
 let currentBet = 1;
-let currentMultiplier = 1.00;
-let potentialWin = 0;
 let mineCount = 5;
 let gameOver = false;
 
@@ -276,12 +262,10 @@ function startMines(){
 
   mines = [];
   revealed = 0;
-  currentMultiplier = 1.00;
-  potentialWin = currentBet;
+  multiplier = 1;
   gameOver = false;
   document.getElementById("opened").textContent = 0;
   document.getElementById("multi").textContent = "1.00x";
-  document.getElementById("current-win").textContent = potentialWin.toFixed(2);
   document.getElementById("mines-cashout").disabled = false;
 
   while(mines.length < mineCount){
@@ -312,22 +296,19 @@ function reveal(i, cell){
     gameOver = true;
     document.getElementById("mines-cashout").disabled = true;
     showMessage("mines", `💥 BOOM! Lost ${currentBet.toFixed(1)} TON 😿`, "lose");
-    setTimeout(() => backToLobby('mines'), 3000);
+    setTimeout(() => backToLobbyMain('mines'), 3000);
     return;
   }
 
   revealed++;
-  currentMultiplier *= 1.02; // +2% за каждую безопасную ячейку
-  potentialWin = currentBet * currentMultiplier;
-
+  multiplier *= 1.02;
   cell.dataset.open = 1;
   cell.style.background = "var(--green-win)";
   cell.textContent = "💎";
   cell.style.transform = "scale(1.1)";
 
   document.getElementById("opened").textContent = revealed;
-  document.getElementById("multi").textContent = currentMultiplier.toFixed(2) + "x";
-  document.getElementById("current-win").textContent = potentialWin.toFixed(2);
+  document.getElementById("multi").textContent = multiplier.toFixed(2) + "x";
 }
 
 function cashout(){
@@ -336,190 +317,86 @@ function cashout(){
     return;
   }
 
-  ton += potentialWin;
+  let win = (currentBet * multiplier).toFixed(1);
+  ton += parseFloat(win);
   document.getElementById("ton").textContent = ton.toFixed(1);
-  showMessage("mines", `🎉 Cashed out! Won ${potentialWin.toFixed(2)} TON! 🏆`, "win");
+  showMessage("mines", `🎉 Cashed out at ${multiplier.toFixed(2)}x! Won ${win} TON! 🏆`, "win");
   document.getElementById("mines-cashout").disabled = true;
-  setTimeout(() => backToLobby('mines'), 3000);
+  setTimeout(() => backToLobbyMain('mines'), 3000);
 }
 
 /**********************
-   PLINKO GAME - Реалистичная физика "по столбикам"
+   CRASH GAME
 **********************/
-let plinkoBet = 1;
-let multipliers = [2, 1.2, 0.8, 0.5, 0.8, 1.2, 2];
+let crashBet = 1;
+let crashMultiplier = 1;
+let crashGameOver = false;
+let crashInterval;
+let crashPoint;
 
-function startPlinko(){
-  plinkoBet = parseFloat(document.getElementById("plinko-bet").value);
-  if(plinkoBet < 0.1 || plinkoBet > 10 || isNaN(plinkoBet)) return showMessage("plinko", "Invalid bet! 0.1-10 TON.", "lose");
-  if(ton < plinkoBet) return showMessage("plinko", "Not enough TON!", "lose");
-  ton -= plinkoBet;
+function startCrash(){
+  crashBet = parseFloat(document.getElementById("crash-bet").value);
+  if(crashBet < 0.1 || crashBet > 10 || isNaN(crashBet)) return showMessage("crash", "Invalid bet! 0.1-10 TON.", "lose");
+  if(ton < crashBet) return showMessage("crash", "Not enough TON!", "lose");
+  ton -= crashBet;
   document.getElementById("ton").textContent = ton.toFixed(1);
 
-  let slotsDiv = document.getElementById("slots");
-  slotsDiv.innerHTML = "";
-  multipliers.forEach(m => {
-    let slot = document.createElement("div");
-    slot.className = "slot";
-    slot.textContent = `x${m}`;
-    slotsDiv.appendChild(slot);
-  });
+  crashMultiplier = 1;
+  crashGameOver = false;
+  document.getElementById("crash-multi").textContent = "1.00x";
+  document.getElementById("crash-cashout").disabled = false;
 
-  hideAll();
-  document.getElementById("plinko-game").classList.add("active");
-}
+  // Random crash point between 1.01 and 50x
+  crashPoint = 1 + Math.random() * 49;
 
-function dropBall(){
-  let canvas = document.getElementById("plinkoCanvas");
+  let canvas = document.getElementById("crashCanvas");
   let ctx = canvas.getContext("2d");
-  let pegs = [];
-  let rows = 12;
+  let rocketY = canvas.height - 50;
+  let speed = 2;
 
-  // Строгая пирамида пегов с равным расстоянием
-  for(let r = 0; r < rows; r++){
-    let pegsInRow = r + 2;
-    let spacing = 32;
-    let offset = (canvas.width - (pegsInRow * spacing)) / 2 + spacing / 2;
-    for(let p = 0; p < pegsInRow; p++){
-      pegs.push({
-        x: offset + p * spacing,
-        y: 80 + r * 42
-      });
-    }
-  }
+  crashInterval = setInterval(() => {
+    if (crashGameOver) return;
 
-  let ball = {x: canvas.width / 2, y: 30, vx: 0, vy: 0};
-  let gravity = 0.4;
-  let ballRadius = 6;
-  let slotWidth = canvas.width / multipliers.length;
+    crashMultiplier *= 1.02; // Increase multiplier
+    document.getElementById("crash-multi").textContent = crashMultiplier.toFixed(2) + "x";
 
-  function animate(){
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Пеги
-    ctx.fillStyle = "#333";
-    pegs.forEach(p => {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 7, 0, Math.PI*2);
-      ctx.fill();
-    });
-
-    // Шарик
-    ctx.fillStyle = "#ff6bb5";
-    ctx.beginPath();
-    ctx.arc(ball.x, ball.y, ballRadius, 0, Math.PI*2);
-    ctx.fill();
-
-    ball.vy += gravity;
-    ball.y += ball.vy;
-    ball.x += ball.vx;
-
-    // Отскок от пегов — только слабый горизонтальный импульс
-    pegs.forEach(p => {
-      let dx = ball.x - p.x;
-      let dy = ball.y - p.y;
-      let dist = Math.sqrt(dx*dx + dy*dy);
-      if(dist < ballRadius + 7){
-        // Импульс в основном вверх + очень слабый в сторону
-        ball.vy = -Math.abs(ball.vy) * 0.7;
-        ball.vx += (Math.random() - 0.5) * 1.2; // минимальный рандом
-      }
-    });
-
-    // Стены
-    if(ball.x < ballRadius || ball.x > canvas.width - ballRadius){
-      ball.vx *= -0.6;
-      ball.x = ball.x < ballRadius ? ballRadius : canvas.width - ballRadius;
-    }
-
-    // Достиг дна
-    if(ball.y > canvas.height - 60){
-      let slotIndex = Math.floor(ball.x / slotWidth);
-      slotIndex = Math.max(0, Math.min(multipliers.length - 1, slotIndex));
-      let mult = multipliers[slotIndex];
-      let points = (plinkoBet * mult).toFixed(1);
-      ton += parseFloat(points);
-      document.getElementById("ton").textContent = ton.toFixed(1);
-      showMessage("plinko", `🎊 Landed on x${mult}! +${points} TON!`, "win");
-      setTimeout(() => backToLobby('plinko'), 3000);
+    if (crashMultiplier >= crashPoint) {
+      crashGameOver = true;
+      document.getElementById("crash-cashout").disabled = true;
+      showMessage("crash", `💥 CRASH at ${crashMultiplier.toFixed(2)}x! Lost ${crashBet.toFixed(1)} TON 😿`, "lose");
+      clearInterval(crashInterval);
+      setTimeout(() => backToLobbyMain('crash'), 3000);
       return;
     }
 
-    requestAnimationFrame(animate);
-  }
-  animate();
-}
-
-/**********************
-   BALL ESCAPE GAME
-**********************/
-let escapeBet = 1;
-
-function startEscape(){
-  escapeBet = parseFloat(document.getElementById("escape-bet").value);
-  if(escapeBet < 0.1 || escapeBet > 10 || isNaN(escapeBet)) return showMessage("escape", "Invalid bet! 0.1-10 TON.", "lose");
-  if(ton < escapeBet) return showMessage("escape", "Not enough TON!", "lose");
-  ton -= escapeBet;
-  document.getElementById("ton").textContent = ton.toFixed(1);
-
-  let canvas = document.getElementById("escapeCanvas");
-  let ctx = canvas.getContext("2d");
-  let ball = {x: 160, y: 220, vx: 3, vy: -4};
-  let rotation = 0;
-  let holeStart = Math.random() * Math.PI * 2;
-  let holeSize = 0.8;
-
-  hideAll();
-  document.getElementById("escape-game").classList.add("active");
-
-  function animate(){
+    // Animate rocket
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    ctx.strokeStyle = "#ccc";
-    ctx.lineWidth = 20;
-    ctx.beginPath();
-    ctx.arc(160, 220, 130, 0, Math.PI*2);
-    ctx.stroke();
-
-    ctx.strokeStyle = "#4caf50";
-    ctx.lineWidth = 25;
-    ctx.beginPath();
-    ctx.arc(160, 220, 130, holeStart + rotation, holeStart + rotation + holeSize);
-    ctx.stroke();
-
     ctx.fillStyle = "#ff6bb5";
     ctx.beginPath();
-    ctx.arc(ball.x, ball.y, 15, 0, Math.PI*2);
-    ctx.fill();
+    ctx.moveTo(150, rocketY);
+    ctx.lineTo(140, rocketY + 20);
+    ctx.lineTo(160, rocketY + 20);
+    ctx.closePath();
+    ctx.fill(); // Simple rocket triangle
+    rocketY -= speed;
+    if (rocketY < 0) rocketY = canvas.height - 50; // Loop if needed, but crash will stop
+  }, 200); // Update every 200ms
 
-    ball.x += ball.vx;
-    ball.y += ball.vy;
+  hideAll();
+  document.getElementById("crash-game").classList.add("active");
+}
 
-    let dx = ball.x - 160;
-    let dy = ball.y - 220;
-    let dist = Math.sqrt(dx*dx + dy*dy);
-    if(dist > 115){
-      let angle = Math.atan2(dy, dx);
-      ball.vx = -Math.cos(angle) * 6;
-      ball.vy = -Math.sin(angle) * 6;
-    }
+function crashCashout(){
+  if (crashGameOver) return;
 
-    let ballAngle = Math.atan2(dy, dx);
-    let normalizedBall = (ballAngle - holeStart - rotation + Math.PI*4) % (Math.PI*2);
-    if(dist > 125 && normalizedBall < holeSize){
-      let mult = 3;
-      let win = (escapeBet * mult).toFixed(1);
-      ton += parseFloat(win);
-      document.getElementById("ton").textContent = ton.toFixed(1);
-      showMessage("escape", `⚡ BALL ESCAPED! +${win} TON! 🏆`, "win");
-      setTimeout(() => backToLobby('escape'), 3000);
-      return;
-    }
-
-    rotation += 0.02;
-    requestAnimationFrame(animate);
-  }
-  animate();
+  let win = (crashBet * crashMultiplier).toFixed(1);
+  ton += parseFloat(win);
+  document.getElementById("ton").textContent = ton.toFixed(1);
+  showMessage("crash", `🎉 Cashed out at ${crashMultiplier.toFixed(2)}x! Won ${win} TON! 🏆`, "win");
+  crashGameOver = true;
+  document.getElementById("crash-cashout").disabled = true;
+  clearInterval(crashInterval);
+  setTimeout(() => backToLobbyMain('crash'), 3000);
 }
 </script>
 </body>
