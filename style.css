@@ -7,13 +7,17 @@
     --lose: #ff4466;
 }
 
-* { box-sizing: border-box; }
+* {
+    box-sizing: border-box;
+}
 
 body {
     margin: 0;
     font-family: system-ui, sans-serif;
     background: radial-gradient(circle at top, #2b0044, #12001f);
     color: var(--pink);
+    min-height: 100vh;
+    padding: 10px;
 }
 
 h1 {
@@ -34,26 +38,61 @@ h1 {
 .balance {
     text-align: center;
     font-size: 1.4rem;
-    margin: 10px 0;
+    margin: 20px 0;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
 }
 
 .nav {
     display: flex;
     justify-content: center;
-    gap: 10px;
+    gap: 15px;
     flex-wrap: wrap;
-    margin: 20px 0;
+    margin: 25px 0;
 }
 
 button {
-    padding: 12px 26px;
+    padding: 14px 28px;
     border: none;
     border-radius: 50px;
     background: linear-gradient(45deg, var(--pink), var(--pink2));
     color: white;
     font-size: 1.1rem;
+    font-weight: bold;
     cursor: pointer;
     transition: .25s;
+    min-width: 120px;
 }
 
-button:hover { transform: scale(1.05); }
+button:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 20px rgba(255, 155, 205, 0.5);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+input, select {
+    padding: 12px 15px;
+    border-radius: 12px;
+    border: 2px solid var(--pink);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 1rem;
+    margin: 8px 0;
+    width: 100%;
+    max-width: 200px;
+}
+
+input:focus, select:focus {
+    outline: none;
+    box-shadow: 0 0 10px var(--pink);
+}
+
+#game-container {
+    margin-top: 20px;
+}
