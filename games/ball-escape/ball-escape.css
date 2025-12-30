@@ -1,43 +1,30 @@
-body {
-    background-color: #0b011d;
-    color: white;
-    font-family: sans-serif;
+.ball-escape-wrapper {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    height: 100vh;
-    margin: 0;
-}
-
-.game-container {
-    text-align: center;
+    justify-content: center;
+    height: 100%;
     width: 100%;
-    max-width: 400px;
 }
 
 #gameCanvas {
-    background: radial-gradient(circle, #1a0b35 0%, #0b011d 100%);
-    border-radius: 20px;
-    margin: 20px 0;
+    max-width: 100%;
+    height: auto;
+    /* Убираем фон, чтобы был виден фон вашего контейнера */
 }
 
-.main-btn {
-    background-color: #0088cc;
+.action-btn {
+    background: #ff69b4; /* Розовый под стиль ваших кнопок */
     color: white;
     border: none;
-    padding: 15px 40px;
-    border-radius: 12px;
-    font-size: 18px;
+    padding: 10px 30px;
+    border-radius: 20px;
     font-weight: bold;
     cursor: pointer;
-    width: 80%;
+    margin-top: 10px;
+    font-size: 1.1rem;
 }
 
-.main-btn:active { transform: scale(0.98); }
-.hidden { display: none; }
-
-#multiplier {
-    color: #00ff88;
-    font-size: 24px;
-    font-weight: bold;
+.action-btn.hidden {
+    display: none;
 }
