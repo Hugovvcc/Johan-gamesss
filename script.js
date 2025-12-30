@@ -1,6 +1,7 @@
 let bal = 100;
 const balEl = document.getElementById('bal');
 const gameContainer = document.getElementById('game-container');
+let loadedGame = null;
 
 function updateBalance() {
     balEl.textContent = bal.toFixed(1);
@@ -18,56 +19,96 @@ window.gameAPI = {
 
 // Загрузка игры
 function loadGame(gameName) {
-    console.log(`Loading game: ${gameName}`);
+    console.log(`🔄 Загружаем игру: ${gameName}`);
     
     // Очищаем контейнер
-    gameContainer.innerHTML = '<div class="card" style="text-align:center;padding:40px">Loading game...</div>';
+    gameContainer.innerHTML = '<div class="card" style="text-align:center;padding:40px">Загрузка игры...</div>';
     
-    // Загружаем HTML
-    fetch(`games/${gameName}/${gameName}.html`)
+    // Формируем пути к файлам
+    const htmlPath = `games/${gameName}/${gameName}.html`;
+    const cssPath = `games/${gameName}/${gameName}.css`;
+    const jsPath = `games/${gameName}/${gameName}.js`;
+    
+    console.log(`📁 Пути: HTML=${htmlPath}, CSS=${cssPath}, JS=${jsPath}`);
+    
+    // 1. Загружаем HTML
+    fetch(htmlPath)
         .then(response => {
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            if (!response.ok) throw new Error(`Ошибка ${response.status}: ${response.statusText}`);
             return response.text();
         })
         .then(html => {
             gameContainer.innerHTML = html;
+            loadedGame = gameName;
+            console.log(`✅ HTML загружен: ${gameName}`);
             
-            // Загружаем CSS
-            const cssLink = document.createElement('link');
-            cssLink.rel = 'stylesheet';
-            cssLink.href = `games/${gameName}/${gameName}.css`;
-            document.head.appendChild(cssLink);
-            
-            // Загружаем JS
-            const script = document.createElement('script');
-            script.src = `games/${gameName}/${gameName}.js`;
-            
-            script.onload = () => {
-                console.log(`${gameName} script loaded`);
-                if (typeof initGame === 'function') {
-                    initGame();
-                }
-            };
-            
-            script.onerror = () => {
-                console.error(`Failed to load ${gameName}.js`);
-                gameContainer.innerHTML = `
-                    <div class="card" style="color:red">
-                        <h3>Error loading ${gameName}</h3>
-                        <p>Check console for details</p>
-                    </div>
-                `;
-            };
-            
-            document.body.appendChild(script);
+            // 2. Загружаем CSS
+            return new Promise((resolve) => {
+                // Удаляем старые стили игры
+                document.querySelectorAll('link[data-game-css]').forEach(link => link.remove());
+                
+                const cssLink = document.createElement('link');
+                cssLink.rel = 'stylesheet';
+                cssLink.href = cssPath;
+                cssLink.setAttribute('data-game-css', gameName);
+                
+                cssLink.onload = () => {
+                    console.log(`✅ CSS загружен: ${gameName}`);
+                    resolve();
+                };
+                
+                cssLink.onerror = () => {
+                    console.warn(`⚠️ CSS не загружен: ${cssPath}`);
+                    resolve(); // Продолжаем без CSS
+                };
+                
+                document.head.appendChild(cssLink);
+            });
+        })
+        .then(() => {
+            // 3. Загружаем JS
+            return new Promise((resolve) => {
+                // Удаляем старые скрипты игры
+                document.querySelectorAll('script[data-game-js]').forEach(script => script.remove());
+                
+                const jsScript = document.createElement('script');
+                jsScript.src = jsPath;
+                jsScript.setAttribute('data-game-js', gameName);
+                
+                jsScript.onload = () => {
+                    console.log(`✅ JS загружен: ${gameName}`);
+                    if (typeof initGame === 'function') {
+                        console.log(`🎮 Инициализируем игру: ${gameName}`);
+                        initGame();
+                    }
+                    resolve();
+                };
+                
+                jsScript.onerror = (error) => {
+                    console.error(`❌ Ошибка загрузки JS: ${jsPath}`, error);
+                    gameContainer.innerHTML += `
+                        <div class="card" style="color:red;margin-top:20px">
+                            <h3>Ошибка загрузки игры</h3>
+                            <p>Файл ${jsPath} не найден</p>
+                            <p>Проверьте что файл существует</p>
+                        </div>
+                    `;
+                    resolve();
+                };
+                
+                document.body.appendChild(jsScript);
+            });
         })
         .catch(error => {
-            console.error('Fetch error:', error);
+            console.error('❌ Ошибка загрузки игры:', error);
             gameContainer.innerHTML = `
                 <div class="card" style="color:red">
-                    <h3>Cannot load ${gameName}</h3>
-                    <p>Make sure folder 'games/${gameName}/' exists</p>
-                    <p>Error: ${error.message}</p>
+                    <h3>Не могу загрузить игру: ${gameName}</h3>
+                    <p>Ошибка: ${error.message}</p>
+                    <p>Проверьте что папка 'games/${gameName}/' существует</p>
+                    <button onclick="loadGame('mines')" style="margin-top:20px">
+                        Вернуться к Mines
+                    </button>
                 </div>
             `;
         });
@@ -75,4 +116,4 @@ function loadGame(gameName) {
 
 // Инициализация
 updateBalance();
-console.log('Main script loaded');
+console.log('🎯 Главный скрипт загружен');
