@@ -1,30 +1,32 @@
 .ball-escape-wrapper {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    height: 100%;
     width: 100%;
+    height: 100%;
 }
 
 #gameCanvas {
-    max-width: 100%;
-    height: auto;
-    /* Убираем фон, чтобы был виден фон вашего контейнера */
+    background: transparent;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
 }
 
-.action-btn {
-    background: #ff69b4; /* Розовый под стиль ваших кнопок */
-    color: white;
-    border: none;
-    padding: 10px 30px;
-    border-radius: 20px;
+.game-notification {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    padding: 20px;
+    border-radius: 15px;
+    border: 2px solid #ff69b4;
+    z-index: 10;
     font-weight: bold;
-    cursor: pointer;
-    margin-top: 10px;
-    font-size: 1.1rem;
+    text-align: center;
+    color: white;
+    pointer-events: none;
 }
 
-.action-btn.hidden {
-    display: none;
-}
+.hidden { display: none !important; }
