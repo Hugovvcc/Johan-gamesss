@@ -1,146 +1,125 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const playBtn = document.getElementById('playBtn');
-const cashoutBtn = document.getElementById('cashoutBtn');
-const gameMessage = document.getElementById('gameMessage');
+const multDisplay = document.getElementById('multiplierValue');
+const gameMsg = document.getElementById('gameMessage');
 
-let currentBet = 1;
-let ball, ring, multiplier, isPlaying = false;
-let isEscaped = false;
-let animationId;
+let bet = 1;
+let isPlaying = false;
+let ball, ring, multiplier, escaped;
 
-// Настройка ставки
-window.setBet = (amount) => {
-    currentBet = amount;
-    document.querySelectorAll('.bet-btn').forEach(btn => {
-        btn.classList.toggle('active', parseInt(btn.innerText) === amount);
-    });
+window.setBet = (val) => {
+    bet = val;
+    document.querySelectorAll('.bet-btn').forEach(b => b.classList.toggle('active', parseInt(b.innerText) === val));
 };
 
-function initParams() {
-    // Скорость уменьшена для плавности (было 3.5/2.5 стало 2.2/1.5)
-    ball = { x: 175, y: 150, vx: 2.2, vy: 1.5, radius: 8 };
-    ring = { radius: 100, gapAngle: 0.25, rotation: Math.random() * Math.PI, speed: 0.03 };
+function init() {
+    ball = { x: 180, y: 160, vx: 2, vy: 1.5, r: 7 };
+    ring = { x: 180, y: 180, r: 100, gap: 0.28, rot: Math.random() * 6, speed: 0.035 };
     multiplier = 1.0;
-    isEscaped = false;
-    updateMultiplierUI();
-}
-
-function updateMultiplierUI() {
-    const display = document.querySelector('.multiplier-text') || document.getElementById('multiplier');
-    if (display) display.innerText = multiplier.toFixed(2) + 'x';
+    escaped = false;
+    multDisplay.innerText = "1.00x";
 }
 
 function draw() {
     if (!isPlaying) return;
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const cx = canvas.width / 2;
-    const cy = 180;
 
-    // Отрисовка зон
-    const zoneH = 40;
-    ctx.globalAlpha = 0.3;
-    ctx.fillStyle = '#00ff00'; ctx.fillRect(0, canvas.height - zoneH, canvas.width/2, zoneH);
-    ctx.fillStyle = '#ff0000'; ctx.fillRect(canvas.width/2, canvas.height - zoneH, canvas.width/2, zoneH);
-    ctx.globalAlpha = 1.0;
+    // Зоны
+    ctx.globalAlpha = 0.2;
+    ctx.fillStyle = '#00ff00'; ctx.fillRect(0, 380, 180, 40);
+    ctx.fillStyle = '#ff0000'; ctx.fillRect(180, 380, 180, 40);
+    ctx.globalAlpha = 1;
 
-    // Отрисовка кольца
+    // Кольцо
     ctx.beginPath();
     ctx.lineWidth = 10;
     ctx.strokeStyle = '#ff69b4';
-    ctx.arc(cx, cy, ring.radius, ring.rotation + ring.gapAngle, ring.rotation - ring.gapAngle + Math.PI * 2);
+    ctx.arc(ring.x, ring.y, ring.r, ring.rot + ring.gap, ring.rot - ring.gap + Math.PI * 2);
     ctx.stroke();
 
-    // Движение
+    // Логика шарика
     ball.x += ball.vx;
     ball.y += ball.vy;
 
-    // Рандомное смещение в сторону КРАСНОГО (когда мяч вылетел)
-    if (isEscaped && ball.y > cy) {
-        // Мягко подталкиваем вправо (к красной зоне)
-        ball.vx += 0.02; 
+    // Стенки канваса
+    if (ball.x + ball.r > canvas.width || ball.x - ball.r < 0) ball.vx *= -1;
+    if (ball.y - ball.r < 0) ball.vy *= -1;
+
+    // Взаимодействие с кольцом
+    const dx = ball.x - ring.x;
+    const dy = ball.y - ring.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+
+    // Проверка угла для дырки
+    let angle = Math.atan2(dy, dx);
+    if (angle < 0) angle += Math.PI * 2;
+    let currentRot = ring.rot % (Math.PI * 2);
+    if (currentRot < 0) currentRot += Math.PI * 2;
+    const inGap = Math.abs(angle - currentRot) < ring.gap || Math.abs(angle - currentRot) > (Math.PI * 2 - ring.gap);
+
+    // Физика столкновений (внутренняя и внешняя стороны)
+    if (!inGap) {
+        if (!escaped && dist + ball.r >= ring.r) { // Удар изнутри
+            reflectBall(dx, dy, dist);
+            multiplier += 0.12;
+            multDisplay.innerText = multiplier.toFixed(2) + "x";
+        } else if (escaped && dist - ball.r <= ring.r && dist > ring.r - 20) { // Удар снаружи
+            reflectBall(dx, dy, dist);
+            // Иксы не добавляем
+        }
+    } else if (!escaped && dist > ring.r) {
+        escaped = true; // Вылетел через дырку
     }
 
-    // Стенки экрана
-    if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) ball.vx *= -1;
-    if (ball.y - ball.radius < 0) ball.vy *= -1;
+    // Рандомный перекос в сторону проигрыша в свободном полете
+    if (escaped && ball.y > ring.y) {
+        ball.vx += 0.015; // Мягко тянет вправо (на красное)
+    }
 
-    // Проверка падения в зоны
-    if (ball.y + ball.radius > canvas.height - zoneH) {
-        ball.x < canvas.width / 2 ? endGame(true) : endGame(false);
+    // Конец игры (зоны)
+    if (ball.y + ball.r > 380) {
+        finish(ball.x < 180);
         return;
     }
 
-    // Физика кольца
-    const dx = ball.x - cx;
-    const dy = ball.y - cy;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-
-    if (!isEscaped && dist + ball.radius >= ring.radius) {
-        let angle = Math.atan2(dy, dx);
-        if (angle < 0) angle += Math.PI * 2;
-        let normRot = ring.rotation % (Math.PI * 2);
-        if (normRot < 0) normRot += Math.PI * 2;
-
-        const diff = Math.abs(angle - normRot);
-        if (diff < ring.gapAngle || diff > (Math.PI * 2 - ring.gapAngle)) {
-            isEscaped = true; // Вылет
-        } else {
-            // Отскок
-            const nx = dx / dist;
-            const ny = dy / dist;
-            const dot = ball.vx * nx + ball.vy * ny;
-            ball.vx = (ball.vx - 2 * dot * nx) * 0.99; // Небольшое замедление при ударе
-            ball.vy = (ball.vy - 2 * dot * ny) * 0.99;
-            
-            multiplier += 0.15;
-            updateMultiplierUI();
-        }
-    }
-
-    // Шарик
+    // Отрисовка шарика
     ctx.beginPath();
-    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-    ctx.fillStyle = isEscaped ? '#ffcc00' : '#00ff88';
+    ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2);
+    ctx.fillStyle = escaped ? '#fff' : '#00ff88';
     ctx.fill();
 
-    ring.rotation += ring.speed;
-    animationId = requestAnimationFrame(draw);
+    ring.rot += ring.speed;
+    requestAnimationFrame(draw);
 }
 
-function startGame() {
-    initParams();
-    isPlaying = true;
-    playBtn.classList.add('hidden');
-    cashoutBtn.classList.remove('hidden');
-    gameMessage.classList.add('hidden');
-    draw();
+function reflectBall(dx, dy, dist) {
+    const nx = dx / dist;
+    const ny = dy / dist;
+    const dot = ball.vx * nx + ball.vy * ny;
+    ball.vx = (ball.vx - 2 * dot * nx) * 0.98;
+    ball.vy = (ball.vy - 2 * dot * ny) * 0.98;
 }
 
-function endGame(isWin) {
+function finish(win) {
     isPlaying = false;
-    cancelAnimationFrame(animationId);
-    
-    if (isWin) {
-        const winAmount = (currentBet * multiplier).toFixed(2);
-        showGameMessage(`ВЫИГРЫШ!\n+${winAmount} TON`, "#00ff88");
+    gameMsg.classList.remove('hidden');
+    if (win) {
+        gameMsg.innerHTML = `<h2 style="color:#00ff88">ПОБЕДА</h2><p>${(bet * multiplier).toFixed(2)} TON</p>`;
     } else {
-        showGameMessage(`ПРОИГРЫШ\n-${currentBet} TON`, "#ff4444");
-        multiplier = 1.0;
-        updateMultiplierUI();
+        gameMsg.innerHTML = `<h2 style="color:#ff4444">ПРОИГРЫШ</h2><p>-${bet} TON</p>`;
+        multDisplay.innerText = "1.00x";
     }
-    
-    playBtn.classList.remove('hidden');
-    cashoutBtn.classList.add('hidden');
+    setTimeout(() => gameMsg.classList.add('hidden'), 2500);
+    document.getElementById('playBtn').classList.remove('hidden');
+    document.getElementById('cashoutBtn').classList.add('hidden');
 }
 
-function showGameMessage(text, color) {
-    gameMessage.innerText = text;
-    gameMessage.style.color = color;
-    gameMessage.style.borderColor = color;
-    gameMessage.classList.remove('hidden');
-}
+document.getElementById('playBtn').onclick = () => {
+    init();
+    isPlaying = true;
+    document.getElementById('playBtn').classList.add('hidden');
+    document.getElementById('cashoutBtn').classList.remove('hidden');
+    draw();
+};
 
-playBtn.onclick = startGame;
-cashoutBtn.onclick = () => endGame(true);
+document.getElementById('cashoutBtn').onclick = () => finish(true);
