@@ -1,46 +1,9 @@
-/* Ball Escape стили */
+/* Ball Escape - новая версия */
 
-#beGameArea {
-    position: relative;
-    width: 100%;
-    height: 400px;
-    background: linear-gradient(135deg, #0a0015, #1a0030);
-    border-radius: 20px;
-    border: 3px solid var(--pink);
-    overflow: hidden;
-    margin: 20px auto;
-    box-shadow: 0 0 40px rgba(255, 107, 181, 0.2);
-}
-
-.be-cell {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
-    border: 1px solid rgba(255, 107, 181, 0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    transition: all 0.3s;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-}
-
-.be-cell:hover {
-    background: rgba(255, 107, 181, 0.1);
-    transform: scale(1.02);
-}
-
-.be-cell.active {
-    background: rgba(255, 107, 181, 0.2);
-    border: 2px solid var(--pink);
-    animation: pulseCell 1s infinite;
-}
-
-@keyframes pulseCell {
-    0% { box-shadow: 0 0 10px rgba(255, 107, 181, 0.3); }
-    50% { box-shadow: 0 0 20px rgba(255, 107, 181, 0.6); }
-    100% { box-shadow: 0 0 10px rgba(255, 107, 181, 0.3); }
+/* Анимация шарика */
+@keyframes ballBounce {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.1); }
 }
 
 @keyframes ballGlow {
@@ -49,62 +12,98 @@
     100% { box-shadow: 0 0 20px #ff0080; }
 }
 
-#ball {
-    animation: ballGlow 1.5s infinite;
-    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    z-index: 10;
+@keyframes ballFall {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, 420px) rotate(720deg); }
 }
 
-#ball:hover {
+@keyframes ballWin {
+    0% { transform: translate(-50%, 420px) scale(1); }
+    50% { transform: translate(-50%, 420px) scale(1.5); }
+    100% { transform: translate(-50%, 420px) scale(1); opacity: 0; }
+}
+
+@keyframes ballLose {
+    0% { transform: translate(-50%, 420px) scale(1); }
+    50% { transform: translate(-50%, 420px) scale(0.5); }
+    100% { transform: translate(-50%, 420px) scale(1); opacity: 0; }
+}
+
+/* Кнопки ставок */
+.bet-btn {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    min-width: 60px;
+    color: white;
+}
+
+.bet-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(255, 107, 181, 0.4);
+}
+
+.bet-btn.active {
+    background: linear-gradient(45deg, #ff6bb5, #ff9ccd) !important;
+    box-shadow: 0 0 20px #ff6bb5;
     transform: scale(1.1);
 }
 
-#ball.caught {
-    animation: catchAnimation 0.5s forwards;
+/* Отображение множителей */
+.mult-display {
+    background: rgba(0, 0, 0, 0.6);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+    border: 1px solid currentColor;
+    font-size: 0.9rem;
 }
 
-@keyframes catchAnimation {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.3); }
-    100% { transform: scale(1); opacity: 0.5; }
+/* Пульсация круга */
+@keyframes circlePulse {
+    0% { border-color: rgba(255, 155, 205, 0.4); }
+    50% { border-color: rgba(255, 107, 181, 0.8); }
+    100% { border-color: rgba(255, 155, 205, 0.4); }
 }
 
-#timerCircle {
-    font-family: 'Courier New', monospace;
-    color: var(--pink2);
-    z-index: 20;
+/* Анимация дырки */
+@keyframes holePulse {
+    0% { box-shadow: 0 0 10px rgba(255, 107, 181, 0.5); }
+    50% { box-shadow: 0 0 30px rgba(255, 107, 181, 0.8); }
+    100% { box-shadow: 0 0 10px rgba(255, 107, 181, 0.5); }
 }
 
-.timer-warning {
-    color: #ff9900 !important;
-    border-color: #ff9900 !important;
-    animation: blink 0.5s infinite !important;
+/* История - анимация появления */
+@keyframes historyAppear {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.timer-danger {
-    color: #ff4466 !important;
-    border-color: #ff4466 !important;
-    animation: blinkFast 0.3s infinite !important;
+/* Анимация выигрыша */
+@keyframes winFlash {
+    0%, 100% { background-color: rgba(0, 255, 157, 0.1); }
+    50% { background-color: rgba(0, 255, 157, 0.3); }
 }
 
-@keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+/* Анимация проигрыша */
+@keyframes loseFlash {
+    0%, 100% { background-color: rgba(255, 68, 102, 0.1); }
+    50% { background-color: rgba(255, 68, 102, 0.3); }
 }
 
-@keyframes blinkFast {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-}
-/* Confetti animation for win */
-.confetti {
+/* Конфетти для победы */
+.confetti-piece {
     position: absolute;
     width: 10px;
     height: 10px;
-    background: var(--pink);
-    top: -10px;
+    background: var(--win);
     opacity: 0;
-    animation: confettiFall 3s linear forwards;
+    z-index: 100;
+    animation: confettiFall 2s linear forwards;
 }
 
 @keyframes confettiFall {
@@ -113,22 +112,29 @@
         opacity: 1;
     }
     100% {
-        transform: translateY(400px) rotate(360deg);
+        transform: translateY(500px) rotate(720deg);
         opacity: 0;
     }
 }
 
-/* Win streak effect */
-.win-streak {
-    position: absolute;
-    font-size: 2rem;
-    font-weight: bold;
-    color: var(--win);
-    animation: streakPop 0.5s ease-out;
+/* Подсветка зеленой/красной зоны */
+.zone-highlight {
+    animation: zonePulse 1s infinite;
 }
 
-@keyframes streakPop {
-    0% { transform: scale(0); opacity: 0; }
-    50% { transform: scale(1.2); opacity: 1; }
-    100% { transform: scale(1); opacity: 0; }
+@keyframes zonePulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* Индикатор таймера */
+.timer-indicator {
+    position: absolute;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, #00ff9d, #ff9900, #ff4466);
+    bottom: 0;
+    left: 0;
+    transform-origin: left;
+    z-index: 3;
 }
