@@ -1,0 +1,53 @@
+<div class="card">
+    <h2 style="text-align:center;margin-bottom:25px">🏀 Ball Escape</h2>
+    
+    <div style="text-align:center;margin-bottom:20px">
+        <div style="margin:15px 0">
+            <label style="display:block;margin-bottom:8px;font-size:1.1rem">Bet Amount (TON):</label>
+            <input id="bebet" type="number" min="0.1" max="10" step="0.1" value="1" style="display:inline-block;width:150px">
+        </div>
+        
+        <div style="margin:15px 0">
+            <label style="display:block;margin-bottom:8px;font-size:1.1rem">Difficulty:</label>
+            <select id="bedifficulty" style="display:inline-block">
+                <option value="easy">Easy (5s)</option>
+                <option value="medium" selected>Medium (4s)</option>
+                <option value="hard">Hard (3s)</option>
+                <option value="extreme">Extreme (2s)</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <button onclick="startBallEscape()" id="startBE" style="background:linear-gradient(45deg,#00c3ff,#0099cc)">Start Game</button>
+        <button onclick="catchBall()" id="catchBE" disabled style="background:linear-gradient(45deg,#ffcc00,#ff9900)">CATCH THE BALL!</button>
+    </div>
+    
+    <div id="becountdown" class="countdown">Click START to begin!</div>
+    
+    <div class="mult" id="bemultiplier">1.00x</div>
+    
+    <div id="beMsg" class="message">🏀 Catch the ball before it escapes! 🏀</div>
+    
+    <!-- Игровое поле -->
+    <div id="beGameArea" style="position:relative;width:100%;height:400px;background:#0a0015;border-radius:20px;border:3px solid var(--pink);overflow:hidden;margin:20px auto;">
+        <!-- Шарик -->
+        <div id="ball" style="display:none;position:absolute;width:80px;height:80px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#ff6bb5,#ff0080);box-shadow:0 0 30px #ff0080;cursor:pointer;"></div>
+        
+        <!-- Сетка ячеек -->
+        <div id="gridContainer" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:20px;height:100%;">
+            <!-- Ячейки будут созданы в JS -->
+        </div>
+        
+        <!-- Таймер -->
+        <div id="timerCircle" style="position:absolute;top:20px;right:20px;width:60px;height:60px;border-radius:50%;border:3px solid var(--pink);display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:bold;background:rgba(0,0,0,0.7);"></div>
+    </div>
+    
+    <div style="text-align:center;margin-top:25px;color:rgba(255,255,255,0.6);font-size:0.9rem">
+        ⚡ The ball moves randomly between cells. Catch it before time runs out!
+    </div>
+    
+    <div class="controls" style="margin-top:25px">
+        <button onclick="startBallEscape()" style="background:linear-gradient(45deg,#6b8cff,#4a6fff)">Play Again</button>
+    </div>
+</div>
