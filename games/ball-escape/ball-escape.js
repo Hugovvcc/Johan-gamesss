@@ -1,274 +1,406 @@
-// ========== BALL ESCAPE GAME LOGIC ==========
+// ========== BALL ESCAPE (НОВАЯ ВЕРСИЯ) ==========
 
-let beGameActive = false;
-let beTimer = 0;
-let beTimerInterval = null;
-let beBallInterval = null;
-let beBet = 0;
-let beMultiplier = 1.0;
-let beCurrentCell = 0;
-let beTimeLimit = 4; // секунд по умолчанию
-let beTotalCells = 25;
-let beScore = 0;
+let gameActive = false;
+let currentMultiplier = 1.00;
+let targetMultiplier = 1.00;
+let currentBet = 1;
+let ballPosition = { x: 50, y: 50 };
+let ballVelocity = { x: 0, y: 0 };
+let gameInterval = null;
+let cashOutMultiplier = 0;
+let gameHash = generateHash();
+let gameHistory = ['2.1x', '0.8x', '3.5x', '1.2x', '4.0x'];
+let isFalling = false;
+let fallDestination = ''; // 'win' или 'lose'
+let autoCashAt = 2.0;
 
 function initGame() {
-    console.log('✅ Ball Escape game initialized');
-    createGrid();
+    console.log('✅ Ball Escape (новая версия) initialized');
+    
+    // Обновляем хэш
+    document.getElementById('gameHash').textContent = gameHash;
+    
+    // Назначаем обработчики для кнопок ставок
+    document.querySelectorAll('.bet-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            setBet(parseFloat(this.dataset.bet));
+        });
+    });
+    
+    // Инициализируем ставку
+    setBet(1);
+    
+    // Запускаем фоновую анимацию шарика
+    startIdleAnimation();
 }
 
-function createGrid() {
-    const gridContainer = document.getElementById('gridContainer');
-    if (!gridContainer) return;
+function generateHash() {
+    const chars = '0123456789abcdef';
+    let hash = '';
+    for (let i = 0; i < 10; i++) {
+        hash += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return hash + '...' + hash.split('').reverse().join('').substring(0, 5);
+}
+
+function setBet(amount) {
+    currentBet = amount;
     
-    gridContainer.innerHTML = '';
+    // Обновляем отображение
+    document.getElementById('currentBet').textContent = amount;
+    document.getElementById('betDisplay').textContent = amount;
+    document.getElementById('betAmount').value = amount;
     
-    for (let i = 0; i < beTotalCells; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'be-cell';
-        cell.dataset.index = i;
-        cell.style.aspectRatio = '1';
-        gridContainer.appendChild(cell);
+    // Подсвечиваем активную кнопку
+    document.querySelectorAll('.bet-btn').forEach(btn => {
+        if (parseFloat(btn.dataset.bet) === amount) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
+    updateCashOutAmount();
+}
+
+function updateBetFromInput() {
+    const input = document.getElementById('betAmount');
+    const value = parseFloat(input.value);
+    if (!isNaN(value) && value >= 0.1 && value <= 50) {
+        setBet(value);
+    } else {
+        alert('Введите ставку от 0.1 до 50 TON');
     }
 }
 
-function startBallEscape() {
-    const betInput = document.getElementById('bebet');
-    if (!betInput) {
-        alert('Bet input not found!');
-        return;
+function startIdleAnimation() {
+    const ball = document.getElementById('ball');
+    if (!ball) return;
+    
+    // Мягкая анимация шарика в режиме ожидания
+    let x = 50;
+    let y = 50;
+    let vx = 0.3;
+    let vy = 0.2;
+    
+    function idleAnimate() {
+        if (gameActive || isFalling) return;
+        
+        // Отскок от границ круга
+        if (x < 10 || x > 90) vx = -vx;
+        if (y < 10 || y > 90) vy = -vy;
+        
+        x += vx;
+        y += vy;
+        
+        // Плавное изменение скорости
+        vx += (Math.random() - 0.5) * 0.05;
+        vy += (Math.random() - 0.5) * 0.05;
+        
+        // Ограничение скорости
+        const speed = Math.sqrt(vx * vx + vy * vy);
+        if (speed > 0.8) {
+            vx *= 0.8 / speed;
+            vy *= 0.8 / speed;
+        }
+        
+        // Обновление позиции
+        ball.style.left = `calc(${x}% - 25px)`;
+        ball.style.top = `calc(${y}% - 25px)`;
+        
+        requestAnimationFrame(idleAnimate);
     }
     
-    beBet = parseFloat(betInput.value);
-    if (isNaN(beBet) || beBet < 0.1 || beBet > 10) {
-        showMessage('Bet 0.1-10 TON', 'lose');
-        return;
-    }
+    idleAnimate();
+}
+
+function startGame() {
+    if (gameActive) return;
     
     const currentBalance = window.gameAPI.getBalance();
-    if (currentBalance < beBet) {
-        showMessage('Not enough balance!', 'lose');
+    if (currentBalance < currentBet) {
+        showMessage('Недостаточно баланса!', 'lose');
         return;
     }
     
-    // Deduct bet
-    window.gameAPI.updateBalance(-beBet);
+    // Снимаем ставку
+    window.gameAPI.updateBalance(-currentBet);
     
-    // Reset game
-    beGameActive = true;
-    beScore = 0;
-    beMultiplier = 1.0;
+    // Сброс игры
+    gameActive = true;
+    isFalling = false;
+    currentMultiplier = 1.00;
+    cashOutMultiplier = 0;
     
-    // Set difficulty
-    const difficulty = document.getElementById('bedifficulty').value;
-    switch(difficulty) {
-        case 'easy': beTimeLimit = 5; break;
-        case 'medium': beTimeLimit = 4; break;
-        case 'hard': beTimeLimit = 3; break;
-        case 'extreme': beTimeLimit = 2; break;
+    // Генерируем целевой множитель (1x - 20x)
+    targetMultiplier = 1 + Math.random() * 19;
+    // С шансом 30% сделать краш раньше
+    if (Math.random() < 0.3) {
+        targetMultiplier = 1 + Math.random() * 3;
     }
     
-    beTimer = beTimeLimit;
+    // Определяем куда упадет шарик (60% шанс на победу)
+    fallDestination = Math.random() < 0.6 ? 'win' : 'lose';
     
-    // Update UI
-    document.getElementById('startBE').disabled = true;
-    document.getElementById('catchBE').disabled = false;
-    document.getElementById('bemultiplier').textContent = beMultiplier.toFixed(2) + 'x';
+    // Обновляем UI
+    document.getElementById('startBtn').disabled = true;
+    document.getElementById('cashOutBtn').disabled = false;
+    showMessage('Игра началась! Заберите до падения шарика!', 'win');
     
-    showMessage(`Catch the ball in ${beTimeLimit} seconds!`, 'win');
+    // Анимация круга
+    const circle = document.getElementById('circle');
+    circle.style.animation = 'circlePulse 1s infinite';
     
-    // Create grid
-    createGrid();
+    // Стартуем игровой цикл
+    startGameLoop();
     
-    // Show ball in random position
-    moveBallToRandomCell();
-    
-    // Start timer
-    startTimer();
-    
-    // Start ball movement
-    startBallMovement();
-    
-    // Update countdown display
-    updateCountdownDisplay();
+    // Обновляем хэш
+    gameHash = generateHash();
+    document.getElementById('gameHash').textContent = gameHash;
 }
 
-function moveBallToRandomCell() {
-    const oldCell = document.querySelector('.be-cell.active');
-    if (oldCell) {
-        oldCell.classList.remove('active');
-    }
+function startGameLoop() {
+    if (gameInterval) clearInterval(gameInterval);
     
-    // Выбираем новую случайную ячейку
-    let newCellIndex;
-    do {
-        newCellIndex = Math.floor(Math.random() * beTotalCells);
-    } while (newCellIndex === beCurrentCell);
+    let speed = 1.0;
+    let time = 0;
     
-    beCurrentCell = newCellIndex;
-    
-    const cells = document.querySelectorAll('.be-cell');
-    const newCell = cells[beCurrentCell];
-    newCell.classList.add('active');
-    
-    // Move the ball element
-    const ball = document.getElementById('ball');
-    if (ball) {
-        const cellRect = newCell.getBoundingClientRect();
-        const containerRect = document.getElementById('beGameArea').getBoundingClientRect();
+    gameInterval = setInterval(() => {
+        if (!gameActive || isFalling) return;
         
-        ball.style.display = 'block';
-        ball.style.left = (cellRect.left - containerRect.left + cellRect.width / 2 - 40) + 'px';
-        ball.style.top = (cellRect.top - containerRect.top + cellRect.height / 2 - 40) + 'px';
-    }
-}
-
-function startBallMovement() {
-    if (beBallInterval) clearInterval(beBallInterval);
-    
-    // Ball moves every 0.8-1.2 seconds randomly
-    beBallInterval = setInterval(() => {
-        if (!beGameActive) return;
-        moveBallToRandomCell();
-        beMultiplier += 0.05; // Multiplier increases as ball moves
-        document.getElementById('bemultiplier').textContent = beMultiplier.toFixed(2) + 'x';
-    }, 800 + Math.random() * 400);
-}
-
-function startTimer() {
-    if (beTimerInterval) clearInterval(beTimerInterval);
-    
-    beTimerInterval = setInterval(() => {
-        if (!beGameActive) return;
+        time += 0.1;
         
-        beTimer--;
-        updateCountdownDisplay();
+        // Увеличиваем множитель (быстрее в начале, медленнее потом)
+        let increaseRate = 0.05 * Math.exp(-time * 0.1);
+        currentMultiplier += increaseRate;
         
-        if (beTimer <= 0) {
-            gameOver(false); // Time's up
+        // Если достигли целевого множителя - начинаем падение
+        if (currentMultiplier >= targetMultiplier && !isFalling) {
+            startBallFall();
+            return;
         }
-    }, 1000);
-}
-
-function updateCountdownDisplay() {
-    const countdownEl = document.getElementById('becountdown');
-    const timerCircle = document.getElementById('timerCircle');
-    
-    if (countdownEl) {
-        countdownEl.textContent = `Time: ${beTimer}s`;
         
-        if (beTimer <= 3) {
-            countdownEl.classList.add('timer-warning');
-            if (beTimer <= 1) {
-                countdownEl.classList.remove('timer-warning');
-                countdownEl.classList.add('timer-danger');
-            }
-        } else {
-            countdownEl.classList.remove('timer-warning', 'timer-danger');
+        // Авто-вывод при достижении 2x
+        if (currentMultiplier >= autoCashAt && cashOutMultiplier === 0) {
+            cashOutMultiplier = currentMultiplier;
+            showMessage(`Авто-вывод при ${autoCashAt.toFixed(2)}x!`, 'win');
         }
-    }
-    
-    if (timerCircle) {
-        timerCircle.textContent = beTimer;
-        timerCircle.style.color = beTimer > 3 ? '#ff6bb5' : (beTimer > 1 ? '#ff9900' : '#ff4466');
-    }
-}
-
-function catchBall() {
-    if (!beGameActive) return;
-    
-    // Calculate win
-    const winAmount = beBet * (beMultiplier - 1);
-    window.gameAPI.updateBalance(winAmount);
-    
-    // Visual feedback
-    const ball = document.getElementById('ball');
-    if (ball) {
-        ball.classList.add('caught');
-    }
-    
-    // Show success
-    showMessage(`SUCCESS! +${winAmount.toFixed(2)} TON (${beMultiplier.toFixed(2)}x)`, 'win');
-    
-    // End game
-    gameOver(true);
-}
-
-function gameOver(success) {
-    beGameActive = false;
-    
-    // Clear intervals
-    if (beTimerInterval) {
-        clearInterval(beTimerInterval);
-        beTimerInterval = null;
-    }
-    
-    if (beBallInterval) {
-        clearInterval(beBallInterval);
-        beBallInterval = null;
-    }
-    
-    // Update UI
-    document.getElementById('startBE').disabled = false;
-    document.getElementById('catchBE').disabled = true;
-    
-    const countdownEl = document.getElementById('becountdown');
-    const timerCircle = document.getElementById('timerCircle');
-    
-    if (success) {
-        if (countdownEl) countdownEl.textContent = '🎉 BALL CAUGHT! 🎉';
-        if (timerCircle) timerCircle.textContent = 'WIN';
         
-        // Victory animation
-        const cells = document.querySelectorAll('.be-cell');
-        cells.forEach((cell, index) => {
-            setTimeout(() => {
-                cell.style.background = 'rgba(0, 255, 157, 0.3)';
-                cell.style.transform = 'scale(1.05)';
-                
-                setTimeout(() => {
-                    cell.style.background = '';
-                    cell.style.transform = '';
-                }, 300);
-            }, index * 50);
-        });
+        // Обновляем отображение
+        updateDisplay();
+        
+        // Анимация шарика
+        animateBall();
+        
+        // Постепенно ускоряемся
+        speed += 0.002;
+        
+    }, 100);
+}
+
+function animateBall() {
+    const ball = document.getElementById('ball');
+    if (!ball) return;
+    
+    // Случайное движение шарика
+    ballPosition.x += (Math.random() - 0.5) * 4;
+    ballPosition.y += (Math.random() - 0.5) * 3;
+    
+    // Ограничиваем в пределах круга
+    ballPosition.x = Math.max(15, Math.min(85, ballPosition.x));
+    ballPosition.y = Math.max(15, Math.min(85, ballPosition.y));
+    
+    ball.style.left = `calc(${ballPosition.x}% - 25px)`;
+    ball.style.top = `calc(${ballPosition.y}% - 25px)`;
+    
+    // Пульсация в зависимости от множителя
+    const pulse = 1 + (currentMultiplier - 1) * 0.05;
+    ball.style.transform = `translate(-50%, -50%) scale(${pulse})`;
+}
+
+function updateDisplay() {
+    // Текущий множитель
+    document.getElementById('currentMultiplier').textContent = currentMultiplier.toFixed(2) + 'x';
+    document.getElementById('bigMultiplier').textContent = currentMultiplier.toFixed(2) + 'x';
+    
+    // Цвет множителя в зависимости от значения
+    const multElement = document.getElementById('bigMultiplier');
+    if (currentMultiplier >= 3) {
+        multElement.style.color = '#ff6600';
+    } else if (currentMultiplier >= 2) {
+        multElement.style.color = '#ffcc00';
     } else {
-        if (countdownEl) countdownEl.textContent = '💥 TIME IS UP! 💥';
-        if (timerCircle) timerCircle.textContent = 'LOST';
-        
-        showMessage(`Too slow! Lost ${beBet.toFixed(2)} TON`, 'lose');
-        
-        // Failure animation
-        const ball = document.getElementById('ball');
-        if (ball) {
-            ball.style.display = 'none';
-        }
+        multElement.style.color = '#ff9ccd';
     }
     
-    // Reset after 3 seconds
+    // Сумма для вывода
+    updateCashOutAmount();
+}
+
+function updateCashOutAmount() {
+    const winAmount = currentBet * (currentMultiplier - 1);
+    document.getElementById('cashAmount').textContent = winAmount.toFixed(2);
+}
+
+function cashOut() {
+    if (!gameActive || isFalling) return;
+    
+    cashOutMultiplier = currentMultiplier;
+    endGame(true);
+}
+
+function startBallFall() {
+    if (isFalling) return;
+    
+    isFalling = true;
+    
+    // Останавливаем игровой цикл
+    if (gameInterval) {
+        clearInterval(gameInterval);
+        gameInterval = null;
+    }
+    
+    const ball = document.getElementById('ball');
+    const hole = document.getElementById('hole');
+    
+    // Анимация падения к дырке
+    ball.style.transition = 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1)';
+    ball.style.left = '50%';
+    ball.style.top = 'calc(100% - 80px)';
+    
+    // Подсветка дырки
+    hole.style.animation = 'holePulse 0.5s infinite';
+    
+    // Через 1.5 секунды - падение через дырку
     setTimeout(() => {
-        if (countdownEl) {
-            countdownEl.textContent = 'Click START to play again!';
-            countdownEl.classList.remove('timer-warning', 'timer-danger');
+        ball.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+        
+        // Определяем конечную позицию (зеленая или красная зона)
+        let finalLeft;
+        let animationName;
+        
+        if (fallDestination === 'win') {
+            finalLeft = '25%'; // Зеленая зона
+            animationName = 'ballWin';
+            ball.style.background = 'radial-gradient(circle at 30% 30%,#00ff9d,#00cc7a)';
+        } else {
+            finalLeft = '75%'; // Красная зона
+            animationName = 'ballLose';
+            ball.style.background = 'radial-gradient(circle at 30% 30%,#ff4466,#cc0033)';
         }
-        if (timerCircle) timerCircle.textContent = '';
-    }, 3000);
+        
+        ball.style.left = finalLeft;
+        ball.style.top = 'calc(100% - 40px)';
+        ball.style.animation = `${animationName} 1s forwards`;
+        
+        // Завершаем игру через секунду
+        setTimeout(() => {
+            endGame(false);
+        }, 1000);
+        
+    }, 1500);
+}
+
+function endGame(wasCashedOut) {
+    gameActive = false;
+    isFalling = false;
+    
+    // Останавливаем анимации
+    const circle = document.getElementById('circle');
+    const hole = document.getElementById('hole');
+    circle.style.animation = '';
+    hole.style.animation = '';
+    
+    // Активируем кнопку старта
+    document.getElementById('startBtn').disabled = false;
+    document.getElementById('cashOutBtn').disabled = true;
+    
+    let winAmount = 0;
+    let finalMultiplier = wasCashedOut ? cashOutMultiplier : (fallDestination === 'win' ? currentMultiplier : 0);
+    
+    if (wasCashedOut) {
+        // Игрок забрал деньги
+        winAmount = currentBet * (cashOutMultiplier - 1);
+        window.gameAPI.updateBalance(winAmount);
+        showMessage(`Успешно! +${winAmount.toFixed(2)} TON (${cashOutMultiplier.toFixed(2)}x)`, 'win');
+        
+        // Конфетти
+        createConfetti();
+    } else if (fallDestination === 'win') {
+        // Шарик упал в зеленую зону
+        winAmount = currentBet * (currentMultiplier - 1);
+        window.gameAPI.updateBalance(winAmount);
+        showMessage(`Выигрыш! +${winAmount.toFixed(2)} TON (${currentMultiplier.toFixed(2)}x)`, 'win');
+        
+        // Подсветка зеленой зоны
+        document.getElementById('winZone').classList.add('zone-highlight');
+        setTimeout(() => {
+            document.getElementById('winZone').classList.remove('zone-highlight');
+        }, 2000);
+        
+        createConfetti();
+    } else {
+        // Шарик упал в красную зону
+        showMessage(`Проигрыш! -${currentBet.toFixed(2)} TON`, 'lose');
+        
+        // Подсветка красной зоны
+        document.getElementById('loseZone').classList.add('zone-highlight');
+        setTimeout(() => {
+            document.getElementById('loseZone').classList.remove('zone-highlight');
+        }, 2000);
+    }
+    
+    // Добавляем в историю
+    if (finalMultiplier > 0) {
+        const historyItem = `<span style="color:${finalMultiplier >= 1 ? '#00ff9d' : '#ff4466'}">${finalMultiplier.toFixed(2)}x</span>`;
+        gameHistory.unshift(historyItem);
+        if (gameHistory.length > 5) gameHistory.pop();
+        
+        document.getElementById('historyList').innerHTML = gameHistory.join(' ');
+    }
+    
+    // Сбрасываем шарик
+    setTimeout(() => {
+        const ball = document.getElementById('ball');
+        ball.style.transition = '';
+        ball.style.animation = '';
+        ball.style.left = '50%';
+        ball.style.top = '50%';
+        ball.style.background = 'radial-gradient(circle at 30% 30%,#ff9ccd,#ff6bb5,#ff0080)';
+        ball.style.transform = 'translate(-50%, -50%) scale(1)';
+        
+        // Возвращаем к фоновой анимации
+        startIdleAnimation();
+    }, 2000);
+}
+
+function createConfetti() {
+    const gameField = document.getElementById('gameField');
+    for (let i = 0; i < 50; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti-piece';
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.top = '0';
+        confetti.style.background = i % 3 === 0 ? '#00ff9d' : (i % 3 === 1 ? '#ff9ccd' : '#ffcc00');
+        confetti.style.width = Math.random() * 10 + 5 + 'px';
+        confetti.style.height = Math.random() * 10 + 5 + 'px';
+        confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+        
+        gameField.appendChild(confetti);
+        
+        // Удаляем через 2 секунды
+        setTimeout(() => {
+            confetti.remove();
+        }, 2000);
+    }
 }
 
 function showMessage(text, type) {
-    const msg = document.getElementById('beMsg');
+    const msg = document.getElementById('gameMessage');
     if (msg) {
         msg.textContent = text;
         msg.className = `message ${type}`;
     }
 }
 
-// Add event listeners for clicking directly on ball
-document.addEventListener('click', function(e) {
-    if (!beGameActive) return;
-    
-    if (e.target.id === 'ball' || e.target.closest('#ball')) {
-        catchBall();
-    }
-});
-
-console.log('Ball Escape game script loaded');
+console.log('Ball Escape (новая версия) загружена');
