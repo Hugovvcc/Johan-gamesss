@@ -1,0 +1,15 @@
+<div class="card game-card">
+    <h2>Mines</h2>
+    Bet: <input id="mbet" type="number" min="0.1" max="10" step="0.1" value="1">
+    Mines: <select id="mcount">
+        <option>5</option><option>6</option><option>7</option>
+        <option>8</option><option>9</option><option>10</option>
+    </select>
+    <div class="controls">
+        <button onclick="startMines()">Start</button>
+        <button id="cashM" onclick="cashMines()" disabled>Cash Out</button>
+    </div>
+    <p>Opened: <span id="opened">0</span> | x<span id="mm">1.00</span></p>
+    <div id="minesMsg" class="message"></div>
+    <div id="grid"></div>
+</div>
