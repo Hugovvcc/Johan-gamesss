@@ -1,24 +1,8 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <link rel="stylesheet" href="ball-escape.css">
-    <title>Ball Escape</title>
-</head>
-<body>
-    <div class="game-container">
-        <div class="header">
-            <span>Множитель: <span id="multiplier">1.00x</span></span>
-        </div>
-        
-        <canvas id="gameCanvas" width="400" height="400"></canvas>
-
-        <div class="controls">
-            <div class="bet-info">Ставка: <span id="currentBet">1</span> TON</div>
-            <button id="playBtn" class="main-btn">СЫГРАТЬ</button>
-            <button id="cashoutBtn" class="main-btn hidden">ЗАБРАТЬ</button>
-        </div>
+<div class="ball-escape-wrapper">
+    <canvas id="gameCanvas" width="350" height="350"></canvas>
+    
+    <div class="game-ui">
+        <button id="playBtn" class="action-btn">ИГРАТЬ (1 TON)</button>
+        <button id="cashoutBtn" class="action-btn hidden">ЗАБРАТЬ</button>
     </div>
-    <script src="ball-escape.js"></script>
-</body>
-</html>
+</div>
