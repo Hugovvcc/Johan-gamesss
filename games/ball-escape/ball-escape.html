@@ -1,23 +1,129 @@
-<!-- games/ball-escape/ball-escape.html -->
-<div class="card">
-    <h2 style="text-align:center;margin-bottom:25px">🎱 Ball Escape</h2>
-   
-    <!-- Статистика сверху -->
-    <div style="display:flex;justify-content:space-between;background:rgba(255,255,255,0.05);padding:15px;border-radius:15px;margin-bottom:20px;">
-        <div style="text-align:center">
-            <div style="color:#ff9ccd;font-size:0.9rem">Макс. приз</div>
-            <div style="font-size:1.8rem;font-weight:bold;color:#00ff9d">▼ 30 TON</div>
-        </div>
-        <div style="text-align:center">
-            <div style="color:#ff9ccd;font-size:0.9rem">Текущий</div>
-            <div style="font-size:1.8rem;font-weight:bold;color:#ff9ccd" id="currentMultiplier">1.00x</div>
-        </div>
-        <div style="text-align:center">
-            <div style="color:#ff9ccd;font-size:0.9rem">Ставка</div>
-            <div style="font-size:1.8rem;font-weight:bold;color:#ffffff" id="currentBet">1</div>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ball Escape</title>
+    <link rel="stylesheet" href="ball-escape.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="game-container">
+        <header class="game-header">
+            <div class="game-title">
+                <h1>Ball Escape</h1>
+                <div class="max-prize">
+                    <span class="prize-label">Макс. приз ▼ 30</span>
+                    <span class="multiplier">2.98x</span>
+                </div>
+            </div>
+            <div class="preview-notice">
+                <i class="fas fa-info-circle"></i>
+                <span>Это превью игры</span>
+            </div>
+        </header>
+
+        <main class="game-content">
+            <div class="game-board">
+                <canvas id="gameCanvas" width="600" height="600"></canvas>
+                <div class="game-controls">
+                    <div class="bet-controls">
+                        <div class="bet-label">Сыграть ▼</div>
+                        <div class="bet-amount">1</div>
+                        <div class="bet-buttons">
+                            <button class="bet-btn" data-bet="1">1</button>
+                            <button class="bet-btn" data-bet="3">3</button>
+                            <button class="bet-btn" data-bet="10">10</button>
+                            <button class="bet-btn" data-bet="30">30</button>
+                            <button class="bet-btn" data-bet="50">50</button>
+                        </div>
+                    </div>
+                    
+                    <div class="action-controls">
+                        <button id="playBtn" class="play-btn">
+                            <i class="fas fa-play"></i> Нажми кнопку, чтобы сыграть
+                        </button>
+                        <button id="addGiftBtn" class="gift-btn">
+                            <i class="fas fa-gift"></i> Добавить гифт
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-stats">
+                <div class="stats-panel">
+                    <div class="stat-item">
+                        <span class="stat-label">Баланс:</span>
+                        <span id="balance" class="stat-value">1000</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Ставка:</span>
+                        <span id="currentBet" class="stat-value">1</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Выигрыш:</span>
+                        <span id="winAmount" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Последний результат:</span>
+                        <span id="lastResult" class="stat-value">-</span>
+                    </div>
+                </div>
+                
+                <div class="history-panel">
+                    <h3>История ставок</h3>
+                    <div id="betHistory" class="history-list">
+                        <!-- История будет добавляться здесь -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="game-footer">
+            <div class="hash-info">
+                © Hash: <span id="gameHash">c1eaf...a0cd3</span>
+            </div>
+            <div class="game-info">
+                <i class="fas fa-cog" id="settingsBtn"></i>
+                <i class="fas fa-question-circle" id="helpBtn"></i>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Модальные окна -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Как играть в Ball Escape</h2>
+            <p>1. Выберите размер ставки с помощью кнопок (1, 3, 10, 30, 50).</p>
+            <p>2. Нажмите кнопку "Нажми кнопку, чтобы сыграть" для запуска игры.</p>
+            <p>3. Шарик начнет движение внутри вращающегося круга с отверстием.</p>
+            <p>4. Шарик будет отскакивать от стенок круга.</p>
+            <p>5. Если шарик выпадет через отверстие, вы выигрываете 2.98x от ставки.</p>
+            <p>6. Если шарик останется внутри круга, вы проигрываете ставку.</p>
+            <p>7. Максимальный выигрыш за одну игру: 30x от ставки.</p>
         </div>
     </div>
-   
-    <!-- Описание -->
-    <div style="text-align:center;background:rgba(255,107,181,0.1);padding:15px;border-radius:12px;margin:20px 0;border:1px solid var(--pink2);">
-        <div style
+
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Настройки игры</h2>
+            <div class="setting-option">
+                <label for="soundToggle">Звук:</label>
+                <input type="checkbox" id="soundToggle" checked>
+            </div>
+            <div class="setting-option">
+                <label for="rotationSpeed">Скорость вращения:</label>
+                <input type="range" id="rotationSpeed" min="1" max="10" value="5">
+            </div>
+            <div class="setting-option">
+                <label for="ballSpeed">Скорость шарика:</label>
+                <input type="range" id="ballSpeed" min="1" max="10" value="5">
+            </div>
+        </div>
+    </div>
+
+    <script src="ball-escape.js"></script>
+</body>
+</html>
