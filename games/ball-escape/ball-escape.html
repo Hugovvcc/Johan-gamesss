@@ -1,39 +1,29 @@
 <!-- Игровое поле -->
 <div id="gameField" style="position:relative;width:100%;height:500px;margin:25px auto;border-radius:25px;overflow:hidden;background:radial-gradient(circle at center,#1a0030,#0a0015);border:3px solid var(--pink);box-shadow:0 0 50px rgba(255,107,181,0.3);">
-    
-    <!-- Вращающийся круг -->
-    <div id="circle" style="position:absolute;width:350px;height:350px;border-radius:50%;border:4px dashed rgba(255,155,205,0.4);top:50px;left:50%;transform:translateX(-50%);z-index:1;"></div>
-    
-    <!-- Центр круга (статичный) -->
-    <div style="position:absolute;width:50px;height:50px;border-radius:50%;background:rgba(255,107,181,0.2);top:175px;left:50%;transform:translateX(-50%);z-index:2;"></div>
-    
-    <!-- Дырка внизу -->
-    <div id="hole" style="position:absolute;width:120px;height:40px;background:radial-gradient(ellipse at center,#2a004a,#0a0015);border:3px solid var(--pink);border-radius:50%;bottom:30px;left:50%;transform:translateX(-50%);z-index:2;"></div>
-    
-    <!-- Зеленая зона выигрыша -->
-    <div class="win-zone" style="position:absolute;width:180px;height:80px;background:linear-gradient(90deg,rgba(0,255,157,0.2),rgba(0,255,157,0.05));border:2px solid var(--win);border-radius:15px;bottom:0;left:50%;transform:translateX(-200px);z-index:1;"></div>
-    
-    <!-- Красная зона проигрыша -->
-    <div class="lose-zone" style="position:absolute;width:180px;height:80px;background:linear-gradient(90deg,rgba(255,68,102,0.05),rgba(255,68,102,0.2));border:2px solid var(--lose);border-radius:15px;bottom:0;right:50%;transform:translateX(200px);z-index:1;"></div>
-    
-    <!-- Метки на зонах -->
-    <div style="position:absolute;bottom:85px;left:calc(50% - 200px);transform:translateX(-50%);color:var(--win);font-weight:bold;font-size:1.2rem;z-index:3;text-align:center;">
-        WIN<br><small style="font-size:0.8rem;opacity:0.8">× множитель</small>
-    </div>
-    <div style="position:absolute;bottom:85px;right:calc(50% - 200px);transform:translateX(50%);color:var(--lose);font-weight:bold;font-size:1.2rem;z-index:3;text-align:center;">
-        LOSE<br><small style="font-size:0.8rem;opacity:0.8">проигрыш</small>
-    </div>
-    
-    <!-- Шарик -->
-    <div id="ball" style="position:absolute;width:50px;height:50px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#ff9ccd,#ff6bb5,#ff0080);box-shadow:0 0 25px #ff0080;z-index:10;top:200px;left:50%;transform:translate(-50%,-50%);"></div>
-    
+
+    <!-- Основное место для анимации (круг + шарик + вращение) -->
+    <canvas id="gameCanvas" width="500" height="500" style="position:absolute;inset:0;z-index:1;"></canvas>
+
+    <!-- Статичные элементы интерфейса поверх canvas -->
+
     <!-- Текущий множитель большой -->
     <div id="bigMultiplier" style="position:absolute;top:60px;left:50%;transform:translateX(-50%);font-size:3rem;font-weight:bold;color:#ff9ccd;text-shadow:0 0 20px #ff0080;z-index:5;">1.00x</div>
-    
-    <!-- Индикатор направления -->
-    <div id="directionIndicator" style="position:absolute;bottom:120px;left:50%;transform:translateX(-50%);width:200px;height:10px;background:linear-gradient(90deg, var(--win), var(--lose));border-radius:5px;z-index:3;opacity:0.5;"></div>
-    
-    <!-- Стрелка направления -->
+
+    <!-- Зеленая и красная зоны (оставляем как фон/подсказку) -->
+    <div class="win-zone" style="position:absolute;width:180px;height:80px;background:linear-gradient(90deg,rgba(0,255,157,0.15),rgba(0,255,157,0.05));border:2px solid #00ff9d;border-radius:15px;bottom:0;left:50%;transform:translateX(-200px);z-index:2;pointer-events:none;"></div>
+    <div class="lose-zone" style="position:absolute;width:180px;height:80px;background:linear-gradient(90deg,rgba(255,68,102,0.05),rgba(255,68,102,0.15));border:2px solid #ff4466;border-radius:15px;bottom:0;right:50%;transform:translateX(200px);z-index:2;pointer-events:none;"></div>
+
+    <!-- Метки WIN / LOSE -->
+    <div style="position:absolute;bottom:85px;left:calc(50% - 200px);transform:translateX(-50%);color:#00ff9d;font-weight:bold;font-size:1.2rem;z-index:4;text-align:center;">
+        WIN<br><small style="font-size:0.8rem;opacity:0.8">× множитель</small>
+    </div>
+    <div style="position:absolute;bottom:85px;right:calc(50% - 200px);transform:translateX(50%);color:#ff4466;font-weight:bold;font-size:1.2rem;z-index:4;text-align:center;">
+        LOSE<br><small style="font-size:0.8rem;opacity:0.8">проигрыш</small>
+    </div>
+
+    <!-- Индикатор направления (можно анимировать стрелку при падении) -->
+    <div id="directionIndicator" style="position:absolute;bottom:120px;left:50%;transform:translateX(-50%);width:200px;height:10px;background:linear-gradient(90deg, #00ff9d, #ff4466);border-radius:5px;z-index:3;opacity:0.4;"></div>
+
     <div id="directionArrow" style="position:absolute;bottom:110px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:15px solid white;z-index:4;display:none;"></div>
-    
+
 </div>
