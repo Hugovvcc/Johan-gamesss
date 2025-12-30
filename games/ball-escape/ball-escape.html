@@ -1,12 +1,19 @@
 <div class="ball-escape-wrapper">
+    <div class="game-header">
+        <div class="prize-info">
+            <span class="prize-label">Макс. приз ▼ 30</span>
+            <span class="multiplier-display">2.98x</span>
+        </div>
+        <div class="preview-notice">
+            <i class="fas fa-info-circle"></i>
+            <span>Это превью игры</span>
+        </div>
+    </div>
+    
     <div id="gameMessage" class="game-notification hidden"></div>
     
-    <div class="game-stats">
-        <div class="stat-item">Множитель: <span id="multiplierValue" class="highlight">1.00x</span></div>
-    </div>
-
     <div class="canvas-container">
-        <canvas id="gameCanvas" width="360" height="420"></canvas>
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
         <div class="zone-icons">
             <span class="icon-win">🤑</span>
             <span class="icon-loss">💀</span>
@@ -14,14 +21,31 @@
     </div>
     
     <div class="controls-container">
-        <div class="bet-selector">
-            <button class="bet-btn active" onclick="setBet(1)">1</button>
-            <button class="bet-btn" onclick="setBet(3)">3</button>
-            <button class="bet-btn" onclick="setBet(5)">5</button>
-            <button class="bet-btn" onclick="setBet(10)">10</button>
-            <span style="color: #aaa; margin-left: 5px;">TON</span>
+        <div class="bet-section">
+            <div class="bet-label">Сыграть ▼</div>
+            <div id="currentBetDisplay" class="current-bet">1</div>
+            <div class="bet-selector">
+                <button class="bet-btn active" onclick="setBet(1)">1</button>
+                <button class="bet-btn" onclick="setBet(3)">3</button>
+                <button class="bet-btn" onclick="setBet(10)">10</button>
+                <button class="bet-btn" onclick="setBet(30)">30</button>
+                <button class="bet-btn" onclick="setBet(50)">50</button>
+            </div>
         </div>
 
-        <button id="playBtn" class="btn-main">ИГРАТЬ</button>
+        <div class="action-buttons">
+            <button id="playBtn" class="btn-main">
+                <i class="fas fa-play"></i>
+                <span>Нажми кнопку, чтобы сыграть</span>
+            </button>
+            <button id="giftBtn" class="btn-gift">
+                <i class="fas fa-gift"></i>
+                <span>Добавить гифт</span>
+            </button>
+        </div>
+    </div>
+    
+    <div class="game-footer">
+        <div class="hash-info">© Hash: <span id="gameHash">c1eaf...a0cd3</span></div>
     </div>
 </div>
