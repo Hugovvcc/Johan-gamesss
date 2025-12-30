@@ -1,44 +1,44 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const multText = document.getElementById('multiplier');
 const playBtn = document.getElementById('playBtn');
 const cashoutBtn = document.getElementById('cashoutBtn');
 
-// Настройки игры
-let ball = { x: 200, y: 200, vx: 2, vy: 2, radius: 8 };
-let ring = { radius: 120, gapAngle: 0.6, rotation: 0, speed: 0.03 };
-let multiplier = 1.0;
-let isPlaying = false;
+// Пытаемся найти ваш существующий элемент множителя (зеленый 1.00x)
+// Если у него нет ID, ищем по иерархии или создаем привязку
+const multiplierDisplay = document.querySelector('span[style*="color: rgb(0, 255, 136)"]') || 
+                          document.querySelector('.multiplier-text') || 
+                          document.getElementById('multiplier');
 
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+let ball, ring, multiplier, isPlaying = false;
+let animationId;
 
-    // 1. Рисуем кольцо с дыркой
-    ctx.beginPath();
-    ctx.lineWidth = 10;
-    ctx.strokeStyle = '#ff00cc';
-    // Рисуем дугу (всё кольцо минус дырка)
-    ctx.arc(centerX, centerY, ring.radius, ring.rotation + ring.gapAngle, ring.rotation - ring.gapAngle + Math.PI * 2);
-    ctx.stroke();
+function initParams() {
+    ball = { x: 175, y: 175, vx: 3, vy: 2, radius: 8 };
+    ring = { radius: 130, gapAngle: 0.5, rotation: 0, speed: 0.04 };
+    multiplier = 1.0;
+}
 
-    if (isPlaying) {
-        updatePhysics(centerX, centerY);
-        // 2. Рисуем шарик
-        ctx.beginPath();
-        ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-        ctx.fillStyle = '#00f2ff';
-        ctx.fill();
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = '#00f2ff';
-
-        ring.rotation += ring.speed;
-        requestAnimationFrame(draw);
+function updateMultiplierUI() {
+    if (multiplierDisplay) {
+        multiplierDisplay.innerText = multiplier.toFixed(2) + 'x';
     }
 }
 
-function updatePhysics(cx, cy) {
+function draw() {
+    if (!isPlaying) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+
+    // Рисуем кольцо
+    ctx.beginPath();
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = '#ff69b4';
+    ctx.arc(cx, cy, ring.radius, ring.rotation + ring.gapAngle, ring.rotation - ring.gapAngle + Math.PI * 2);
+    ctx.stroke();
+
+    // Физика движения
     ball.x += ball.vx;
     ball.y += ball.vy;
 
@@ -46,66 +46,63 @@ function updatePhysics(cx, cy) {
     const dy = ball.y - cy;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
-    // Проверка столкновения с границей кольца
     if (dist + ball.radius >= ring.radius) {
-        // Вычисляем угол шарика относительно центра
         let angle = Math.atan2(dy, dx);
         if (angle < 0) angle += Math.PI * 2;
 
-        // Текущее положение дырки (нормализованный угол)
-        let normRotation = ring.rotation % (Math.PI * 2);
-        if (normRotation < 0) normRotation += Math.PI * 2;
+        let normRot = ring.rotation % (Math.PI * 2);
+        if (normRot < 0) normRot += Math.PI * 2;
 
-        // Проверка: попал ли шарик в дырку
-        const diff = Math.abs(angle - normRotation);
+        const diff = Math.abs(angle - normRot);
+        
         if (diff < ring.gapAngle || diff > (Math.PI * 2 - ring.gapAngle)) {
-            gameOver();
+            endGame(false);
+            return;
         } else {
             // Отскок
-            const normalX = dx / dist;
-            const normalY = dy / dist;
-            const dot = ball.vx * normalX + ball.vy * normalY;
+            const nx = dx / dist;
+            const ny = dy / dist;
+            const dot = ball.vx * nx + ball.vy * ny;
+            ball.vx -= 2 * dot * nx;
+            ball.vy -= 2 * dot * ny;
             
-            ball.vx -= 2 * dot * normalX;
-            ball.vy -= 2 * dot * normalY;
-
-            // Чуть-чуть выталкиваем шарик внутрь, чтобы не застрял
-            ball.x = cx + (ring.radius - ball.radius - 2) * Math.cos(angle);
-            ball.y = cy + (ring.radius - ball.radius - 2) * Math.sin(angle);
-
-            // Увеличиваем множитель за удар
-            multiplier += 0.15;
-            multText.innerText = multiplier.toFixed(2) + 'x';
+            // Эффект ускорения и множитель
+            multiplier += 0.12;
+            updateMultiplierUI();
         }
     }
+
+    // Рисуем шарик
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+    ctx.fillStyle = '#00ff88';
+    ctx.fill();
+
+    ring.rotation += ring.speed;
+    animationId = requestAnimationFrame(draw);
 }
 
 function startGame() {
+    initParams();
     isPlaying = true;
-    multiplier = 1.0;
-    ball = { x: 200, y: 200, vx: 3, vy: 2, radius: 8 };
     playBtn.classList.add('hidden');
     cashoutBtn.classList.remove('hidden');
+    updateMultiplierUI();
     draw();
 }
 
-function gameOver() {
+function endGame(isWin) {
     isPlaying = false;
-    alert("Проигрыш! Шарик вылетел.");
-    resetUI();
-}
-
-function resetUI() {
+    cancelAnimationFrame(animationId);
+    alert(isWin ? `Вы забрали ${multiplier.toFixed(2)}x!` : "Шарик вылетел! Ставка сгорела.");
+    
     playBtn.classList.remove('hidden');
     cashoutBtn.classList.add('hidden');
-    multText.innerText = '1.00x';
+    if (!isWin) {
+        multiplier = 1.0;
+        updateMultiplierUI();
+    }
 }
 
-playBtn.addEventListener('click', startGame);
-cashoutBtn.addEventListener('click', () => {
-    isPlaying = false;
-    alert(`Выигрыш: ${multiplier.toFixed(2)}x`);
-    resetUI();
-});
-
-draw(); // Первый запуск отрисовки
+playBtn.onclick = startGame;
+cashoutBtn.onclick = () => endGame(true);
