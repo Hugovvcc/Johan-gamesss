@@ -4,25 +4,31 @@ const playBtn = document.getElementById('playBtn');
 const cashoutBtn = document.getElementById('cashoutBtn');
 const gameMessage = document.getElementById('gameMessage');
 
-const multiplierDisplay = document.querySelector('span[style*="color: rgb(0, 255, 136)"]') || 
-                          document.getElementById('multiplier');
-
+let currentBet = 1;
 let ball, ring, multiplier, isPlaying = false;
-let isEscaped = false; // Состояние, когда шарик вылетел из круга
+let isEscaped = false;
+let animationId;
+
+// Настройка ставки
+window.setBet = (amount) => {
+    currentBet = amount;
+    document.querySelectorAll('.bet-btn').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.innerText) === amount);
+    });
+};
 
 function initParams() {
-    ball = { x: 175, y: 150, vx: 3.5, vy: 2.5, radius: 8 };
-    // gapAngle: 0.3 делает дырку значительно меньше
-    ring = { radius: 100, gapAngle: 0.3, rotation: 0, speed: 0.04 };
+    // Скорость уменьшена для плавности (было 3.5/2.5 стало 2.2/1.5)
+    ball = { x: 175, y: 150, vx: 2.2, vy: 1.5, radius: 8 };
+    ring = { radius: 100, gapAngle: 0.25, rotation: Math.random() * Math.PI, speed: 0.03 };
     multiplier = 1.0;
     isEscaped = false;
+    updateMultiplierUI();
 }
 
-function showMessage(text, color = "#fff") {
-    gameMessage.innerText = text;
-    gameMessage.style.borderColor = color;
-    gameMessage.classList.remove('hidden');
-    setTimeout(() => gameMessage.classList.add('hidden'), 3000);
+function updateMultiplierUI() {
+    const display = document.querySelector('.multiplier-text') || document.getElementById('multiplier');
+    if (display) display.innerText = multiplier.toFixed(2) + 'x';
 }
 
 function draw() {
@@ -30,50 +36,47 @@ function draw() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const cx = canvas.width / 2;
-    const cy = 180; // Смещаем центр круга чуть выше
+    const cy = 180;
 
-    // 1. Рисуем нижние зоны (Зеленая и Красная)
-    const zoneHeight = 40;
-    ctx.fillStyle = '#00ff0033'; // Зеленая (лево)
-    ctx.fillRect(0, canvas.height - zoneHeight, canvas.width / 2, zoneHeight);
-    ctx.fillStyle = '#ff000033'; // Красная (право)
-    ctx.fillRect(canvas.width / 2, canvas.height - zoneHeight, canvas.width / 2, zoneHeight);
-    
-    // Граница зон
-    ctx.strokeStyle = '#00ff00'; ctx.strokeRect(0, canvas.height - zoneHeight, canvas.width/2, zoneHeight);
-    ctx.strokeStyle = '#ff0000'; ctx.strokeRect(canvas.width/2, canvas.height - zoneHeight, canvas.width/2, zoneHeight);
+    // Отрисовка зон
+    const zoneH = 40;
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = '#00ff00'; ctx.fillRect(0, canvas.height - zoneH, canvas.width/2, zoneH);
+    ctx.fillStyle = '#ff0000'; ctx.fillRect(canvas.width/2, canvas.height - zoneH, canvas.width/2, zoneH);
+    ctx.globalAlpha = 1.0;
 
-    // 2. Рисуем основное кольцо
+    // Отрисовка кольца
     ctx.beginPath();
-    ctx.lineWidth = 8;
+    ctx.lineWidth = 10;
     ctx.strokeStyle = '#ff69b4';
     ctx.arc(cx, cy, ring.radius, ring.rotation + ring.gapAngle, ring.rotation - ring.gapAngle + Math.PI * 2);
     ctx.stroke();
 
-    // 3. Логика движения шарика
+    // Движение
     ball.x += ball.vx;
     ball.y += ball.vy;
 
-    // Физика внешних границ холста (отскок от стенок)
+    // Рандомное смещение в сторону КРАСНОГО (когда мяч вылетел)
+    if (isEscaped && ball.y > cy) {
+        // Мягко подталкиваем вправо (к красной зоне)
+        ball.vx += 0.02; 
+    }
+
+    // Стенки экрана
     if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) ball.vx *= -1;
     if (ball.y - ball.radius < 0) ball.vy *= -1;
 
-    // Проверка попадания в зоны внизу
-    if (ball.y + ball.radius > canvas.height - zoneHeight) {
-        if (ball.x < canvas.width / 2) {
-            endGame(true); // Выигрыш
-        } else {
-            endGame(false); // Проигрыш
-        }
+    // Проверка падения в зоны
+    if (ball.y + ball.radius > canvas.height - zoneH) {
+        ball.x < canvas.width / 2 ? endGame(true) : endGame(false);
         return;
     }
 
-    // Взаимодействие с кольцом
+    // Физика кольца
     const dx = ball.x - cx;
     const dy = ball.y - cy;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
-    // Если шарик внутри или касается кольца
     if (!isEscaped && dist + ball.radius >= ring.radius) {
         let angle = Math.atan2(dy, dx);
         if (angle < 0) angle += Math.PI * 2;
@@ -81,35 +84,29 @@ function draw() {
         if (normRot < 0) normRot += Math.PI * 2;
 
         const diff = Math.abs(angle - normRot);
-        
         if (diff < ring.gapAngle || diff > (Math.PI * 2 - ring.gapAngle)) {
-            // ШАРИК ВЫЛЕТЕЛ
-            isEscaped = true; 
-            // Теперь он просто летит к зонам, отскакивая от стен
+            isEscaped = true; // Вылет
         } else {
-            // ОТСКОК ВНУТРИ (дает иксы)
+            // Отскок
             const nx = dx / dist;
             const ny = dy / dist;
             const dot = ball.vx * nx + ball.vy * ny;
-            ball.vx -= 2 * dot * nx;
-            ball.vy -= 2 * dot * ny;
+            ball.vx = (ball.vx - 2 * dot * nx) * 0.99; // Небольшое замедление при ударе
+            ball.vy = (ball.vy - 2 * dot * ny) * 0.99;
             
-            multiplier += 0.10;
-            if (multiplierDisplay) multiplierDisplay.innerText = multiplier.toFixed(2) + 'x';
+            multiplier += 0.15;
+            updateMultiplierUI();
         }
     }
 
-    // 4. Отрисовка шарика
+    // Шарик
     ctx.beginPath();
     ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-    ctx.fillStyle = isEscaped ? '#fff' : '#00ff88';
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = ctx.fillStyle;
+    ctx.fillStyle = isEscaped ? '#ffcc00' : '#00ff88';
     ctx.fill();
-    ctx.shadowBlur = 0;
 
     ring.rotation += ring.speed;
-    requestAnimationFrame(draw);
+    animationId = requestAnimationFrame(draw);
 }
 
 function startGame() {
@@ -123,15 +120,26 @@ function startGame() {
 
 function endGame(isWin) {
     isPlaying = false;
+    cancelAnimationFrame(animationId);
+    
     if (isWin) {
-        showMessage(`ПОБЕДА!\nВыигрыш: ${multiplier.toFixed(2)}x`, "#00ff88");
+        const winAmount = (currentBet * multiplier).toFixed(2);
+        showGameMessage(`ВЫИГРЫШ!\n+${winAmount} TON`, "#00ff88");
     } else {
-        showMessage("ПРОИГРЫШ!\nПопали в красную зону", "#ff0000");
-        if (multiplierDisplay) multiplierDisplay.innerText = '1.00x';
+        showGameMessage(`ПРОИГРЫШ\n-${currentBet} TON`, "#ff4444");
+        multiplier = 1.0;
+        updateMultiplierUI();
     }
     
     playBtn.classList.remove('hidden');
     cashoutBtn.classList.add('hidden');
+}
+
+function showGameMessage(text, color) {
+    gameMessage.innerText = text;
+    gameMessage.style.color = color;
+    gameMessage.style.borderColor = color;
+    gameMessage.classList.remove('hidden');
 }
 
 playBtn.onclick = startGame;
