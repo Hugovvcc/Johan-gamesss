@@ -1,15 +1,35 @@
-<div class="card game-card">
-    <h2>Mines</h2>
-    Bet: <input id="mbet" type="number" min="0.1" max="10" step="0.1" value="1">
-    Mines: <select id="mcount">
-        <option>5</option><option>6</option><option>7</option>
-        <option>8</option><option>9</option><option>10</option>
-    </select>
-    <div class="controls">
-        <button onclick="startMines()">Start</button>
-        <button id="cashM" onclick="cashMines()" disabled>Cash Out</button>
+<div class="card">
+    <h2 style="text-align:center;margin-bottom:25px">🎮 Mines Game</h2>
+    
+    <div style="text-align:center;margin-bottom:20px">
+        <div style="margin:10px 0">
+            <label style="display:block;margin-bottom:5px">Bet Amount (TON):</label>
+            <input id="mbet" type="number" min="0.1" max="10" step="0.1" value="1" style="display:inline-block">
+        </div>
+        
+        <div style="margin:10px 0">
+            <label style="display:block;margin-bottom:5px">Number of Mines:</label>
+            <select id="mcount" style="display:inline-block">
+                <option>5</option><option>6</option><option>7</option>
+                <option>8</option><option>9</option><option>10</option>
+            </select>
+        </div>
     </div>
-    <p>Opened: <span id="opened">0</span> | x<span id="mm">1.00</span></p>
+    
+    <div class="controls">
+        <button onclick="startMines()" style="background:linear-gradient(45deg,#00ff9d,#00cc7a)">Start Game</button>
+        <button id="cashM" onclick="cashMines()" disabled style="background:linear-gradient(45deg,#ff9ccd,#ff6bb5)">Cash Out</button>
+    </div>
+    
+    <div style="text-align:center;margin:20px 0;font-size:1.2rem">
+        <p>💰 Opened: <span id="opened" style="font-weight:bold">0</span> cells | Multiplier: x<span id="mm" style="font-weight:bold">1.00</span></p>
+    </div>
+    
     <div id="minesMsg" class="message"></div>
+    
     <div id="grid"></div>
+    
+    <div style="text-align:center;margin-top:25px;color:rgba(255,255,255,0.6);font-size:0.9rem">
+        Click cells to find diamonds 💎. Avoid mines 💣!
+    </div>
 </div>
