@@ -138,3 +138,38 @@
     transform-origin: left;
     z-index: 3;
 }
+/* Физика шарика */
+#ball {
+    transition: transform 0.2s ease, background 0.5s ease;
+    will-change: transform, left, top;
+}
+
+/* Отскок шарика */
+@keyframes bounce {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.1); }
+}
+
+.ball-bounce {
+    animation: bounce 0.3s ease;
+}
+
+/* Анимация падения */
+@keyframes fallToHole {
+    0% { 
+        transform: translate(-50%, -50%) scale(1);
+    }
+    100% { 
+        transform: translate(-50%, 100px) scale(0.8);
+    }
+}
+
+/* Вращение шарика */
+@keyframes ballRotate {
+    from { transform: translate(-50%, -50%) rotate(0deg); }
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.ball-rotating {
+    animation: ballRotate 2s linear infinite;
+}
