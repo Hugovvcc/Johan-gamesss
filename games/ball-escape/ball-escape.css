@@ -1,219 +1,443 @@
-/* Ball Escape - новая версия */
-
-/* Анимация шарика */
-@keyframes ballBounce {
-    0%, 100% { transform: translate(-50%, -50%) scale(1); }
-    50% { transform: translate(-50%, -50%) scale(1.1); }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-@keyframes ballGlow {
-    0% { box-shadow: 0 0 20px #ff0080; }
-    50% { box-shadow: 0 0 40px #ff0080, 0 0 60px #ff0080; }
-    100% { box-shadow: 0 0 20px #ff0080; }
+body {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
 }
 
-@keyframes ballFall {
-    0% { transform: translate(-50%, -50%) rotate(0deg); }
-    100% { transform: translate(-50%, 420px) rotate(720deg); }
+.game-container {
+    width: 100%;
+    max-width: 1200px;
+    background: rgba(25, 25, 45, 0.9);
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    border: 1px solid #2a2a4a;
 }
 
-@keyframes ballWin {
-    0% { transform: translate(-50%, 420px) scale(1); }
-    50% { transform: translate(-50%, 420px) scale(1.5); }
-    100% { transform: translate(-50%, 420px) scale(1); opacity: 0; }
+.game-header {
+    background: linear-gradient(90deg, #0f3460 0%, #1a1a2e 100%);
+    padding: 15px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #2a2a4a;
 }
 
-@keyframes ballLose {
-    0% { transform: translate(-50%, 420px) scale(1); }
-    50% { transform: translate(-50%, 420px) scale(0.5); }
-    100% { transform: translate(-50%, 420px) scale(1); opacity: 0; }
+.game-title h1 {
+    font-size: 28px;
+    font-weight: 700;
+    background: linear-gradient(90deg, #00b4db, #0083b0);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 5px;
 }
 
-/* Кнопки ставок */
-.bet-btn {
-    padding: 12px 25px;
-    border: none;
-    border-radius: 10px;
-    font-size: 1.2rem;
+.max-prize {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.prize-label {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #e0e0ff;
+}
+
+.multiplier {
+    background: linear-gradient(90deg, #ff416c, #ff4b2b);
+    padding: 5px 15px;
+    border-radius: 8px;
     font-weight: bold;
+    font-size: 18px;
+    box-shadow: 0 4px 8px rgba(255, 65, 108, 0.3);
+}
+
+.preview-notice {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 193, 7, 0.2);
+    padding: 8px 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 193, 7, 0.5);
+    font-size: 14px;
+}
+
+.preview-notice i {
+    color: #ffc107;
+}
+
+.game-content {
+    display: flex;
+    padding: 25px;
+    gap: 30px;
+}
+
+@media (max-width: 900px) {
+    .game-content {
+        flex-direction: column;
+    }
+}
+
+.game-board {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 25px;
+}
+
+canvas {
+    background: #0d1028;
+    border-radius: 50%;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    border: 5px solid #2a2a4a;
+}
+
+.game-controls {
+    width: 100%;
+    background: rgba(30, 30, 50, 0.8);
+    border-radius: 15px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.bet-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.bet-label {
+    font-size: 14px;
+    color: #a0a0d0;
+    margin-bottom: 5px;
+}
+
+.bet-amount {
+    font-size: 32px;
+    font-weight: bold;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    color: #00b4db;
+    border: 2px solid #2a2a4a;
+}
+
+.bet-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.bet-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #2a2a4a, #3a3a6a);
+    color: #e0e0ff;
+    font-weight: bold;
+    font-size: 16px;
     cursor: pointer;
     transition: all 0.3s;
     min-width: 60px;
-    color: white;
 }
 
 .bet-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(255, 107, 181, 0.4);
-}
-
-.bet-btn.active {
-    background: linear-gradient(45deg, #ff6bb5, #ff9ccd) !important;
-    box-shadow: 0 0 20px #ff6bb5;
-    transform: scale(1.1);
-}
-
-/* Отображение множителей */
-.mult-display {
-    background: rgba(0, 0, 0, 0.6);
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-weight: bold;
-    border: 1px solid currentColor;
-    font-size: 0.9rem;
-}
-
-/* Пульсация круга */
-@keyframes circlePulse {
-    0% { border-color: rgba(255, 155, 205, 0.4); }
-    50% { border-color: rgba(255, 107, 181, 0.8); }
-    100% { border-color: rgba(255, 155, 205, 0.4); }
-}
-
-/* Анимация дырки */
-@keyframes holePulse {
-    0% { box-shadow: 0 0 10px rgba(255, 107, 181, 0.5); }
-    50% { box-shadow: 0 0 30px rgba(255, 107, 181, 0.8); }
-    100% { box-shadow: 0 0 10px rgba(255, 107, 181, 0.5); }
-}
-
-/* История - анимация появления */
-@keyframes historyAppear {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Анимация выигрыша */
-@keyframes winFlash {
-    0%, 100% { background-color: rgba(0, 255, 157, 0.1); }
-    50% { background-color: rgba(0, 255, 157, 0.3); }
-}
-
-/* Анимация проигрыша */
-@keyframes loseFlash {
-    0%, 100% { background-color: rgba(255, 68, 102, 0.1); }
-    50% { background-color: rgba(255, 68, 102, 0.3); }
-}
-
-/* Конфетти для победы */
-.confetti-piece {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    background: var(--win);
-    opacity: 0;
-    z-index: 100;
-    animation: confettiFall 2s linear forwards;
-}
-
-@keyframes confettiFall {
-    0% {
-        transform: translateY(0) rotate(0deg);
-        opacity: 1;
-    }
-    100% {
-        transform: translateY(500px) rotate(720deg);
-        opacity: 0;
-    }
-}
-
-/* Подсветка зеленой/красной зоны */
-.zone-highlight {
-    animation: zonePulse 1s infinite;
-}
-
-@keyframes zonePulse {
-    0%, 100% { opacity: 0.5; }
-    50% { opacity: 1; }
-}
-
-/* Индикатор таймера */
-.timer-indicator {
-    position: absolute;
-    width: 100%;
-    height: 5px;
-    background: linear-gradient(90deg, #00ff9d, #ff9900, #ff4466);
-    bottom: 0;
-    left: 0;
-    transform-origin: left;
-    z-index: 3;
-}
-/* Физика шарика */
-#ball {
-    transition: transform 0.2s ease, background 0.5s ease;
-    will-change: transform, left, top;
-}
-
-/* Отскок шарика */
-@keyframes bounce {
-    0%, 100% { transform: translate(-50%, -50%) scale(1); }
-    50% { transform: translate(-50%, -50%) scale(1.1); }
-}
-
-.ball-bounce {
-    animation: bounce 0.3s ease;
-}
-
-/* Анимация падения */
-@keyframes fallToHole {
-    0% { 
-        transform: translate(-50%, -50%) scale(1);
-    }
-    100% { 
-        transform: translate(-50%, 100px) scale(0.8);
-    }
-}
-
-/* Вращение шарика */
-@keyframes ballRotate {
-    from { transform: translate(-50%, -50%) rotate(0deg); }
-    to { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
-.ball-rotating {
-    animation: ballRotate 2s linear infinite;
-}
-/* Анимация вращения круга */
-@keyframes circleSpin {
-    from { transform: translateX(-50%) rotate(0deg); }
-    to { transform: translateX(-50%) rotate(360deg); }
-}
-
-/* Анимация подсветки зоны */
-@keyframes zonePulse {
-    0%, 100% { 
-        box-shadow: 0 0 10px currentColor;
-        transform: scale(1);
-    }
-    50% { 
-        box-shadow: 0 0 30px currentColor;
-        transform: scale(1.05);
-    }
-}
-
-.win-zone {
-    transition: all 0.3s;
-}
-
-.lose-zone {
-    transition: all 0.3s;
-}
-
-/* Анимация появления в истории */
-@keyframes historyAppear {
-    from {
-        opacity: 0;
-        transform: scale(0.5);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-/* Стиль для активной кнопки ставки */
-.bet-btn.active {
-    background: linear-gradient(45deg, #ff6bb5, #ff9ccd) !important;
-    box-shadow: 0 0 20px rgba(255, 107, 181, 0.8);
+    background: linear-gradient(90deg, #3a3a6a, #4a4a8a);
     transform: translateY(-2px);
+}
+
+.bet-btn.active {
+    background: linear-gradient(90deg, #00b4db, #0083b0);
+    box-shadow: 0 0 15px rgba(0, 180, 219, 0.5);
+}
+
+.action-controls {
+    display: flex;
+    gap: 15px;
+}
+
+.play-btn, .gift-btn {
+    flex: 1;
+    padding: 15px;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s;
+}
+
+.play-btn {
+    background: linear-gradient(90deg, #00b09b, #96c93d);
+    color: white;
+}
+
+.play-btn:hover {
+    background: linear-gradient(90deg, #00a08b, #8ab83d);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 176, 155, 0.4);
+}
+
+.play-btn:disabled {
+    background: #555;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.gift-btn {
+    background: linear-gradient(90deg, #ff416c, #ff4b2b);
+    color: white;
+}
+
+.gift-btn:hover {
+    background: linear-gradient(90deg, #ff315c, #ff3b1b);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(255, 65, 108, 0.4);
+}
+
+.game-stats {
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+@media (max-width: 900px) {
+    .game-stats {
+        width: 100%;
+    }
+}
+
+.stats-panel, .history-panel {
+    background: rgba(30, 30, 50, 0.8);
+    border-radius: 15px;
+    padding: 20px;
+}
+
+.stats-panel {
+    border: 2px solid #2a2a4a;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-item:last-child {
+    border-bottom: none;
+}
+
+.stat-label {
+    color: #a0a0d0;
+    font-size: 14px;
+}
+
+.stat-value {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+#balance {
+    color: #00b4db;
+}
+
+#currentBet {
+    color: #ffc107;
+}
+
+#winAmount {
+    color: #4CAF50;
+}
+
+#lastResult {
+    color: #e0e0ff;
+}
+
+.history-panel h3 {
+    margin-bottom: 15px;
+    color: #00b4db;
+    font-size: 18px;
+}
+
+.history-list {
+    max-height: 200px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.history-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 8px 12px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+}
+
+.history-item.win {
+    border-left: 4px solid #4CAF50;
+}
+
+.history-item.loss {
+    border-left: 4px solid #f44336;
+}
+
+.game-footer {
+    background: rgba(20, 20, 40, 0.9);
+    padding: 15px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 2px solid #2a2a4a;
+}
+
+.hash-info {
+    font-family: monospace;
+    font-size: 14px;
+    color: #a0a0d0;
+}
+
+.game-info {
+    display: flex;
+    gap: 15px;
+}
+
+.game-info i {
+    font-size: 20px;
+    color: #a0a0d0;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.game-info i:hover {
+    color: #00b4db;
+}
+
+/* Модальные окна */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: #1a1a2e;
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 500px;
+    border: 2px solid #2a2a4a;
+    position: relative;
+}
+
+.close-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
+    color: #aaa;
+    cursor: pointer;
+}
+
+.close-modal:hover {
+    color: #fff;
+}
+
+.modal-content h2 {
+    margin-bottom: 20px;
+    color: #00b4db;
+}
+
+.modal-content p {
+    margin-bottom: 10px;
+    line-height: 1.5;
+    color: #e0e0ff;
+}
+
+.setting-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.setting-option:last-child {
+    border-bottom: none;
+}
+
+.setting-option label {
+    color: #e0e0ff;
+}
+
+.setting-option input[type="checkbox"] {
+    width: 40px;
+    height: 20px;
+    appearance: none;
+    background: #555;
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+}
+
+.setting-option input[type="checkbox"]:checked {
+    background: #00b4db;
+}
+
+.setting-option input[type="checkbox"]::before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: white;
+    top: 2px;
+    left: 2px;
+    transition: all 0.3s;
+}
+
+.setting-option input[type="checkbox"]:checked::before {
+    left: 22px;
+}
+
+.setting-option input[type="range"] {
+    width: 150px;
 }
