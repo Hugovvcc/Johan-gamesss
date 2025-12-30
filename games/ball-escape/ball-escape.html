@@ -5,20 +5,23 @@
         <div class="stat-item">Множитель: <span id="multiplierValue" class="highlight">1.00x</span></div>
     </div>
 
-    <canvas id="gameCanvas" width="360" height="420"></canvas>
+    <div class="canvas-container">
+        <canvas id="gameCanvas" width="360" height="420"></canvas>
+        <div class="zone-icons">
+            <span class="icon-win">🤑</span>
+            <span class="icon-loss">💀</span>
+        </div>
+    </div>
     
     <div class="controls-container">
-        <div class="bet-label">Выберите ставку (TON)</div>
         <div class="bet-selector">
             <button class="bet-btn active" onclick="setBet(1)">1</button>
             <button class="bet-btn" onclick="setBet(3)">3</button>
             <button class="bet-btn" onclick="setBet(5)">5</button>
             <button class="bet-btn" onclick="setBet(10)">10</button>
+            <span style="color: #aaa; margin-left: 5px;">TON</span>
         </div>
 
-        <div class="actions">
-            <button id="playBtn" class="btn-main">ИГРАТЬ</button>
-            <button id="cashoutBtn" class="btn-main cashout hidden">ЗАБРАТЬ</button>
-        </div>
+        <button id="playBtn" class="btn-main">ИГРАТЬ</button>
     </div>
 </div>
