@@ -1,27 +1,75 @@
 .card {
     background: var(--card);
     border-radius: 20px;
-    padding: 20px;
+    padding: 25px;
     margin: 20px 0;
     border: 1px solid rgba(255, 150, 200, 0.25);
     backdrop-filter: blur(8px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .controls {
     display: flex;
     justify-content: center;
+    gap: 15px;
     flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 15px;
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 15px;
 }
 
 .message {
     text-align: center;
     font-size: 1.2rem;
-    margin: 10px 0;
-    padding: 10px;
+    margin: 15px 0;
+    padding: 12px 20px;
     border-radius: 12px;
+    font-weight: bold;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.win { background: rgba(0, 255, 157, 0.2); border: 1px solid var(--win); }
-.lose { background: rgba(255, 68, 102, 0.2); border: 1px solid var(--lose); }
+.win {
+    background: rgba(0, 255, 157, 0.15);
+    border: 2px solid var(--win);
+    color: var(--win);
+}
+
+.lose {
+    background: rgba(255, 68, 102, 0.15);
+    border: 2px solid var(--lose);
+    color: var(--lose);
+}
+
+.countdown {
+    text-align: center;
+    font-size: 2.2rem;
+    margin: 20px 0;
+    padding: 15px;
+    color: var(--pink2);
+    background: rgba(255, 107, 181, 0.1);
+    border-radius: 15px;
+    font-weight: bold;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+.mult {
+    text-align: center;
+    font-size: 3.5rem;
+    font-weight: bold;
+    margin: 20px 0;
+    padding: 15px;
+    background: linear-gradient(90deg, var(--pink), #d946ef);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 20px rgba(255, 155, 205, 0.5);
+}
