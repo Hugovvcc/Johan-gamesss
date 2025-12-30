@@ -2,6 +2,14 @@
     <div id="gameMessage" class="game-notification hidden"></div>
     <canvas id="gameCanvas" width="350" height="450"></canvas>
     
+    <div class="bet-selector">
+        <button class="bet-btn active" onclick="setBet(1)">1</button>
+        <button class="bet-btn" onclick="setBet(3)">3</button>
+        <button class="bet-btn" onclick="setBet(5)">5</button>
+        <button class="bet-btn" onclick="setBet(10)">10</button>
+        <span>TON</span>
+    </div>
+
     <div class="game-ui">
         <button id="playBtn" class="action-btn">ИГРАТЬ</button>
         <button id="cashoutBtn" class="action-btn hidden">ЗАБРАТЬ</button>
