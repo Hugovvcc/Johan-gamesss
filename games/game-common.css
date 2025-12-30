@@ -1,0 +1,27 @@
+.card {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 20px;
+    margin: 20px 0;
+    border: 1px solid rgba(255, 150, 200, 0.25);
+    backdrop-filter: blur(8px);
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.message {
+    text-align: center;
+    font-size: 1.2rem;
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 12px;
+}
+
+.win { background: rgba(0, 255, 157, 0.2); border: 1px solid var(--win); }
+.lose { background: rgba(255, 68, 102, 0.2); border: 1px solid var(--lose); }
