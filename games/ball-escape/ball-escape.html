@@ -1,29 +1,23 @@
-<!-- Игровое поле -->
-<div id="gameField" style="position:relative;width:100%;height:500px;margin:25px auto;border-radius:25px;overflow:hidden;background:radial-gradient(circle at center,#1a0030,#0a0015);border:3px solid var(--pink);box-shadow:0 0 50px rgba(255,107,181,0.3);">
-
-    <!-- Основное место для анимации (круг + шарик + вращение) -->
-    <canvas id="gameCanvas" width="500" height="500" style="position:absolute;inset:0;z-index:1;"></canvas>
-
-    <!-- Статичные элементы интерфейса поверх canvas -->
-
-    <!-- Текущий множитель большой -->
-    <div id="bigMultiplier" style="position:absolute;top:60px;left:50%;transform:translateX(-50%);font-size:3rem;font-weight:bold;color:#ff9ccd;text-shadow:0 0 20px #ff0080;z-index:5;">1.00x</div>
-
-    <!-- Зеленая и красная зоны (оставляем как фон/подсказку) -->
-    <div class="win-zone" style="position:absolute;width:180px;height:80px;background:linear-gradient(90deg,rgba(0,255,157,0.15),rgba(0,255,157,0.05));border:2px solid #00ff9d;border-radius:15px;bottom:0;left:50%;transform:translateX(-200px);z-index:2;pointer-events:none;"></div>
-    <div class="lose-zone" style="position:absolute;width:180px;height:80px;background:linear-gradient(90deg,rgba(255,68,102,0.05),rgba(255,68,102,0.15));border:2px solid #ff4466;border-radius:15px;bottom:0;right:50%;transform:translateX(200px);z-index:2;pointer-events:none;"></div>
-
-    <!-- Метки WIN / LOSE -->
-    <div style="position:absolute;bottom:85px;left:calc(50% - 200px);transform:translateX(-50%);color:#00ff9d;font-weight:bold;font-size:1.2rem;z-index:4;text-align:center;">
-        WIN<br><small style="font-size:0.8rem;opacity:0.8">× множитель</small>
+<!-- games/ball-escape/ball-escape.html -->
+<div class="card">
+    <h2 style="text-align:center;margin-bottom:25px">🎱 Ball Escape</h2>
+   
+    <!-- Статистика сверху -->
+    <div style="display:flex;justify-content:space-between;background:rgba(255,255,255,0.05);padding:15px;border-radius:15px;margin-bottom:20px;">
+        <div style="text-align:center">
+            <div style="color:#ff9ccd;font-size:0.9rem">Макс. приз</div>
+            <div style="font-size:1.8rem;font-weight:bold;color:#00ff9d">▼ 30 TON</div>
+        </div>
+        <div style="text-align:center">
+            <div style="color:#ff9ccd;font-size:0.9rem">Текущий</div>
+            <div style="font-size:1.8rem;font-weight:bold;color:#ff9ccd" id="currentMultiplier">1.00x</div>
+        </div>
+        <div style="text-align:center">
+            <div style="color:#ff9ccd;font-size:0.9rem">Ставка</div>
+            <div style="font-size:1.8rem;font-weight:bold;color:#ffffff" id="currentBet">1</div>
+        </div>
     </div>
-    <div style="position:absolute;bottom:85px;right:calc(50% - 200px);transform:translateX(50%);color:#ff4466;font-weight:bold;font-size:1.2rem;z-index:4;text-align:center;">
-        LOSE<br><small style="font-size:0.8rem;opacity:0.8">проигрыш</small>
-    </div>
-
-    <!-- Индикатор направления (можно анимировать стрелку при падении) -->
-    <div id="directionIndicator" style="position:absolute;bottom:120px;left:50%;transform:translateX(-50%);width:200px;height:10px;background:linear-gradient(90deg, #00ff9d, #ff4466);border-radius:5px;z-index:3;opacity:0.4;"></div>
-
-    <div id="directionArrow" style="position:absolute;bottom:110px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:15px solid white;z-index:4;display:none;"></div>
-
-</div>
+   
+    <!-- Описание -->
+    <div style="text-align:center;background:rgba(255,107,181,0.1);padding:15px;border-radius:12px;margin:20px 0;border:1px solid var(--pink2);">
+        <div style
