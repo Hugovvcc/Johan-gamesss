@@ -173,3 +173,47 @@
 .ball-rotating {
     animation: ballRotate 2s linear infinite;
 }
+/* Анимация вращения круга */
+@keyframes circleSpin {
+    from { transform: translateX(-50%) rotate(0deg); }
+    to { transform: translateX(-50%) rotate(360deg); }
+}
+
+/* Анимация подсветки зоны */
+@keyframes zonePulse {
+    0%, 100% { 
+        box-shadow: 0 0 10px currentColor;
+        transform: scale(1);
+    }
+    50% { 
+        box-shadow: 0 0 30px currentColor;
+        transform: scale(1.05);
+    }
+}
+
+.win-zone {
+    transition: all 0.3s;
+}
+
+.lose-zone {
+    transition: all 0.3s;
+}
+
+/* Анимация появления в истории */
+@keyframes historyAppear {
+    from {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Стиль для активной кнопки ставки */
+.bet-btn.active {
+    background: linear-gradient(45deg, #ff6bb5, #ff9ccd) !important;
+    box-shadow: 0 0 20px rgba(255, 107, 181, 0.8);
+    transform: translateY(-2px);
+}
