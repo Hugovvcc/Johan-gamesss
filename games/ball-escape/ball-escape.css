@@ -1,27 +1,76 @@
-.bet-selector {
-    margin-bottom: 15px;
+.ball-escape-wrapper {
     display: flex;
-    gap: 10px;
+    flex-direction: column;
     align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    font-family: 'Segoe UI', Roboto, sans-serif;
+}
+
+.game-stats {
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+    color: #fff;
+}
+
+.highlight {
+    color: #00ff88;
+    font-weight: bold;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+#gameCanvas {
+    background: rgba(20, 10, 35, 0.5);
+    border-radius: 24px;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.bet-selector {
+    display: flex;
+    gap: 8px;
+    margin: 15px 0;
 }
 
 .bet-btn {
-    background: #331a4d;
-    border: 1px solid #ff69b4;
-    color: white;
-    padding: 5px 12px;
-    border-radius: 8px;
+    background: #2a1a3d;
+    border: 1px solid #4a3a5d;
+    color: #aaa;
+    padding: 8px 16px;
+    border-radius: 12px;
     cursor: pointer;
+    transition: 0.2s;
 }
 
 .bet-btn.active {
     background: #ff69b4;
-    box-shadow: 0 0 10px #ff69b4;
+    color: white;
+    border-color: #ff69b4;
+    box-shadow: 0 0 15px rgba(255, 105, 180, 0.4);
 }
 
-.action-btn {
-    width: 200px;
-    height: 50px;
-    font-size: 1.2rem;
-    transition: 0.3s;
+.btn-main {
+    background: #0088cc;
+    color: white;
+    border: none;
+    padding: 14px 40px;
+    border-radius: 16px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+}
+
+.btn-main.cashout { background: #ff69b4; }
+
+.game-notification {
+    position: absolute;
+    top: 40%;
+    background: rgba(0,0,0,0.9);
+    padding: 20px;
+    border-radius: 20px;
+    text-align: center;
+    z-index: 100;
+    border: 1px solid #444;
 }
