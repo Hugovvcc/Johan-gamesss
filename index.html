@@ -18,10 +18,16 @@
     </div>
     
     <div id="game-container">
-        <!-- Здесь будет загружаться игра -->
+        <!-- Игра загрузится здесь -->
     </div>
 </div>
 
 <script src="script.js"></script>
+<script>
+    // Автозагрузка Mines при старте
+    window.addEventListener('load', function() {
+        loadGame('mines');
+    });
+</script>
 </body>
 </html>
