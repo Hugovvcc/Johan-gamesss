@@ -1,119 +1,36 @@
-let bal = 100;
-const balEl = document.getElementById('bal');
-const gameContainer = document.getElementById('game-container');
-let loadedGame = null;
-
-function updateBalance() {
-    balEl.textContent = bal.toFixed(1);
+// Интеграция с основной системой баланса
+if (typeof window.getGameBalance === 'function') {
+    // Используем баланс из основной системы
+    var userBalance = window.getGameBalance();
+} else {
+    // Запасной вариант
+    var userBalance = 1000;
 }
 
-// Глобальный API для игр
-window.gameAPI = {
-    getBalance: () => bal,
-    updateBalance: (amount) => {
-        bal += amount;
-        updateBalance();
-        return bal;
+// Функция для обновления баланса через основную систему
+function updateGameBalance(amount) {
+    if (typeof window.processGameWin === 'function' && amount > 0) {
+        return window.processGameWin(amount);
+    } else if (typeof window.placeGameBet === 'function' && amount < 0) {
+        return window.placeGameBet(-amount);
     }
-};
-
-// Загрузка игры
-function loadGame(gameName) {
-    console.log(`🔄 Загружаем игру: ${gameName}`);
-    
-    // Очищаем контейнер
-    gameContainer.innerHTML = '<div class="card" style="text-align:center;padding:40px">Загрузка игры...</div>';
-    
-    // Формируем пути к файлам
-    const htmlPath = `games/${gameName}/${gameName}.html`;
-    const cssPath = `games/${gameName}/${gameName}.css`;
-    const jsPath = `games/${gameName}/${gameName}.js`;
-    
-    console.log(`📁 Пути: HTML=${htmlPath}, CSS=${cssPath}, JS=${jsPath}`);
-    
-    // 1. Загружаем HTML
-    fetch(htmlPath)
-        .then(response => {
-            if (!response.ok) throw new Error(`Ошибка ${response.status}: ${response.statusText}`);
-            return response.text();
-        })
-        .then(html => {
-            gameContainer.innerHTML = html;
-            loadedGame = gameName;
-            console.log(`✅ HTML загружен: ${gameName}`);
-            
-            // 2. Загружаем CSS
-            return new Promise((resolve) => {
-                // Удаляем старые стили игры
-                document.querySelectorAll('link[data-game-css]').forEach(link => link.remove());
-                
-                const cssLink = document.createElement('link');
-                cssLink.rel = 'stylesheet';
-                cssLink.href = cssPath;
-                cssLink.setAttribute('data-game-css', gameName);
-                
-                cssLink.onload = () => {
-                    console.log(`✅ CSS загружен: ${gameName}`);
-                    resolve();
-                };
-                
-                cssLink.onerror = () => {
-                    console.warn(`⚠️ CSS не загружен: ${cssPath}`);
-                    resolve(); // Продолжаем без CSS
-                };
-                
-                document.head.appendChild(cssLink);
-            });
-        })
-        .then(() => {
-            // 3. Загружаем JS
-            return new Promise((resolve) => {
-                // Удаляем старые скрипты игры
-                document.querySelectorAll('script[data-game-js]').forEach(script => script.remove());
-                
-                const jsScript = document.createElement('script');
-                jsScript.src = jsPath;
-                jsScript.setAttribute('data-game-js', gameName);
-                
-                jsScript.onload = () => {
-                    console.log(`✅ JS загружен: ${gameName}`);
-                    if (typeof initGame === 'function') {
-                        console.log(`🎮 Инициализируем игру: ${gameName}`);
-                        initGame();
-                    }
-                    resolve();
-                };
-                
-                jsScript.onerror = (error) => {
-                    console.error(`❌ Ошибка загрузки JS: ${jsPath}`, error);
-                    gameContainer.innerHTML += `
-                        <div class="card" style="color:red;margin-top:20px">
-                            <h3>Ошибка загрузки игры</h3>
-                            <p>Файл ${jsPath} не найден</p>
-                            <p>Проверьте что файл существует</p>
-                        </div>
-                    `;
-                    resolve();
-                };
-                
-                document.body.appendChild(jsScript);
-            });
-        })
-        .catch(error => {
-            console.error('❌ Ошибка загрузки игры:', error);
-            gameContainer.innerHTML = `
-                <div class="card" style="color:red">
-                    <h3>Не могу загрузить игру: ${gameName}</h3>
-                    <p>Ошибка: ${error.message}</p>
-                    <p>Проверьте что папка 'games/${gameName}/' существует</p>
-                    <button onclick="loadGame('mines')" style="margin-top:20px">
-                        Вернуться к Mines
-                    </button>
-                </div>
-            `;
-        });
+    return false;
 }
 
-// Инициализация
-updateBalance();
-console.log('🎯 Главный скрипт загружен');
+// Функция для получения текущего баланса
+function getCurrentBalance() {
+    if (typeof window.getGameBalance === 'function') {
+        return window.getGameBalance();
+    }
+    return userBalance;
+}
+
+// Обновляем все вызовы обновления баланса в игре:
+// Вместо: userBalance += amount
+// Используйте: if (updateGameBalance(amount)) { /* успех */ }
+
+// Вместо: userBalance -= bet
+// Используйте: if (updateGameBalance(-bet)) { /* успех */ }
+
+// Для отображения баланса всегда используйте:
+// balanceDisplay.textContent = getCurrentBalance().toFixed(2);
