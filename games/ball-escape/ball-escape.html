@@ -1,90 +1,21 @@
-<div class="ball-escape-wrapper">
-    <div class="game-header">
-        <div class="prize-info">
-            <span class="prize-label">Макс. приз ▼ 30</span>
-            <span class="multiplier-display">2.98x</span>
-        </div>
-        <div class="preview-notice">
-            <i class="fas fa-info-circle"></i>
-            <span>Это превью игры</span>
-        </div>
+<div class="game-container">
+    <div class="status-bar">
+        <span class="max-prize">Макс. приз: 30</span>
+        <span class="balance-display">Баланс: <span id="balance">98.00</span></span>
     </div>
-    
-    <div id="gameMessage" class="game-notification hidden"></div>
-    
-    <div class="canvas-container">
-        <canvas id="gameCanvas" width="400" height="400"></canvas>
-        <div class="zone-icons">
-            <span class="icon-win">🤑</span>
-            <span class="icon-loss">💀</span>
-        </div>
-    </div>
-    
-    <div class="balance-display">
-        <div class="balance-label">Баланс:</div>
-        <div id="globalBalance" class="balance-value">1000</div>
-        <button id="depositBtn" class="btn-deposit">Пополнить</button>
-        <button id="withdrawBtn" class="btn-withdraw">Вывести</button>
-    </div>
-    
-    <div class="controls-container">
-        <div class="bet-section">
-            <div class="bet-label">Сыграть ▼</div>
-            <div id="currentBetDisplay" class="current-bet">1</div>
-            <div class="bet-selector">
-                <button class="bet-btn active" onclick="setBet(1)">1</button>
-                <button class="bet-btn" onclick="setBet(3)">3</button>
-                <button class="bet-btn" onclick="setBet(10)">10</button>
-                <button class="bet-btn" onclick="setBet(30)">30</button>
-                <button class="bet-btn" onclick="setBet(50)">50</button>
-            </div>
-        </div>
 
-        <div class="action-buttons">
-            <button id="playBtn" class="btn-main">
-                <i class="fas fa-play"></i>
-                <span>Нажми кнопку, чтобы сыграть</span>
-            </button>
-            <button id="giftBtn" class="btn-gift">
-                <i class="fas fa-gift"></i>
-                <span>Добавить гифт</span>
-            </button>
-        </div>
+    <div class="game-area">
+        <canvas id="ballCanvas" width="300" height="300"></canvas>
+        <div class="multiplier" id="multiplierText">1.00x</div>
+        <div class="preview-overlay" id="previewText">Это превью игры</div>
     </div>
-    
-    <div class="game-footer">
-        <div class="hash-info">© Hash: <span id="gameHash">c1eaf...a0cd3</span></div>
-    </div>
-</div>
 
-<!-- Модальное окно пополнения -->
-<div id="depositModal" class="modal">
-    <div class="modal-content">
-        <span class="close-modal">&times;</span>
-        <h2>Пополнение баланса</h2>
-        <div class="deposit-options">
-            <button class="deposit-option" onclick="deposit(10)">+10 TON</button>
-            <button class="deposit-option" onclick="deposit(50)">+50 TON</button>
-            <button class="deposit-option" onclick="deposit(100)">+100 TON</button>
-            <button class="deposit-option" onclick="deposit(500)">+500 TON</button>
+    <div class="controls">
+        <div class="bet-options">
+            <button onclick="setBet(1)">1</button>
+            <button onclick="setBet(3)">3</button>
+            <button onclick="setBet(10)">10</button>
         </div>
-        <div class="custom-deposit">
-            <input type="number" id="customAmount" placeholder="Введите сумму" min="1" max="10000">
-            <button onclick="depositCustom()">Пополнить</button>
-        </div>
-    </div>
-</div>
-
-<!-- Модальное окно вывода -->
-<div id="withdrawModal" class="modal">
-    <div class="modal-content">
-        <span class="close-modal">&times;</span>
-        <h2>Вывод средств</h2>
-        <div class="withdraw-info">
-            <p>Доступно: <span id="availableBalance">1000</span> TON</p>
-            <input type="number" id="withdrawAmount" placeholder="Сумма для вывода" min="1">
-            <input type="text" id="walletAddress" placeholder="Ваш TON кошелек">
-            <button onclick="processWithdrawal()">Вывести</button>
-        </div>
+        <button id="playButton" class="main-play-btn">Сыграть | <span id="currentBet">1</span></button>
     </div>
 </div>
