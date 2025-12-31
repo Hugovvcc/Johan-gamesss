@@ -1,52 +1,48 @@
-.ball-escape-wrapper {
-    background: #0b0e18;
-    border-radius: 20px;
-    padding: 15px;
-    width: 340px;
-    color: white;
+.game-card {
+    background: radial-gradient(circle, #1a1a2e 0%, #0f0f1b 100%);
+    border-radius: 24px;
+    padding: 20px;
+    width: 350px;
     text-align: center;
+    color: white;
+    font-family: sans-serif;
+}
+
+.canvas-wrapper {
     position: relative;
+    margin: 20px 0;
 }
 
-.canvas-container {
-    position: relative;
-    width: 300px;
-    height: 300px;
-    margin: 10px auto;
-}
-
-#gameCanvas {
-    display: block;
-}
-
-.multiplier-text {
+.multiplier {
     position: absolute;
-    top: 50%;
+    top: 45%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 32px;
-    font-weight: bold;
-    color: #2ecc71;
-    text-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+    font-size: 38px;
+    font-weight: 900;
+    color: #00ff88;
+    text-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
 }
 
-.play-btn {
-    background: #00a2ff;
+.play-button {
+    background: #0095ff;
     border: none;
     color: white;
+    padding: 15px;
     width: 100%;
-    padding: 12px;
-    border-radius: 10px;
+    border-radius: 12px;
+    font-size: 18px;
     font-weight: bold;
     cursor: pointer;
-    margin-top: 10px;
+    box-shadow: 0 4px 15px rgba(0, 149, 255, 0.3);
 }
 
-.bet-btn {
-    background: #1e263a;
+.bet-selector button {
+    background: #252a41;
     border: none;
-    color: #8e94a5;
-    padding: 8px 12px;
-    border-radius: 5px;
+    color: #ccc;
+    margin: 5px;
+    padding: 8px 15px;
+    border-radius: 8px;
     cursor: pointer;
 }
