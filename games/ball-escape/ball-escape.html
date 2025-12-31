@@ -20,6 +20,13 @@
         </div>
     </div>
     
+    <div class="balance-display">
+        <div class="balance-label">Баланс:</div>
+        <div id="globalBalance" class="balance-value">1000</div>
+        <button id="depositBtn" class="btn-deposit">Пополнить</button>
+        <button id="withdrawBtn" class="btn-withdraw">Вывести</button>
+    </div>
+    
     <div class="controls-container">
         <div class="bet-section">
             <div class="bet-label">Сыграть ▼</div>
@@ -47,5 +54,37 @@
     
     <div class="game-footer">
         <div class="hash-info">© Hash: <span id="gameHash">c1eaf...a0cd3</span></div>
+    </div>
+</div>
+
+<!-- Модальное окно пополнения -->
+<div id="depositModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>Пополнение баланса</h2>
+        <div class="deposit-options">
+            <button class="deposit-option" onclick="deposit(10)">+10 TON</button>
+            <button class="deposit-option" onclick="deposit(50)">+50 TON</button>
+            <button class="deposit-option" onclick="deposit(100)">+100 TON</button>
+            <button class="deposit-option" onclick="deposit(500)">+500 TON</button>
+        </div>
+        <div class="custom-deposit">
+            <input type="number" id="customAmount" placeholder="Введите сумму" min="1" max="10000">
+            <button onclick="depositCustom()">Пополнить</button>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно вывода -->
+<div id="withdrawModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>Вывод средств</h2>
+        <div class="withdraw-info">
+            <p>Доступно: <span id="availableBalance">1000</span> TON</p>
+            <input type="number" id="withdrawAmount" placeholder="Сумма для вывода" min="1">
+            <input type="text" id="walletAddress" placeholder="Ваш TON кошелек">
+            <button onclick="processWithdrawal()">Вывести</button>
+        </div>
     </div>
 </div>
