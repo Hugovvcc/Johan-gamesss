@@ -1,68 +1,85 @@
-const canvas = document.getElementById('gameCanvas');
+const canvas = document.getElementById('ballGame');
 const ctx = canvas.getContext('2d');
-const btn = document.getElementById('mainActionBtn');
+const btn = document.getElementById('actionBtn');
 
+let state = 'ROTATE'; // Состояния: ROTATE (вращение), FALL (падение)
 let angle = 0;
-let isPlaying = false;
-let ballRadius = 80; // Радиус орбиты шарика
+let ballY = 0;
+let ballX = 0;
+let dropSpeed = 0;
+const radius = 100;
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
 
-    // 1. Рисуем нижние зоны (Зеленая и Красная)
-    ctx.lineWidth = 20;
-    ctx.lineCap = 'round';
-
-    // Зеленая (слева снизу)
+    // 1. Рисуем нижние поля (Зеленое и Красное)
+    ctx.lineWidth = 25;
+    ctx.lineCap = 'butt';
+    
+    // Зеленое (слева снизу)
     ctx.beginPath();
-    ctx.strokeStyle = '#27ae60';
-    ctx.arc(centerX, centerY, ballRadius, 0.6 * Math.PI, 1.0 * Math.PI);
+    ctx.strokeStyle = '#2ecc71';
+    ctx.arc(centerX, centerY, radius + 10, 0.6 * Math.PI, 0.95 * Math.PI);
     ctx.stroke();
 
-    // Красная (справа снизу)
+    // Красное (справа снизу)
     ctx.beginPath();
-    ctx.strokeStyle = '#c0392b';
-    ctx.arc(centerX, centerY, ballRadius, 0 * Math.PI, 0.4 * Math.PI);
+    ctx.strokeStyle = '#e74c3c';
+    ctx.arc(centerX, centerY, radius + 10, 0.05 * Math.PI, 0.4 * Math.PI);
     ctx.stroke();
 
-    // 2. Розовое кольцо с "дыркой" сверху
-    ctx.lineWidth = 6;
-    ctx.strokeStyle = '#ff2df7';
+    // 2. Рисуем кольцо с дыркой снизу
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = '#ff00ff';
     ctx.beginPath();
-    // Рисуем почти полный круг, оставляя разрыв вверху
-    ctx.arc(centerX, centerY, ballRadius, 1.4 * Math.PI, 1.6 * Math.PI, true);
+    // Дырка находится в диапазоне от 0.4*PI до 0.6*PI (самый низ)
+    ctx.arc(centerX, centerY, radius, 0.6 * Math.PI, 0.4 * Math.PI);
     ctx.stroke();
 
-    // 3. Рисуем шарик
-    const ballX = centerX + Math.cos(angle) * ballRadius;
-    const ballY = centerY + Math.sin(angle) * ballRadius;
+    // 3. Логика движения шарика
+    if (state === 'ROTATE') {
+        angle += 0.06;
+        ballX = centerX + Math.cos(angle) * radius;
+        ballY = centerY + Math.sin(angle) * radius;
+    } else if (state === 'FALL') {
+        ballY += dropSpeed;
+        dropSpeed += 0.5; // Гравитация
+        
+        // Проверка столкновения с нижними полями
+        if (ballY > centerY + radius + 10) {
+            resetGame();
+        }
+    }
 
+    // 4. Отрисовка шарика
+    ctx.beginPath();
+    ctx.fillStyle = '#00d2ff';
     ctx.shadowBlur = 15;
     ctx.shadowColor = '#00d2ff';
-    ctx.fillStyle = '#00d2ff';
-    ctx.beginPath();
-    ctx.arc(ballX, ballY, 6, 0, Math.PI * 2);
+    ctx.arc(ballX, ballY, 8, 0, Math.PI * 2);
     ctx.fill();
-    ctx.shadowBlur = 0; // Сбрасываем тень
-
-    // Анимация вращения
-    if (isPlaying) {
-        angle += 0.05;
-    }
+    ctx.shadowBlur = 0;
 
     requestAnimationFrame(draw);
 }
 
-btn.addEventListener('click', () => {
-    isPlaying = !isPlaying;
-    btn.innerText = isPlaying ? "Остановить" : "Сыграть | 1";
-});
-
-function updateBet(amount) {
-    document.getElementById('bet-display').innerText = amount;
+function resetGame() {
+    state = 'ROTATE';
+    dropSpeed = 0;
 }
 
-// Запускаем цикл отрисовки
+btn.addEventListener('click', () => {
+    // Если шарик находится над дыркой (внизу), он выпадает
+    // Угол в радианах для низа примерно 1.57 (PI/2)
+    const currentAngle = angle % (Math.PI * 2);
+    
+    if (state === 'ROTATE') {
+        state = 'FALL';
+        btn.innerText = "Ждем...";
+        setTimeout(() => { btn.innerText = "Сыграть | 1"; }, 2000);
+    }
+});
+
 draw();
