@@ -1,23 +1,21 @@
-<div class="ball-escape-wrapper">
-    <div class="game-header">
-        <span class="max-win">Макс. приз: 30</span>
-        <span class="current-balance">Баланс: <span id="balance-val">98.00</span></span>
+<div class="game-card">
+    <div class="header-info">
+        <div class="max-prize">Макс. приз: 30</div>
+        <div class="user-balance">0.89 <span class="ton-icon">💎</span></div>
     </div>
 
-    <div class="canvas-container">
-        <canvas id="gameCanvas" width="300" height="300"></canvas>
-        <div id="multiplier" class="multiplier-text">1.00x</div>
-        <div class="preview-label">Это превью игры</div>
+    <div class="canvas-wrapper">
+        <canvas id="ballGame" width="320" height="320"></canvas>
+        <div id="multiplierText" class="multiplier">1.00x</div>
     </div>
 
-    <div class="bet-controls">
-        <div class="bet-buttons">
-            <button class="bet-btn" onclick="updateBet(1)">1</button>
-            <button class="bet-btn" onclick="updateBet(3)">3</button>
-            <button class="bet-btn" onclick="updateBet(10)">10</button>
-            <button class="bet-btn" onclick="updateBet(30)">30</button>
-            <button class="bet-btn" onclick="updateBet(50)">50</button>
+    <div class="game-footer">
+        <p class="preview-tag">Это превью игры</p>
+        <div class="bet-selector">
+            <button onclick="setBet(1)">1 💎</button>
+            <button onclick="setBet(3)">3 💎</button>
+            <button onclick="setBet(10)">10 💎</button>
         </div>
-        <button id="mainActionBtn" class="play-btn">Сыграть | <span id="bet-display">1</span></button>
+        <button id="actionBtn" class="play-button">Сыграть | 1</button>
     </div>
 </div>
