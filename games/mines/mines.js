@@ -1,4 +1,4 @@
-// ========== MINES GAME LOGIC (0.1 MODE) ==========
+// ========== MINES GAME LOGIC (BET RETURNED +0.1) ==========
 
 let mines = [];
 let opened = 0;
@@ -53,7 +53,7 @@ function startMines() {
     mbet = parseInt(betInput.value);
 
     if (isNaN(mbet) || mbet < 1) {
-        showMessage('Bet must be whole TON', 'lose');
+        showMessage('Bet must be at least 1 TON', 'lose');
         return;
     }
 
@@ -62,7 +62,7 @@ function startMines() {
         return;
     }
 
-    // deduct bet
+    // снимаем ставку
     window.gameAPI.updateBalance(-mbet);
 
     opened = 0;
@@ -72,7 +72,7 @@ function startMines() {
     document.getElementById('mm').textContent = 'x1.0';
     document.getElementById('cashM').disabled = false;
 
-    // generate mines
+    // генерация мин
     mines = [];
     const mc = parseInt(document.getElementById('mcount')?.value || 5);
 
@@ -92,7 +92,7 @@ function clickCell(cell, index) {
     cell.style.cursor = 'default';
 
     if (mines.includes(index)) {
-        // 💣
+        // 💣 МИНА
         cell.textContent = '💣';
         cell.style.background = 'rgba(255,68,102,0.35)';
         cell.style.borderColor = '#ff4466';
@@ -103,7 +103,7 @@ function clickCell(cell, index) {
 
         revealAllMines();
     } else {
-        // 💎
+        // 💎 АЛМАЗ
         cell.textContent = '💎';
         cell.style.background = 'rgba(0,255,157,0.25)';
         cell.style.borderColor = '#00ff9d';
@@ -122,8 +122,8 @@ function cashMines() {
         return;
     }
 
-    const profit = opened * (mbet * 0.1);
-    const totalWin = mbet + profit;
+    const profit = opened * 0.1;      // +0.1 за ячейку
+    const totalWin = mbet + profit;   // депозит + выигрыш
 
     window.gameAPI.updateBalance(totalWin);
 
@@ -131,7 +131,7 @@ function cashMines() {
     document.getElementById('cashM').disabled = true;
 
     showMessage(
-        `Cashed out! +${profit.toFixed(1)} TON 💰`,
+        `Cashed out! ${totalWin.toFixed(1)} TON 💰`,
         'win'
     );
 }
@@ -154,4 +154,4 @@ function showMessage(text, type) {
     msg.className = `message ${type}`;
 }
 
-console.log('Mines script loaded (0.1 system)');
+console.log('Mines script loaded (bet returned system)');
