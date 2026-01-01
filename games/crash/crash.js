@@ -1,4 +1,4 @@
-// ========== CRASH GAME LOGIC (BEAUTIFUL ROCKET VERSION) ==========
+// ========== CRASH GAME LOGIC (BEAUTIFUL + SLOW + LOW X) ==========
 
 let cm = 1;
 let crashed = false;
@@ -19,7 +19,7 @@ function initGame() {
     canvas = document.getElementById('cv');
     ctx = canvas.getContext('2d');
     drawInitialScreen();
-    console.log('✅ Crash initialized (beautiful rocket)');
+    console.log('✅ Crash initialized (slow & low x)');
 }
 
 function drawInitialScreen() {
@@ -53,6 +53,8 @@ function startCrash() {
     cm = 1;
     crashed = false;
     gameStarted = true;
+
+    // 🎯 фиксируем краш заранее
     crashPoint = generateCrashPoint();
 
     document.getElementById('cm').textContent = "1.00x";
@@ -63,20 +65,25 @@ function startCrash() {
     animate();
 }
 
+// 💥 ЧАСТЫЕ НИЗКИЕ ИКСЫ
 function generateCrashPoint() {
     const r = Math.random();
-    if (r < 0.65) return 1 + Math.random() * 3;
-    if (r < 0.9) return 4 + Math.random() * 6;
-    return 10 + Math.random() * 25;
+
+    if (r < 0.45) return 1.05 + Math.random() * 0.35; // 1.05–1.40 (очень часто)
+    if (r < 0.75) return 1.4 + Math.random() * 1.2;  // 1.4–2.6
+    if (r < 0.92) return 2.6 + Math.random() * 3.5;  // 2.6–6.1
+    return 6 + Math.random() * 14;                  // редкие хайпы
 }
 
 function animate() {
     if (crashed || !gameStarted) return;
 
+    // motion trail
     ctx.fillStyle = "rgba(8,0,16,0.22)";
     ctx.fillRect(0, 0, 400, 420);
 
-    cm *= 1.006;
+    // 🐢 МЕДЛЕННЫЙ РОСТ ИКСОВ
+    cm *= 1.0035;
     document.getElementById('cm').textContent = cm.toFixed(2) + "x";
 
     const y = 420 - cm * 22;
@@ -85,7 +92,8 @@ function animate() {
     drawRocket(200, y);
 
     if (cm >= crashPoint) {
-        crash();
+        // маленькая пауза — психология
+        setTimeout(crash, 120);
         return;
     }
 
@@ -165,7 +173,7 @@ function drawRocket(x, y) {
     ctx.restore();
 }
 
-// 🌌 stars
+// 🌌 MOVING STARS
 function drawStars() {
     ctx.fillStyle = "#ffffffcc";
     stars.forEach(st => {
@@ -176,6 +184,8 @@ function drawStars() {
 }
 
 function crash() {
+    if (crashed) return;
+
     crashed = true;
     gameStarted = false;
     document.getElementById('cashC').disabled = true;
@@ -218,7 +228,7 @@ function showMessage(text, type) {
     msg.className = `message ${type}`;
 }
 
-// автоинициализация
+// автостарт
 window.onload = initGame;
 
-console.log('🚀 Crash loaded (beautiful rocket)');
+console.log('🚀 Crash loaded (slow growth, low multipliers)');
