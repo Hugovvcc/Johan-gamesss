@@ -1,29 +1,41 @@
 body {
     margin: 0;
-    padding: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #0d001a; /* Темный фон */
+    background-color: #0d001a;
     color: white;
     font-family: sans-serif;
-    overflow: hidden;
 }
 
 .game-container {
+    position: relative;
     text-align: center;
-    /* Все стили графики перенесены в JS canvas */
 }
 
 canvas {
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: radial-gradient(circle, #1a0033 0%, #0d001a 100%);
+    border-radius: 10px;
 }
 
 .score-display {
     position: absolute;
     top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 24px;
+    width: 100%;
+    font-size: 32px;
+    font-weight: bold;
+    color: #00ff88;
+}
+
+#actionBtn {
+    display: block;
+    margin: 20px auto;
+    padding: 15px 40px;
+    background: #ff00ff;
+    border: none;
+    color: white;
+    font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
 }
