@@ -1,114 +1,139 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const scoreElement = document.getElementById('score');
+const btn = document.getElementById('actionBtn');
 
 canvas.width = 400;
-canvas.height = 500; // Добавляем место для зон выигрыша/проигрыша
+canvas.height = 600;
 
-let gameRunning = false;
-let score = 0;
-const center = { x: canvas.width / 2, y: canvas.height / 2 - 50 }; // Центр выше для зон внизу
-const radius = 120; // Радиус трека
-const trackWidth = 15;
-const gapAngle = Math.PI / 4; // Размер щели (45 градусов)
+const center = { x: canvas.width / 2, y: canvas.height / 2 - 50 };
+const radius = 130;
+const gapAngle = 0.6; // Размер дырки в радианах
 
+let gameRunning = true;
+let multiplier = 1.0;
+let isFalling = false;
 let trackRotation = 0;
-const rotationSpeed = 0.01;
 
 const player = {
-    // Шар изначально привязан к верхней части трека
-    angle: -Math.PI / 2, 
-    isInside: true,
-    x: 0,
-    y: 0,
+    x: center.x,
+    y: center.y,
+    vx: 3, // Скорость по X
+    vy: 2, // Скорость по Y
     size: 10
 };
 
-// Зоны выигрыша/проигрыша (зеленая/красная)
-const zoneHeight = 100;
+function drawZones() {
+    const zh = 120;
+    // Красная зона
+    ctx.fillStyle = '#ff4444';
+    ctx.fillRect(0, canvas.height - zh, canvas.width / 2, zh);
+    ctx.font = '50px Arial';
+    ctx.fillText('💀', canvas.width / 4 - 25, canvas.height - 50);
 
-function startGame() {
-    gameRunning = true;
-    score = 0;
-    player.isInside = true;
-    trackRotation = 0;
-    gameLoop();
+    // Зеленая зона
+    ctx.fillStyle = '#44ff44';
+    ctx.fillRect(canvas.width / 2, canvas.height - zh, canvas.width / 2, zh);
+    ctx.fillText('🤑', (canvas.width * 0.75) - 25, canvas.height - 50);
 }
 
-function updateGame() {
-    if (!player.isInside) return;
+function update() {
+    if (!gameRunning) return;
 
-    // Вращаем трек
-    trackRotation += rotationSpeed;
+    trackRotation += 0.015;
+
+    if (!isFalling) {
+        // Физика прыжков внутри
+        player.x += player.vx;
+        player.y += player.vy;
+
+        // Расстояние от центра
+        const dx = player.x - center.x;
+        const dy = player.y - center.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        // Если коснулся стенки круга
+        if (dist + player.size > radius) {
+            // Находим угол шара относительно центра
+            const angle = Math.atan2(dy, dx);
+            
+            // Проверка: находится ли шар в зоне дырки?
+            // Нормализуем углы для сравнения
+            const normAngle = (angle - trackRotation + Math.PI * 2) % (Math.PI * 2);
+            
+            // Дырка находится внизу (около 1.57 рад или PI/2)
+            if (normAngle > 1.57 - gapAngle/2 && normAngle < 1.57 + gapAngle/2) {
+                // Ничего не делаем, шар пролетит в дырку
+            } else {
+                // ОТСКОК
+                const normalX = dx / dist;
+                const normalY = dy / dist;
+                const dot = player.vx * normalX + player.vy * normalY;
+                
+                player.vx -= 2 * dot * normalX;
+                player.vy -= 2 * dot * normalY;
+
+                // Выталкиваем шарик немного внутрь, чтобы не застрял
+                player.x = center.x + normalX * (radius - player.size - 1);
+                player.y = center.y + normalY * (radius - player.size - 1);
+
+                // Увеличиваем множитель при отскоке
+                multiplier += 0.05;
+                scoreElement.textContent = multiplier.toFixed(2);
+            }
+        }
+    } else {
+        // Физика падения
+        player.y += 7;
+        
+        // Проверка зон
+        if (player.y > canvas.height - 100) {
+            gameRunning = false;
+            alert(player.x > canvas.width / 2 ? "ВЫИГРЫШ! 🤑" : "ПРОИГРЫШ! 💀");
+            location.reload();
+        }
+    }
     
-    // Позиция шара относительно центра трека
-    // Шар не двигается сам, он привязан к вращающемуся треку
-    const currentAngle = player.angle + trackRotation;
-    player.x = center.x + Math.cos(currentAngle) * radius;
-    player.y = center.y + Math.sin(currentAngle) * radius;
-
-    score++;
-    scoreElement.textContent = Math.floor(score / 50);
+    // Если шар вылетел за пределы круга
+    const finalDist = Math.sqrt((player.x - center.x)**2 + (player.y - center.y)**2);
+    if (finalDist > radius + 20) isFalling = true;
 }
 
-function drawGame() {
+function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawZones();
 
-    // Рисуем нижние зоны (красная и зеленая)
-    ctx.fillStyle = '#ff5555'; // Красная
-    ctx.fillRect(0, canvas.height - zoneHeight, canvas.width / 2, zoneHeight);
-    ctx.fillStyle = '#55ff55'; // Зеленая
-    ctx.fillRect(canvas.width / 2, canvas.height - zoneHeight, canvas.width / 2, zoneHeight);
-    
-    // Рисуем вращающийся трек
+    // Трек
     ctx.save();
     ctx.translate(center.x, center.y);
     ctx.rotate(trackRotation);
-    
-    // Рисуем дугу трека (от 0 до 2*PI минус размер щели)
     ctx.beginPath();
-    // Вырезаем "дыру" в дуге
-    ctx.arc(0, 0, radius, gapAngle / 2, Math.PI * 2 - gapAngle / 2);
-    ctx.strokeStyle = '#ff00ff'; // Неоновый розовый
-    ctx.lineWidth = trackWidth;
+    ctx.arc(0, 0, radius, gapAngle/2 + 1.57, -gapAngle/2 + 1.57);
+    ctx.strokeStyle = '#ff00ff';
+    ctx.lineWidth = 10;
+    ctx.lineCap = 'round';
     ctx.stroke();
+    ctx.restore();
 
-    ctx.restore(); // Восстанавливаем систему координат
-
-    // Рисуем шар
+    // Шар
     ctx.beginPath();
     ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
-    ctx.fillStyle = '#0066ff';
+    ctx.fillStyle = '#00d2ff';
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = '#00d2ff';
     ctx.fill();
+    ctx.shadowBlur = 0;
 }
 
-function gameLoop() {
-    if (!gameRunning) return;
-
-    updateGame();
-    drawGame();
-    
-    // Базовая проверка "выпадения" шара - нужно будет доработать логику
-    // Пока просто останавливаем игру, если игрок "выпал"
-    if (!player.isInside) {
-        console.log("Шар выпал!");
-        // Здесь должна быть логика проверки на зеленую/красную зону
-        gameRunning = false; 
-    }
-
-    requestAnimationFrame(gameLoop);
+function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
 }
 
-// При клике игрок "отпускает" шар, и он перестает следовать за вращением
-canvas.addEventListener('click', () => {
-    if (gameRunning && player.isInside) {
-        // Чтобы шар выпал, мы просто перестаем обновлять его позицию относительно трека
-        player.isInside = false;
-        // В этот момент шар начинает двигаться по прямой вниз (нужно добавить логику физики)
-    } else if (!gameRunning) {
-        startGame();
-    }
+btn.addEventListener('click', () => {
+    // В этой версии шар всегда прыгает, а кнопка может, например, замедлять вращение
+    // Или можно сделать, чтобы изначально шар был зафиксирован
 });
 
-// Запускаем игру при первой загрузке, чтобы показать интерфейс
-startGame();
+loop();
