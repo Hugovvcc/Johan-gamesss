@@ -6,36 +6,52 @@ body {
     height: 100vh;
     background-color: #0d001a;
     color: white;
-    font-family: sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
 }
 
 .game-container {
     position: relative;
     text-align: center;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
 }
 
 canvas {
+    display: block;
     background: radial-gradient(circle, #1a0033 0%, #0d001a 100%);
-    border-radius: 10px;
+    border-radius: 15px;
+    margin-bottom: 20px;
 }
 
 .score-display {
-    position: absolute;
-    top: 20px;
-    width: 100%;
-    font-size: 32px;
+    font-size: 28px;
     font-weight: bold;
     color: #00ff88;
+    margin-bottom: 15px;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
 }
 
-#actionBtn {
-    display: block;
-    margin: 20px auto;
-    padding: 15px 40px;
-    background: #ff00ff;
-    border: none;
-    color: white;
+.btn {
+    padding: 15px 50px;
+    font-size: 18px;
     font-weight: bold;
-    border-radius: 10px;
+    color: white;
+    background: linear-gradient(45deg, #ff00ff, #00d2ff);
+    border: none;
+    border-radius: 12px;
     cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 5px 15px rgba(255, 0, 255, 0.3);
+}
+
+.btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 25px rgba(0, 210, 255, 0.5);
+}
+
+.btn:active {
+    transform: scale(0.95);
 }
