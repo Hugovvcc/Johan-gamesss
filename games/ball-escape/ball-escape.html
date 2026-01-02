@@ -1,17 +1,23 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ball Escape 2.0</title>
-    <link rel="stylesheet" href="ball-escape.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ball Escape</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="game-container">
-        <canvas id="gameCanvas"></canvas>
-        <div class="score-display">Множитель: <span id="score">1.00</span>x</div>
-        <button id="actionBtn">ВЫБРОСИТЬ ШАР</button>
+
+<div class="game-container">
+    <canvas id="gameCanvas" width="400" height="600"></canvas>
+
+    <div class="score-display">
+        Множитель: <span id="score">1.00</span>x
     </div>
-    <script src="ball-escape.js"></script>
+
+    <button id="actionBtn">START</button>
+</div>
+
+<script src="game.js"></script>
 </body>
 </html>
