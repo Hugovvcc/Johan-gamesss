@@ -4,9 +4,9 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #0d001a;
+    background: #0b0014;
+    font-family: Arial, sans-serif;
     color: white;
-    font-family: sans-serif;
 }
 
 .game-container {
@@ -15,27 +15,30 @@ body {
 }
 
 canvas {
-    background: radial-gradient(circle, #1a0033 0%, #0d001a 100%);
-    border-radius: 10px;
+    background: radial-gradient(circle at top, #1e0038, #090012);
+    border-radius: 20px;
 }
 
 .score-display {
     position: absolute;
-    top: 20px;
+    top: 18px;
     width: 100%;
-    font-size: 32px;
+    text-align: center;
+    font-size: 28px;
     font-weight: bold;
-    color: #00ff88;
+    color: #00ff9d;
+    text-shadow: 0 0 10px #00ff9d;
 }
 
 #actionBtn {
-    display: block;
-    margin: 20px auto;
-    padding: 15px 40px;
-    background: #ff00ff;
-    border: none;
-    color: white;
+    margin-top: 18px;
+    padding: 14px 45px;
+    font-size: 18px;
     font-weight: bold;
-    border-radius: 10px;
+    border-radius: 14px;
+    border: none;
     cursor: pointer;
+    background: linear-gradient(135deg, #ff00ff, #ff66ff);
+    color: white;
+    box-shadow: 0 0 20px #ff00ff;
 }
