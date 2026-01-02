@@ -1,48 +1,33 @@
-.game-card {
-    background: radial-gradient(circle, #1a1a2e 0%, #0f0f1b 100%);
-    border-radius: 24px;
-    padding: 20px;
-    width: 350px;
-    text-align: center;
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #0d001a;
     color: white;
     font-family: sans-serif;
+    overflow: hidden;
 }
 
-.canvas-wrapper {
-    position: relative;
-    margin: 20px 0;
+canvas {
+    background-color: #00000033;
+    /* Здесь будут стили для неонового свечения, которые требуют больше работы */
 }
 
-.multiplier {
+.ui {
     position: absolute;
-    top: 45%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 38px;
-    font-weight: 900;
-    color: #00ff88;
-    text-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+    text-align: center;
+    pointer-events: none; /* Чтобы не мешать кликам по canvas */
 }
 
-.play-button {
-    background: #0095ff;
-    border: none;
-    color: white;
-    padding: 15px;
-    width: 100%;
-    border-radius: 12px;
+button {
+    pointer-events: all;
+    padding: 10px 20px;
     font-size: 18px;
-    font-weight: bold;
     cursor: pointer;
-    box-shadow: 0 4px 15px rgba(0, 149, 255, 0.3);
-}
-
-.bet-selector button {
-    background: #252a41;
+    background-color: #ff00ff; /* Розовый цвет как на фото */
     border: none;
-    color: #ccc;
-    margin: 5px;
-    padding: 8px 15px;
-    border-radius: 8px;
-    cursor: pointer;
+    border-radius: 5px;
 }
