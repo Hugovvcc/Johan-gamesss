@@ -6,8 +6,7 @@ body {
     height: 100vh;
     background-color: #0d001a;
     color: white;
-    font-family: 'Arial', sans-serif;
-    overflow: hidden;
+    font-family: sans-serif;
 }
 
 .game-container {
@@ -15,42 +14,28 @@ body {
     text-align: center;
 }
 
+canvas {
+    background: radial-gradient(circle, #1a0033 0%, #0d001a 100%);
+    border-radius: 10px;
+}
+
 .score-display {
+    position: absolute;
+    top: 20px;
+    width: 100%;
     font-size: 32px;
     font-weight: bold;
     color: #00ff88;
-    margin-bottom: 10px;
-    text-shadow: 0 0 15px rgba(0, 255, 136, 0.6);
 }
 
-canvas {
-    background: radial-gradient(circle, #1a0033 0%, #0d001a 100%);
-    border-radius: 20px;
-    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+#actionBtn {
     display: block;
-}
-
-.controls {
-    margin-top: 20px;
-}
-
-.btn {
-    padding: 15px 60px;
-    font-size: 20px;
-    font-weight: bold;
-    color: white;
-    background: linear-gradient(45deg, #ff00ff, #00d2ff);
+    margin: 20px auto;
+    padding: 15px 40px;
+    background: #ff00ff;
     border: none;
-    border-radius: 12px;
+    color: white;
+    font-weight: bold;
+    border-radius: 10px;
     cursor: pointer;
-    box-shadow: 0 5px 20px rgba(255, 0, 255, 0.4);
-    transition: transform 0.2s;
-}
-
-.btn:hover {
-    transform: scale(1.05);
-}
-
-.btn:active {
-    transform: scale(0.95);
 }
