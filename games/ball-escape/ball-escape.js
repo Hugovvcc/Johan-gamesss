@@ -8,7 +8,7 @@ canvas.height = 600;
 
 const center = { x: canvas.width / 2, y: canvas.height / 2 - 50 };
 const radius = 130;
-const gapAngle = 0.7; 
+const gapAngle = 0.7; // Размер дырки внизу
 
 let gameActive = false;
 let isFalling = false;
@@ -23,14 +23,14 @@ const ball = {
     size: 10
 };
 
-// Функция инициализации новой игры
-function initGame() {
+// Функция старта
+function launchBall() {
     ball.x = center.x;
     ball.y = center.y;
     
-    // Генерируем случайную траекторию
+    // Рандомный запуск (разные траектории)
     const randomAngle = Math.random() * Math.PI * 2;
-    const speed = 4 + Math.random() * 2; 
+    const speed = 5; 
     ball.vx = Math.cos(randomAngle) * speed;
     ball.vy = Math.sin(randomAngle) * speed;
     
@@ -38,89 +38,34 @@ function initGame() {
     scoreElement.textContent = "1.00";
     isFalling = false;
     gameActive = true;
-    startBtn.style.display = 'none'; // Скрываем кнопку во время игры
-}
-
-function drawZones() {
-    const zh = 120;
-    ctx.font = '50px Arial';
-    ctx.textAlign = 'center';
-    
-    // Красная зона 💀
-    ctx.fillStyle = 'rgba(255, 68, 68, 0.8)';
-    ctx.fillRect(0, canvas.height - zh, canvas.width / 2, zh);
-    ctx.fillStyle = 'white';
-    ctx.fillText('💀', canvas.width / 4, canvas.height - 50);
-
-    // Зеленая зона 🤑
-    ctx.fillStyle = 'rgba(68, 255, 68, 0.8)';
-    ctx.fillRect(canvas.width / 2, canvas.height - zh, canvas.width / 2, zh);
-    ctx.fillStyle = 'white';
-    ctx.fillText('🤑', canvas.width * 0.75, canvas.height - 50);
-}
-
-function update() {
-    if (!gameActive) return;
-
-    trackRotation += 0.02;
-
-    if (!isFalling) {
-        ball.x += ball.vx;
-        ball.y += ball.vy;
-
-        const dx = ball.x - center.x;
-        const dy = ball.y - center.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist + ball.size > radius) {
-            const angle = Math.atan2(dy, dx);
-            const normAngle = (angle - trackRotation + Math.PI * 4) % (Math.PI * 2);
-            
-            // Если шар в зоне дырки (снизу)
-            if (normAngle > 1.57 - gapAngle/2 && normAngle < 1.57 + gapAngle/2) {
-                isFalling = true;
-            } else {
-                // Математика отскока
-                const normalX = dx / dist;
-                const normalY = dy / dist;
-                const dot = ball.vx * normalX + ball.vy * normalY;
-                
-                ball.vx = (ball.vx - 2 * dot * normalX) + (Math.random() - 0.5);
-                ball.vy = (ball.vy - 2 * dot * normalY) + (Math.random() - 0.5);
-
-                ball.x = center.x + normalX * (radius - ball.size - 1);
-                ball.y = center.y + normalY * (radius - ball.size - 1);
-
-                multiplier += 0.10;
-                scoreElement.textContent = multiplier.toFixed(2);
-            }
-        }
-    } else {
-        // Падение вниз
-        ball.vy += 0.4; // Гравитация
-        ball.x += ball.vx * 0.5;
-        ball.y += ball.vy;
-
-        // Конец игры при падении в зону
-        if (ball.y > canvas.height - 60) {
-            gameActive = false;
-            const win = ball.x > canvas.width / 2;
-            alert(win ? `ВЫИГРАЛ 🤑 x${multiplier.toFixed(2)}` : "ПРОИГРАЛ 💀");
-            startBtn.style.display = 'inline-block'; // Возвращаем кнопку
-            startBtn.textContent = "ПОПРОБОВАТЬ СНОВА";
-        }
-    }
+    startBtn.style.visibility = 'hidden'; // Прячем кнопку
 }
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawZones();
 
-    // Круг
+    // Рисуем зоны 💀 и 🤑
+    const zh = 120;
+    ctx.font = '50px Arial';
+    ctx.textAlign = 'center';
+    // Красная
+    ctx.fillStyle = '#ff4444';
+    ctx.fillRect(0, canvas.height - zh, canvas.width/2, zh);
+    ctx.fillStyle = 'white';
+    ctx.fillText('💀', canvas.width/4, canvas.height - 50);
+    // Зеленая
+    ctx.fillStyle = '#44ff44';
+    ctx.fillRect(canvas.width/2, canvas.height - zh, canvas.width/2, zh);
+    ctx.fillStyle = 'white';
+    ctx.fillText('🤑', canvas.width * 0.75, canvas.height - 50);
+
+    // Вращение и отрисовка кольца
+    trackRotation += 0.02;
     ctx.save();
     ctx.translate(center.x, center.y);
     ctx.rotate(trackRotation);
     ctx.beginPath();
+    // Дырка ориентирована вниз
     ctx.arc(0, 0, radius, gapAngle/2 + 1.57, -gapAngle/2 + 1.57);
     ctx.strokeStyle = '#ff00ff';
     ctx.lineWidth = 12;
@@ -128,23 +73,66 @@ function draw() {
     ctx.stroke();
     ctx.restore();
 
-    // Шар
-    ctx.beginPath();
-    ctx.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2);
-    ctx.fillStyle = '#00d2ff';
-    ctx.fill();
+    if (gameActive) {
+        if (!isFalling) {
+            ball.x += ball.vx;
+            ball.y += ball.vy;
+
+            const dx = ball.x - center.x;
+            const dy = ball.y - center.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist + ball.size > radius) {
+                const angle = Math.atan2(dy, dx);
+                const normAngle = (angle - trackRotation + Math.PI * 4) % (Math.PI * 2);
+                
+                // Проверка вылета в дырку
+                if (normAngle > 1.57 - gapAngle/2 && normAngle < 1.57 + gapAngle/2) {
+                    isFalling = true;
+                } else {
+                    // Отскок
+                    const normalX = dx / dist;
+                    const normalY = dy / dist;
+                    const dot = ball.vx * normalX + ball.vy * normalY;
+                    ball.vx = (ball.vx - 2 * dot * normalX) + (Math.random() - 0.5);
+                    ball.vy = (ball.vy - 2 * dot * normalY) + (Math.random() - 0.5);
+                    ball.x = center.x + normalX * (radius - ball.size - 1);
+                    ball.y = center.y + normalY * (radius - ball.size - 1);
+
+                    multiplier += 0.15;
+                    scoreElement.textContent = multiplier.toFixed(2);
+                }
+            }
+        } else {
+            // Падение
+            ball.vy += 0.4;
+            ball.x += ball.vx * 0.3;
+            ball.y += ball.vy;
+
+            if (ball.y > canvas.height - 60) {
+                gameActive = false;
+                startBtn.style.visibility = 'visible';
+                startBtn.textContent = "ЕЩЕ РАЗ";
+            }
+        }
+
+        // Рисуем шар
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2);
+        ctx.fillStyle = '#00d2ff';
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#00d2ff';
+        ctx.fill();
+        ctx.shadowBlur = 0;
+    }
+
+    requestAnimationFrame(draw);
 }
 
-function gameLoop() {
-    update();
-    draw();
-    requestAnimationFrame(gameLoop);
-}
-
-// ПРИВЯЗКА КНОПКИ
-startBtn.onclick = function() {
-    initGame();
-};
+// Слушатель кнопки
+startBtn.addEventListener('click', () => {
+    launchBall();
+});
 
 // Запуск цикла анимации
-gameLoop();
+draw();
