@@ -1,23 +1,27 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ball Escape</title>
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ball Escape Deluxe</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="game.js" defer></script>
 </head>
 <body>
 
-<div class="game">
-    <canvas id="canvas" width="400" height="620"></canvas>
+<div class="game-container">
+    <canvas id="canvas"></canvas>
 
-    <div class="multiplier">
-        <span id="mult">1.00</span>x
+    <div class="ui-layer">
+        <div class="multiplier-box">
+            <span id="multValue">1.00</span><span class="x-label">x</span>
+        </div>
+        
+        <div id="statusMessage" class="status hidden"></div>
+
+        <button id="startBtn" class="primary-btn">START</button>
     </div>
-
-    <button id="startBtn">START</button>
 </div>
 
-<script src="game.js"></script>
 </body>
 </html>
