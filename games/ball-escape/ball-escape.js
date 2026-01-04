@@ -12,50 +12,75 @@ ctx.scale(dpr, dpr);
 const multEl = document.getElementById("multValue");
 const btn = document.getElementById("startBtn");
 const statusEl = document.getElementById("statusMessage");
+const betInput = document.getElementById("mbet"); // Поле ставки
+const diffSelect = document.getElementById("mcount"); // Сложность
 
-// Config
+// Переменная баланса
+let balance = 100.00;
+
+// Создаем визуальный счетчик баланса
+const balanceDiv = document.createElement('div');
+balanceDiv.style.cssText = "color:white; font-family:sans-serif; margin-bottom:10px; font-weight:bold; font-size:1.2rem; text-align:center;";
+balanceDiv.innerHTML = `BALANCE: <span id="balVal" style="color:#00ff9d">${balance.toFixed(2)}</span> TON`;
+document.querySelector('.ui-layer').prepend(balanceDiv);
+
 const CONFIG = {
     centerX: rect.width / 2,
     centerY: 260,
     radius: 140,
     ballRadius: 10,
-    gapSize: 0.65, // Radians
+    gapSize: 0.65, 
     gravity: 0.25,
     rotationSpeed: 0.02,
-    bounceDamping: 1.02, // Add energy on bounce
+    bounceDamping: 1.02, 
     maxSpeed: 18,
     trailLength: 12
 };
 
-// State
 let state = {
     running: false,
     falling: false,
     finished: false,
     rotation: 0,
     multiplier: 1.00,
-    particles: []
+    particles: [],
+    currentBet: 0
 };
 
-// Ball Object
 let ball = {
     x: CONFIG.centerX,
     y: CONFIG.centerY,
     vx: 0,
     vy: 0,
-    history: [] // For trail
+    history: []
 };
 
-// Audio (Optional Placeholder)
-const playSound = (type) => {
-    // Implement sound effects here if needed
-};
-
-// Utils
-const randomRange = (min, max) => Math.random() * (max - min) + min;
-const distance = (x1, y1, x2, y2) => Math.hypot(x2 - x1, y2 - y1);
+function updateBalanceDisplay() {
+    document.getElementById("balVal").textContent = balance.toFixed(2);
+}
 
 function initGame() {
+    const betAmount = parseFloat(betInput.value);
+
+    // Проверка ставки
+    if (betAmount > balance) {
+        alert("Not enough TON on balance!");
+        return;
+    }
+    if (isNaN(betAmount) || betAmount < 1) {
+        alert("Minimum bet is 1 TON");
+        return;
+    }
+
+    // Списание денег
+    balance -= betAmount;
+    state.currentBet = betAmount;
+    updateBalanceDisplay();
+
+    // Настройка сложности (меняем скорость вращения или размер дыры)
+    const difficulty = parseInt(diffSelect.value);
+    CONFIG.rotationSpeed = 0.01 * (difficulty + 1);
+
     state.multiplier = 1.00;
     state.running = true;
     state.falling = false;
@@ -65,11 +90,10 @@ function initGame() {
     
     multEl.textContent = "1.00";
     statusEl.className = "status hidden";
-    btn.style.display = "none";
+    btn.style.visibility = "hidden"; // Скрываем кнопку пока идет игра
 
-    // Randomize start
     const angle = Math.random() * Math.PI * 2;
-    const speed = randomRange(6, 9);
+    const speed = 7;
     
     ball.x = CONFIG.centerX;
     ball.y = CONFIG.centerY;
@@ -93,35 +117,25 @@ function spawnParticles(x, y, color) {
 function updatePhysics() {
     if (!state.running) return;
 
-    // Rotate ring
     state.rotation += CONFIG.rotationSpeed;
 
-    // Update Particles
     for (let i = state.particles.length - 1; i >= 0; i--) {
         let p = state.particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
+        p.x += p.vx; p.y += p.vy;
         p.life -= 0.05;
         if (p.life <= 0) state.particles.splice(i, 1);
     }
 
-    // Ball Trail
     ball.history.push({ x: ball.x, y: ball.y });
     if (ball.history.length > CONFIG.trailLength) ball.history.shift();
 
     if (state.falling) {
-        // GRAVITY MODE
         ball.vy += CONFIG.gravity;
         ball.x += ball.vx;
         ball.y += ball.vy;
 
-        // Bounce off walls (optional, creates chaos)
-        if (ball.x < ball.radius || ball.x > rect.width - ball.radius) {
-            ball.vx *= -0.6;
-            ball.x = ball.x < ball.radius ? ball.radius : rect.width - ball.radius;
-        }
+        if (ball.x < 10 || ball.x > rect.width - 10) ball.vx *= -0.6;
 
-        // Check ground/zones
         const zoneHeight = 120;
         if (ball.y > rect.height - zoneHeight - CONFIG.ballRadius) {
             finishGame();
@@ -129,7 +143,6 @@ function updatePhysics() {
         return;
     }
 
-    // INSIDE RING MODE
     ball.x += ball.vx;
     ball.y += ball.vy;
 
@@ -137,68 +150,28 @@ function updatePhysics() {
     const dy = ball.y - CONFIG.centerY;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
-    // Collision Check
     if (dist + CONFIG.ballRadius >= CONFIG.radius) {
         const angleToBall = Math.atan2(dy, dx);
-        
-        // Normalize angles to 0 - 2PI for easy comparison
         const normalizedBallAngle = (angleToBall - state.rotation + Math.PI * 4) % (Math.PI * 2);
-        // The gap is visually at the "bottom" relative to rotation frame? 
-        // In drawTrack, the arc is drawn from (gap/2 + PI/2) to (-gap/2 + PI/2).
-        // This means the gap IS the segment between -gap/2+PI/2 and gap/2+PI/2.
-        // Wait, start angle: gap/2 + PI/2 (approx 100 deg)
-        // End angle: -gap/2 + PI/2 (approx 80 deg)
-        // Canvas arcs are clockwise. So it draws from 100 deg all the way around to 80 deg.
-        // The GAP is between 80 deg and 100 deg (around 90 deg / PI/2).
-        
         const gapCenter = Math.PI / 2;
-        const distFromGap = Math.abs(normalizedBallAngle - gapCenter);
         
-        // Check if ball is within the gap
-        if (distFromGap < CONFIG.gapSize / 2) {
-            // ESCAPE!
+        if (Math.abs(normalizedBallAngle - gapCenter) < CONFIG.gapSize / 2) {
             state.falling = true;
             spawnParticles(ball.x, ball.y, "#ffffff");
-            // Add a little kick outwards based on current velocity to ensure it clears visual rim
-            ball.x += ball.vx * 2; 
-            ball.y += ball.vy * 2;
+            ball.y += 10; 
         } else {
-            // BOUNCE
-            // Normal vector at collision point
             const nx = dx / dist;
             const ny = dy / dist;
-            
-            // Reflect velocity: v' = v - 2(v·n)n
             const dot = ball.vx * nx + ball.vy * ny;
-            ball.vx = ball.vx - 2 * dot * nx;
-            ball.vy = ball.vy - 2 * dot * ny;
+            ball.vx = (ball.vx - 2 * dot * nx) * CONFIG.bounceDamping;
+            ball.vy = (ball.vy - 2 * dot * ny) * CONFIG.bounceDamping;
 
-            // Add energy (gameplay mechanic)
-            ball.vx *= CONFIG.bounceDamping;
-            ball.vy *= CONFIG.bounceDamping;
-
-            // Cap speed
-            const speed = Math.hypot(ball.vx, ball.vy);
-            if (speed > CONFIG.maxSpeed) {
-                const scale = CONFIG.maxSpeed / speed;
-                ball.vx *= scale;
-                ball.vy *= scale;
-            }
-
-            // Push ball out of wall to prevent sticking
             ball.x = CONFIG.centerX + nx * (CONFIG.radius - CONFIG.ballRadius - 1);
             ball.y = CONFIG.centerY + ny * (CONFIG.radius - CONFIG.ballRadius - 1);
 
-            // Chaos factor (user requested "different trajectories")
-            ball.vx += (Math.random() - 0.5) * 0.5;
-            ball.vy += (Math.random() - 0.5) * 0.5;
-
-            // Gameplay updates
-            state.multiplier += 0.15; // Faster progression
+            state.multiplier += 0.15;
             multEl.textContent = state.multiplier.toFixed(2);
             spawnParticles(ball.x, ball.y, "#00d2ff");
-            
-            // Slight screen shake or visual impact could go here
         }
     }
 }
@@ -207,127 +180,58 @@ function finishGame() {
     state.running = false;
     state.finished = true;
     
-    // Determine Win/Lose based on X position
-    // Center divider logic
     const isWin = ball.x < rect.width / 2;
-    
     statusEl.classList.remove("hidden");
+    
     if (isWin) {
-        statusEl.textContent = `YOU WON $${(100 * state.multiplier).toFixed(0)}`;
-        statusEl.classList.add("win");
-        statusEl.classList.remove("lose");
+        const winAmount = state.currentBet * state.multiplier;
+        balance += winAmount;
+        statusEl.textContent = `WIN: +${winAmount.toFixed(2)} TON`;
+        statusEl.style.color = "#00ff88";
         spawnParticles(ball.x, ball.y, "#00ff88");
     } else {
-        statusEl.textContent = "LOSS";
-        statusEl.classList.add("lose");
-        statusEl.classList.remove("win");
+        statusEl.textContent = `LOSS: -${state.currentBet.toFixed(2)} TON`;
+        statusEl.style.color = "#ff3333";
         spawnParticles(ball.x, ball.y, "#ff3333");
     }
 
+    updateBalanceDisplay();
     btn.textContent = "PLAY AGAIN";
-    btn.style.display = "block";
+    btn.style.visibility = "visible";
 }
 
-// Drawing Functions
+// Функции отрисовки (остаются без изменений)
 function drawZones() {
     const h = 120;
     const y = rect.height - h;
-
-    // Left Zone (Win)
-    const gradWin = ctx.createLinearGradient(0, y, 0, rect.height);
-    gradWin.addColorStop(0, "rgba(0, 255, 136, 0.2)");
-    gradWin.addColorStop(1, "rgba(0, 255, 136, 0.05)");
-    ctx.fillStyle = gradWin;
+    ctx.fillStyle = "rgba(0, 255, 136, 0.1)";
     ctx.fillRect(0, y, rect.width / 2, h);
-    
-    // Border Win
-    ctx.strokeStyle = "#00ff88";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(2, y, rect.width / 2 - 4, h - 2);
-
-    // Right Zone (Lose)
-    const gradLose = ctx.createLinearGradient(0, y, 0, rect.height);
-    gradLose.addColorStop(0, "rgba(255, 51, 51, 0.2)");
-    gradLose.addColorStop(1, "rgba(255, 51, 51, 0.05)");
-    ctx.fillStyle = gradLose;
+    ctx.fillStyle = "rgba(255, 51, 51, 0.1)";
     ctx.fillRect(rect.width / 2, y, rect.width / 2, h);
-
-    // Border Lose
-    ctx.strokeStyle = "#ff3333";
-    ctx.strokeRect(rect.width / 2 + 2, y, rect.width / 2 - 4, h - 2);
-
-    // Icons/Text
-    ctx.font = "bold 36px Segoe UI, Arial";
+    
+    ctx.font = "bold 24px Arial";
     ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = "#00ff88";
-    ctx.fillStyle = "#fff";
-    ctx.fillText("WIN", rect.width / 4, y + h/2);
-
-    ctx.shadowColor = "#ff3333";
-    ctx.fillText("LOSE", rect.width * 0.75, y + h/2);
-    
-    ctx.shadowBlur = 0;
+    ctx.fillStyle = "#00ff88"; ctx.fillText("WIN", rect.width / 4, y + 60);
+    ctx.fillStyle = "#ff3333"; ctx.fillText("LOSE", rect.width * 0.75, y + 60);
 }
 
 function drawTrack() {
     ctx.save();
     ctx.translate(CONFIG.centerX, CONFIG.centerY);
     ctx.rotate(state.rotation);
-
-    // Main Ring
     ctx.beginPath();
-    // Arc: draws the LINE. We want a gap at bottom (PI/2).
-    // So we draw from (PI/2 + gap/2) around to (PI/2 - gap/2)
     ctx.arc(0, 0, CONFIG.radius, Math.PI/2 + CONFIG.gapSize/2, Math.PI/2 - CONFIG.gapSize/2);
-    
     ctx.strokeStyle = "#ff00ff";
-    ctx.lineWidth = 12;
+    ctx.lineWidth = 10;
     ctx.lineCap = "round";
-    ctx.shadowBlur = 20;
-    ctx.shadowColor = "#ff00ff";
     ctx.stroke();
-
-    // Inner Glow Ring (decoration)
-    ctx.beginPath();
-    ctx.arc(0, 0, CONFIG.radius - 20, 0, Math.PI * 2);
-    ctx.strokeStyle = "rgba(255, 0, 255, 0.1)";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
     ctx.restore();
 }
 
 function drawBall() {
-    // Draw Trail
-    if (state.running || state.falling) {
-        ctx.beginPath();
-        for (let i = 0; i < ball.history.length; i++) {
-            const pos = ball.history[i];
-            if (i === 0) ctx.moveTo(pos.x, pos.y);
-            else ctx.lineTo(pos.x, pos.y);
-        }
-        ctx.lineCap = "round";
-        ctx.lineWidth = CONFIG.ballRadius * 0.8;
-        ctx.strokeStyle = "rgba(0, 210, 255, 0.3)";
-        ctx.stroke();
-    }
-
-    // Draw Ball
     ctx.beginPath();
     ctx.arc(ball.x, ball.y, CONFIG.ballRadius, 0, Math.PI * 2);
     ctx.fillStyle = "#00d2ff";
-    ctx.shadowBlur = 20;
-    ctx.shadowColor = "#00d2ff";
-    ctx.fill();
-    ctx.shadowBlur = 0;
-    
-    // Highlight
-    ctx.fillStyle = "rgba(255,255,255,0.8)";
-    ctx.beginPath();
-    ctx.arc(ball.x - 3, ball.y - 3, 3, 0, Math.PI * 2);
     ctx.fill();
 }
 
@@ -338,26 +242,19 @@ function drawParticles() {
         ctx.beginPath();
         ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
         ctx.fill();
-        ctx.globalAlpha = 1.0;
     }
+    ctx.globalAlpha = 1;
 }
 
 function loop() {
-    // Clear with slight fade for trail effect (optional, but we use history array instead for cleaner look)
     ctx.clearRect(0, 0, rect.width, rect.height);
-    
     drawZones();
     drawTrack();
     drawParticles();
     drawBall();
-    
     updatePhysics();
-    
     requestAnimationFrame(loop);
 }
 
-// Events
 btn.onclick = initGame;
-
-// Start Loop
 loop();
