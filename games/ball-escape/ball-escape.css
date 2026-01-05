@@ -1,55 +1,37 @@
-.ui-layer {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    /* Убираем space-between, чтобы элементы не разлетались */
-    justify-content: flex-start; 
-    padding: 20px 0;
-    box-sizing: border-box;
-}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ball Escape Deluxe</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="game.js" defer></script>
+</head>
+<body>
 
-/* Кнопки ставок теперь не зависят от общего потока */
-.bet-selector {
-    pointer-events: auto;
-    display: flex;
-    gap: 8px;
-    /* Размещаем их чуть ниже множителя */
-    margin-top: 10px; 
-    z-index: 100;
-}
+<div class="game-container">
+    <canvas id="canvas"></canvas>
 
-.bet-btn {
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid var(--neon-green);
-    color: var(--neon-green);
-    padding: 6px 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: bold;
-    transition: 0.2s;
-    white-space: nowrap;
-}
+    <div class="ui-layer">
+        <div class="top-section">
+            <div class="multiplier-box">
+                <span id="multValue">1.00</span><span class="x-label">x</span>
+            </div>
+            
+            <div class="bet-selector">
+                <button class="bet-btn active" data-amount="1">1 TON</button>
+                <button class="bet-btn" data-amount="3">3 TON</button>
+                <button class="bet-btn" data-amount="5">5 TON</button>
+                <button class="bet-btn" data-amount="10">10 TON</button>
+            </div>
+        </div>
 
-.bet-btn.active {
-    background: var(--neon-green);
-    color: #000;
-    box-shadow: 0 0 15px var(--neon-green);
-}
+        <div class="bottom-section">
+            <div id="statusMessage" class="status hidden"></div>
+            <button id="startBtn" class="primary-btn">START</button>
+        </div>
+    </div>
+</div>
 
-/* Опускаем сообщение о статусе и кнопку старта вниз */
-#statusMessage {
-    margin-top: auto; /* Выталкивает вверх всё, что над ним */
-    margin-bottom: 20px;
-}
-
-#startBtn {
-    pointer-events: auto;
-    margin-bottom: 40px;
-}
+</body>
+</html>
