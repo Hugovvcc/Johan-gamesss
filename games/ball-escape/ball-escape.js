@@ -11,18 +11,20 @@ const multEl = document.getElementById("multValue");
 const btn = document.getElementById("startBtn");
 const statusEl = document.getElementById("statusMessage");
 
-// НОВОЕ: Логика выбора ставки кнопками
-let selectedBet = 1; // По умолчанию 1 TON
+// --- ЛОГИКА ВЫБОРА СТАВКИ ---
+let selectedBet = 1; 
 const betButtons = document.querySelectorAll('.bet-btn');
 
 betButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        // Сбрасываем стиль у всех кнопок
-        betButtons.forEach(b => b.style.background = 'none');
-        // Подсвечиваем выбранную
-        button.style.background = 'rgba(0,255,157,0.4)';
-        // Сохраняем значение
+    button.addEventListener('click', (e) => {
+        if (state.running) return; // Блокируем смену во время игры
+
+        // Убираем активный класс у всех и добавляем нажатой
+        betButtons.forEach(b => b.classList.remove('active'));
+        button.classList.add('active');
+
         selectedBet = parseFloat(button.getAttribute('data-amount'));
+        console.log("Ставка изменена на:", selectedBet);
     });
 });
 
@@ -56,7 +58,6 @@ let ball = {
 };
 
 function initGame() {
-    // Используем значение из выбранной кнопки
     const betValue = selectedBet; 
 
     if (typeof window.gameAPI !== 'undefined') {
@@ -91,8 +92,6 @@ function initGame() {
     ball.history = [];
 }
 
-// ... остальной код (updatePhysics, finishGame, draw-функции) остается без изменений ...
-
 function updatePhysics() {
     if (!state.running) return;
     state.rotation += CONFIG.rotationSpeed;
@@ -115,7 +114,7 @@ function updatePhysics() {
         const gapCenter = Math.PI / 2;
         if (Math.abs(normalizedBallAngle - gapCenter) < CONFIG.gapSize / 2) {
             state.falling = true;
-            ball.vx += 1.8; // Твоя подкрутка в сторону LOSE
+            ball.vx += 1.8; // Твоя подкрутка
             ball.y += 5; 
         } else {
             const nx = dx / dist;
