@@ -11,34 +11,29 @@ const multEl = document.getElementById("multValue");
 const btn = document.getElementById("startBtn");
 const statusEl = document.getElementById("statusMessage");
 
-// --- ЛОГИКА ВЫБОРА СТАВКИ ---
-let selectedBet = 1; 
+// ЛОГИКА СТАВОК
+let selectedBet = 1;
 const betButtons = document.querySelectorAll('.bet-btn');
 
 betButtons.forEach(button => {
-    button.addEventListener('click', (e) => {
-        if (state.running) return; // Блокируем смену во время игры
-
-        // Убираем активный класс у всех и добавляем нажатой
+    button.addEventListener('click', () => {
+        if (state.running) return;
         betButtons.forEach(b => b.classList.remove('active'));
         button.classList.add('active');
-
         selectedBet = parseFloat(button.getAttribute('data-amount'));
-        console.log("Ставка изменена на:", selectedBet);
     });
 });
 
 const CONFIG = {
     centerX: rect.width / 2,
-    centerY: 260,
-    radius: 140,
+    centerY: 280,
+    radius: 130,
     ballRadius: 10,
-    gapSize: 0.65, 
-    gravity: 0.35,        
+    gapSize: 0.65,
+    gravity: 0.35,
     rotationSpeed: 0.02,
-    bounceDamping: 1.0,   
-    maxSpeed: 8,          
-    trailLength: 12
+    bounceDamping: 1.0,
+    maxSpeed: 8
 };
 
 let state = {
@@ -47,18 +42,16 @@ let state = {
     finished: false,
     rotation: 0,
     multiplier: 1.00,
-    particles: [],
     currentBet: 0
 };
 
 let ball = {
     x: CONFIG.centerX, y: CONFIG.centerY,
-    vx: 0, vy: 0,
-    history: []
+    vx: 0, vy: 0
 };
 
 function initGame() {
-    const betValue = selectedBet; 
+    const betValue = selectedBet;
 
     if (typeof window.gameAPI !== 'undefined') {
         const currentBal = window.gameAPI.getBalance();
@@ -75,47 +68,47 @@ function initGame() {
     state.falling = false;
     state.finished = false;
     state.rotation = 0;
-    state.particles = [];
     
     multEl.textContent = "1.00";
     statusEl.className = "status hidden";
-    statusEl.classList.remove("win", "lose");
     btn.style.display = "none";
 
     const angle = Math.random() * Math.PI * 2;
     const speed = 6;
-    
     ball.x = CONFIG.centerX;
     ball.y = CONFIG.centerY;
     ball.vx = Math.cos(angle) * speed;
     ball.vy = Math.sin(angle) * speed;
-    ball.history = [];
 }
 
 function updatePhysics() {
     if (!state.running) return;
     state.rotation += CONFIG.rotationSpeed;
+
     if (state.falling) {
         ball.vy += CONFIG.gravity;
         ball.x += ball.vx;
         ball.y += ball.vy;
         if (ball.x < 10 || ball.x > rect.width - 10) ball.vx *= -0.5;
-        if (ball.y > rect.height - 120 - CONFIG.ballRadius) finishGame();
+        if (ball.y > rect.height - 120) finishGame();
         return;
     }
+
     ball.x += ball.vx;
     ball.y += ball.vy;
+
     const dx = ball.x - CONFIG.centerX;
     const dy = ball.y - CONFIG.centerY;
     const dist = Math.sqrt(dx * dx + dy * dy);
+
     if (dist + CONFIG.ballRadius >= CONFIG.radius) {
         const angleToBall = Math.atan2(dy, dx);
         const normalizedBallAngle = (angleToBall - state.rotation + Math.PI * 4) % (Math.PI * 2);
         const gapCenter = Math.PI / 2;
+
         if (Math.abs(normalizedBallAngle - gapCenter) < CONFIG.gapSize / 2) {
             state.falling = true;
-            ball.vx += 1.8; // Твоя подкрутка
-            ball.y += 5; 
+            ball.vx += 1.8; 
         } else {
             const nx = dx / dist;
             const ny = dy / dist;
@@ -138,10 +131,10 @@ function finishGame() {
     if (isWin) {
         const winAmount = state.currentBet * state.multiplier;
         if (typeof window.gameAPI !== 'undefined') window.gameAPI.updateBalance(winAmount);
-        statusEl.textContent = `YOU WON ${winAmount.toFixed(1)} TON`;
+        statusEl.textContent = `WIN: +${winAmount.toFixed(1)} TON`;
         statusEl.classList.add("win");
     } else {
-        statusEl.textContent = "LOSS";
+        statusEl.textContent = "LOSE";
         statusEl.classList.add("lose");
     }
     btn.textContent = "PLAY AGAIN";
@@ -155,7 +148,7 @@ function drawZones() {
     ctx.fillRect(0, y, rect.width / 2, h);
     ctx.fillStyle = "rgba(255, 51, 51, 0.1)";
     ctx.fillRect(rect.width / 2, y, rect.width / 2, h);
-    ctx.font = "bold 24px Arial";
+    ctx.font = "bold 20px Arial";
     ctx.textAlign = "center";
     ctx.fillStyle = "#00ff88"; ctx.fillText("WIN", rect.width / 4, y + 60);
     ctx.fillStyle = "#ff3333"; ctx.fillText("LOSE", rect.width * 0.75, y + 60);
