@@ -2,36 +2,31 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <title>Johan Game</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ball Escape Deluxe</title>
     <link rel="stylesheet" href="style.css">
-    <script type="module" src="game.js" defer></script>
+    <link rel="stylesheet" href="games/game-common.css">
 </head>
 <body>
-
-<div class="game-container">
-    <canvas id="canvas"></canvas>
-
-    <div class="ui-layer">
-        <div class="top-section">
-            <div class="multiplier-box">
-                <span id="multValue">1.00</span><span class="x-label">x</span>
-            </div>
-            
-            <div class="bet-selector">
-                <button class="bet-btn active" data-amount="1">1 TON</button>
-                <button class="bet-btn" data-amount="3">3 TON</button>
-                <button class="bet-btn" data-amount="5">5 TON</button>
-                <button class="bet-btn" data-amount="10">10 TON</button>
-            </div>
-        </div>
-
-        <div class="bottom-section">
-            <div id="statusMessage" class="status hidden"></div>
-            <button id="startBtn" class="primary-btn">START</button>
-        </div>
+<div class="container">
+    <h1>Johan Game</h1>
+    <div class="balance">Balance: <span id="bal">100.0</span> TON</div>
+    
+    <div class="nav">
+        <button onclick="loadGame('mines')">Mines</button>
+        <button onclick="loadGame('ball-escape')">Ball Escape</button>
     </div>
+    
+    <div id="game-container">
+        </div>
 </div>
 
+<script src="script.js"></script>
+<script>
+    // Автозагрузка Mines при старте
+    window.addEventListener('load', function() {
+        loadGame('mines');
+    });
+</script>
 </body>
 </html>
