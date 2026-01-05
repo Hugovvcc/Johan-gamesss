@@ -5,7 +5,6 @@
     --neon-green: #00ff88;
     --neon-blue: #00d2ff;
     --neon-red: #ff3333;
-    --glass-border: rgba(255, 255, 255, 0.1);
 }
 
 body {
@@ -15,7 +14,7 @@ body {
     justify-content: center;
     align-items: center;
     background: radial-gradient(circle at top, var(--bg-panel), var(--bg-dark));
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: sans-serif;
     color: white;
     overflow: hidden;
 }
@@ -24,94 +23,79 @@ body {
     position: relative;
     width: 400px;
     height: 620px;
-    border-radius: 24px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
     background: #000;
-}
-
-canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
     border-radius: 24px;
-    background: radial-gradient(circle at 50% 30%, #2a0044, #090012);
 }
 
 .ui-layer {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none; /* Let clicks pass to canvas if needed, but here mainly for button */
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none; /* Пропускаем клики сквозь контейнер... */
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    padding: 20px 0 40px 0;
+    padding: 20px 0;
     box-sizing: border-box;
 }
 
-.multiplier-box {
-    text-align: center;
-    z-index: 10;
+/* ...но разрешаем клики для селектора и кнопок */
+.bet-selector, #startBtn {
+    pointer-events: auto; 
+}
+
+.bet-selector {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    z-index: 100;
+}
+
+.bet-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--neon-green);
+    color: var(--neon-green);
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.bet-btn:hover {
+    background: rgba(0, 255, 136, 0.2);
+}
+
+.bet-btn.active {
+    background: var(--neon-green);
+    color: black;
+    box-shadow: 0 0 15px var(--neon-green);
 }
 
 #multValue {
     font-size: 48px;
     font-weight: 800;
     color: var(--neon-green);
-    text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
-    font-variant-numeric: tabular-nums;
-}
-
-.x-label {
-    font-size: 24px;
-    color: var(--neon-green);
-    margin-left: 4px;
-    opacity: 0.8;
 }
 
 .status {
-    font-size: 32px;
+    font-size: 28px;
     font-weight: bold;
-    text-transform: uppercase;
-    text-shadow: 0 0 15px currentColor;
     margin-top: auto;
-    margin-bottom: 20px;
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    margin-bottom: 10px;
 }
 
-.status.hidden {
-    opacity: 0;
-    transform: translateY(10px);
-}
-
+.status.hidden { opacity: 0; }
 .status.win { color: var(--neon-green); }
 .status.lose { color: var(--neon-red); }
 
 #startBtn {
-    pointer-events: auto;
     padding: 16px 50px;
     font-size: 20px;
-    font-weight: 800;
-    letter-spacing: 1px;
     border-radius: 100px;
     border: none;
     cursor: pointer;
     background: linear-gradient(135deg, #ff00ff, #bc00ff);
     color: white;
-    box-shadow: 0 0 25px rgba(255, 0, 255, 0.4);
-    transition: transform 0.1s, box-shadow 0.1s;
     text-transform: uppercase;
-    margin-bottom: 20px;
-}
-
-#startBtn:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 35px rgba(255, 0, 255, 0.6);
-}
-
-#startBtn:active {
-    transform: scale(0.95);
 }
