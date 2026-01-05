@@ -12,7 +12,6 @@ ctx.scale(dpr, dpr);
 const multEl = document.getElementById("multValue");
 const btn = document.getElementById("startBtn");
 const statusEl = document.getElementById("statusMessage");
-const betInput = document.getElementById("mbet"); 
 
 const CONFIG = {
     centerX: rect.width / 2,
@@ -20,10 +19,10 @@ const CONFIG = {
     radius: 140,
     ballRadius: 10,
     gapSize: 0.65, 
-    gravity: 0.35,        // Чуть усилили гравитацию для четкого падения
+    gravity: 0.35,        
     rotationSpeed: 0.02,
-    bounceDamping: 1.0,   // ИСПРАВЛЕНО: 1.0 означает отсутствие ускорения при ударе
-    maxSpeed: 8,          // ИСПРАВЛЕНО: жесткое ограничение скорости
+    bounceDamping: 1.0,   
+    maxSpeed: 8,          
     trailLength: 12
 };
 
@@ -46,7 +45,8 @@ let ball = {
 };
 
 function initGame() {
-    const betValue = parseFloat(betInput.value);
+    // СТАВКА ЗАФИКСИРОВАНА: Теперь всегда 1 TON
+    const betValue = 1; 
 
     if (typeof window.gameAPI !== 'undefined') {
         const currentBal = window.gameAPI.getBalance();
@@ -54,10 +54,7 @@ function initGame() {
             alert("Недостаточно средств!");
             return;
         }
-        if (betValue < 1 || betValue > 10) {
-            alert("Ставка должна быть от 1 до 10 TON");
-            return;
-        }
+        // Списываем 1 TON
         window.gameAPI.updateBalance(-betValue);
     }
 
@@ -74,7 +71,6 @@ function initGame() {
     statusEl.classList.remove("win", "lose");
     btn.style.display = "none";
 
-    // Начальный импульс всегда умеренный
     const angle = Math.random() * Math.PI * 2;
     const speed = 6;
     
@@ -95,7 +91,6 @@ function updatePhysics() {
         ball.x += ball.vx;
         ball.y += ball.vy;
 
-        // Отскок от стенок при падении
         if (ball.x < 10 || ball.x > rect.width - 10) ball.vx *= -0.5;
 
         if (ball.y > rect.height - 120 - CONFIG.ballRadius) {
@@ -118,22 +113,17 @@ function updatePhysics() {
         
         if (Math.abs(normalizedBallAngle - gapCenter) < CONFIG.gapSize / 2) {
             state.falling = true;
-            
-            // ПОДКУТКА: При вылете из кольца смещаем вектор скорости вправо (в сторону LOSE)
-            // Чем больше это число, тем сложнее попасть в WIN
+            // Подкрутка шансов в сторону LOSE
             ball.vx += 1.8; 
-            
             ball.y += 5; 
         } else {
             const nx = dx / dist;
             const ny = dy / dist;
             const dot = ball.vx * nx + ball.vy * ny;
             
-            // Физика отскока без ускорения
             ball.vx = (ball.vx - 2 * dot * nx) * CONFIG.bounceDamping;
             ball.vy = (ball.vy - 2 * dot * ny) * CONFIG.bounceDamping;
 
-            // Ограничение скорости (один темп)
             const currentSpeed = Math.sqrt(ball.vx**2 + ball.vy**2);
             if (currentSpeed > CONFIG.maxSpeed) {
                 ball.vx = (ball.vx / currentSpeed) * CONFIG.maxSpeed;
@@ -143,7 +133,6 @@ function updatePhysics() {
             ball.x = CONFIG.centerX + nx * (CONFIG.radius - CONFIG.ballRadius - 1);
             ball.y = CONFIG.centerY + ny * (CONFIG.radius - CONFIG.ballRadius - 1);
 
-            // ИСПРАВЛЕНО: Минимальный прирост иксов (0.01 за удар)
             state.multiplier += 0.01;
             multEl.textContent = state.multiplier.toFixed(2);
         }
