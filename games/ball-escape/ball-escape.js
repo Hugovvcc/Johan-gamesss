@@ -20,10 +20,10 @@ const CONFIG = {
     radius: 140,
     ballRadius: 10,
     gapSize: 0.65, 
-    gravity: 0.25,
+    gravity: 0.35,        // Чуть усилили гравитацию для четкого падения
     rotationSpeed: 0.02,
-    bounceDamping: 1.02, 
-    maxSpeed: 18,
+    bounceDamping: 1.0,   // ИСПРАВЛЕНО: 1.0 означает отсутствие ускорения при ударе
+    maxSpeed: 8,          // ИСПРАВЛЕНО: жесткое ограничение скорости
     trailLength: 12
 };
 
@@ -46,10 +46,8 @@ let ball = {
 };
 
 function initGame() {
-    // Получаем значение ставки
     const betValue = parseFloat(betInput.value);
 
-    // Проверка баланса через твой API
     if (typeof window.gameAPI !== 'undefined') {
         const currentBal = window.gameAPI.getBalance();
         if (betValue > currentBal) {
@@ -60,15 +58,10 @@ function initGame() {
             alert("Ставка должна быть от 1 до 10 TON");
             return;
         }
-        
-        // Списываем ставку из общего баланса
         window.gameAPI.updateBalance(-betValue);
     }
 
-    // Сохраняем текущую ставку для расчета выигрыша
     state.currentBet = betValue;
-
-    // Сброс состояния игры (как было в оригинале)
     state.multiplier = 1.00;
     state.running = true;
     state.falling = false;
@@ -78,10 +71,12 @@ function initGame() {
     
     multEl.textContent = "1.00";
     statusEl.className = "status hidden";
+    statusEl.classList.remove("win", "lose");
     btn.style.display = "none";
 
+    // Начальный импульс всегда умеренный
     const angle = Math.random() * Math.PI * 2;
-    const speed = 7;
+    const speed = 6;
     
     ball.x = CONFIG.centerX;
     ball.y = CONFIG.centerY;
@@ -95,23 +90,13 @@ function updatePhysics() {
 
     state.rotation += CONFIG.rotationSpeed;
 
-    // Частицы и хвост шарика
-    for (let i = state.particles.length - 1; i >= 0; i--) {
-        let p = state.particles[i];
-        p.x += p.vx; p.y += p.vy;
-        p.life -= 0.05;
-        if (p.life <= 0) state.particles.splice(i, 1);
-    }
-
-    ball.history.push({ x: ball.x, y: ball.y });
-    if (ball.history.length > CONFIG.trailLength) ball.history.shift();
-
     if (state.falling) {
         ball.vy += CONFIG.gravity;
         ball.x += ball.vx;
         ball.y += ball.vy;
 
-        if (ball.x < 10 || ball.x > rect.width - 10) ball.vx *= -0.6;
+        // Отскок от стенок при падении
+        if (ball.x < 10 || ball.x > rect.width - 10) ball.vx *= -0.5;
 
         if (ball.y > rect.height - 120 - CONFIG.ballRadius) {
             finishGame();
@@ -133,19 +118,33 @@ function updatePhysics() {
         
         if (Math.abs(normalizedBallAngle - gapCenter) < CONFIG.gapSize / 2) {
             state.falling = true;
-            ball.y += 10; 
+            
+            // ПОДКУТКА: При вылете из кольца смещаем вектор скорости вправо (в сторону LOSE)
+            // Чем больше это число, тем сложнее попасть в WIN
+            ball.vx += 1.8; 
+            
+            ball.y += 5; 
         } else {
             const nx = dx / dist;
             const ny = dy / dist;
             const dot = ball.vx * nx + ball.vy * ny;
+            
+            // Физика отскока без ускорения
             ball.vx = (ball.vx - 2 * dot * nx) * CONFIG.bounceDamping;
             ball.vy = (ball.vy - 2 * dot * ny) * CONFIG.bounceDamping;
+
+            // Ограничение скорости (один темп)
+            const currentSpeed = Math.sqrt(ball.vx**2 + ball.vy**2);
+            if (currentSpeed > CONFIG.maxSpeed) {
+                ball.vx = (ball.vx / currentSpeed) * CONFIG.maxSpeed;
+                ball.vy = (ball.vy / currentSpeed) * CONFIG.maxSpeed;
+            }
 
             ball.x = CONFIG.centerX + nx * (CONFIG.radius - CONFIG.ballRadius - 1);
             ball.y = CONFIG.centerY + ny * (CONFIG.radius - CONFIG.ballRadius - 1);
 
-            // Начисление иксов (Multiplier) за каждое касание стенки
-            state.multiplier += 0.15;
+            // ИСПРАВЛЕНО: Минимальный прирост иксов (0.01 за удар)
+            state.multiplier += 0.01;
             multEl.textContent = state.multiplier.toFixed(2);
         }
     }
@@ -155,19 +154,14 @@ function finishGame() {
     state.running = false;
     state.finished = true;
     
-    // Проверка зоны (левая половина - WIN, правая - LOSE)
     const isWin = ball.x < rect.width / 2;
     statusEl.classList.remove("hidden");
     
     if (isWin) {
-        // Выигрыш = ставка умноженная на иксы
         const winAmount = state.currentBet * state.multiplier;
-        
-        // Пополняем общий баланс через твой API
         if (typeof window.gameAPI !== 'undefined') {
             window.gameAPI.updateBalance(winAmount);
         }
-        
         statusEl.textContent = `YOU WON ${winAmount.toFixed(1)} TON`;
         statusEl.classList.add("win");
     } else {
@@ -178,9 +172,6 @@ function finishGame() {
     btn.textContent = "PLAY AGAIN";
     btn.style.display = "block";
 }
-
-// Функции рисования (drawZones, drawTrack, drawBall, drawParticles) 
-// должны остаться такими же, как в твоем исходном коде.
 
 function drawZones() {
     const h = 120;
