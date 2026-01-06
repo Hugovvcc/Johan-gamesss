@@ -2,38 +2,28 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const dpr = window.devicePixelRatio || 1;
 
+// Настройка Canvas
 const rect = canvas.getBoundingClientRect();
 canvas.width = rect.width * dpr;
 canvas.height = rect.height * dpr;
 ctx.scale(dpr, dpr);
 
+// Элементы интерфейса
 const multEl = document.getElementById("multValue");
 const btn = document.getElementById("startBtn");
 const statusEl = document.getElementById("statusMessage");
 
-// ЛОГИКА СТАВОК
-let selectedBet = 1;
-const betButtons = document.querySelectorAll('.bet-btn');
-
-betButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        if (state.running) return;
-        betButtons.forEach(b => b.classList.remove('active'));
-        button.classList.add('active');
-        selectedBet = parseFloat(button.getAttribute('data-amount'));
-    });
-});
-
 const CONFIG = {
     centerX: rect.width / 2,
-    centerY: 280,
-    radius: 130,
+    centerY: 260,
+    radius: 140,
     ballRadius: 10,
-    gapSize: 0.65,
-    gravity: 0.35,
+    gapSize: 0.65, 
+    gravity: 0.35,        
     rotationSpeed: 0.02,
-    bounceDamping: 1.0,
-    maxSpeed: 8
+    bounceDamping: 1.0,   
+    maxSpeed: 8,          
+    trailLength: 12
 };
 
 let state = {
@@ -42,16 +32,21 @@ let state = {
     finished: false,
     rotation: 0,
     multiplier: 1.00,
+    particles: [],
     currentBet: 0
 };
 
 let ball = {
-    x: CONFIG.centerX, y: CONFIG.centerY,
-    vx: 0, vy: 0
+    x: CONFIG.centerX,
+    y: CONFIG.centerY,
+    vx: 0,
+    vy: 0,
+    history: []
 };
 
 function initGame() {
-    const betValue = selectedBet;
+    // СТАВКА ЗАФИКСИРОВАНА: Теперь всегда 1 TON
+    const betValue = 1; 
 
     if (typeof window.gameAPI !== 'undefined') {
         const currentBal = window.gameAPI.getBalance();
@@ -59,6 +54,7 @@ function initGame() {
             alert("Недостаточно средств!");
             return;
         }
+        // Списываем 1 TON
         window.gameAPI.updateBalance(-betValue);
     }
 
@@ -68,29 +64,38 @@ function initGame() {
     state.falling = false;
     state.finished = false;
     state.rotation = 0;
+    state.particles = [];
     
     multEl.textContent = "1.00";
     statusEl.className = "status hidden";
+    statusEl.classList.remove("win", "lose");
     btn.style.display = "none";
 
     const angle = Math.random() * Math.PI * 2;
     const speed = 6;
+    
     ball.x = CONFIG.centerX;
     ball.y = CONFIG.centerY;
     ball.vx = Math.cos(angle) * speed;
     ball.vy = Math.sin(angle) * speed;
+    ball.history = [];
 }
 
 function updatePhysics() {
     if (!state.running) return;
+
     state.rotation += CONFIG.rotationSpeed;
 
     if (state.falling) {
         ball.vy += CONFIG.gravity;
         ball.x += ball.vx;
         ball.y += ball.vy;
+
         if (ball.x < 10 || ball.x > rect.width - 10) ball.vx *= -0.5;
-        if (ball.y > rect.height - 120) finishGame();
+
+        if (ball.y > rect.height - 120 - CONFIG.ballRadius) {
+            finishGame();
+        }
         return;
     }
 
@@ -105,20 +110,31 @@ function updatePhysics() {
         const angleToBall = Math.atan2(dy, dx);
         const normalizedBallAngle = (angleToBall - state.rotation + Math.PI * 4) % (Math.PI * 2);
         const gapCenter = Math.PI / 2;
-
+        
         if (Math.abs(normalizedBallAngle - gapCenter) < CONFIG.gapSize / 2) {
             state.falling = true;
+            // Подкрутка шансов в сторону LOSE
             ball.vx += 1.8; 
+            ball.y += 5; 
         } else {
             const nx = dx / dist;
             const ny = dy / dist;
             const dot = ball.vx * nx + ball.vy * ny;
+            
             ball.vx = (ball.vx - 2 * dot * nx) * CONFIG.bounceDamping;
             ball.vy = (ball.vy - 2 * dot * ny) * CONFIG.bounceDamping;
-            state.multiplier += 0.01;
-            multEl.textContent = state.multiplier.toFixed(2);
+
+            const currentSpeed = Math.sqrt(ball.vx**2 + ball.vy**2);
+            if (currentSpeed > CONFIG.maxSpeed) {
+                ball.vx = (ball.vx / currentSpeed) * CONFIG.maxSpeed;
+                ball.vy = (ball.vy / currentSpeed) * CONFIG.maxSpeed;
+            }
+
             ball.x = CONFIG.centerX + nx * (CONFIG.radius - CONFIG.ballRadius - 1);
             ball.y = CONFIG.centerY + ny * (CONFIG.radius - CONFIG.ballRadius - 1);
+
+            state.multiplier += 0.01;
+            multEl.textContent = state.multiplier.toFixed(2);
         }
     }
 }
@@ -126,17 +142,22 @@ function updatePhysics() {
 function finishGame() {
     state.running = false;
     state.finished = true;
+    
     const isWin = ball.x < rect.width / 2;
     statusEl.classList.remove("hidden");
+    
     if (isWin) {
         const winAmount = state.currentBet * state.multiplier;
-        if (typeof window.gameAPI !== 'undefined') window.gameAPI.updateBalance(winAmount);
-        statusEl.textContent = `WIN: +${winAmount.toFixed(1)} TON`;
+        if (typeof window.gameAPI !== 'undefined') {
+            window.gameAPI.updateBalance(winAmount);
+        }
+        statusEl.textContent = `YOU WON ${winAmount.toFixed(1)} TON`;
         statusEl.classList.add("win");
     } else {
-        statusEl.textContent = "LOSE";
+        statusEl.textContent = "LOSS";
         statusEl.classList.add("lose");
     }
+
     btn.textContent = "PLAY AGAIN";
     btn.style.display = "block";
 }
@@ -148,7 +169,8 @@ function drawZones() {
     ctx.fillRect(0, y, rect.width / 2, h);
     ctx.fillStyle = "rgba(255, 51, 51, 0.1)";
     ctx.fillRect(rect.width / 2, y, rect.width / 2, h);
-    ctx.font = "bold 20px Arial";
+    
+    ctx.font = "bold 24px Arial";
     ctx.textAlign = "center";
     ctx.fillStyle = "#00ff88"; ctx.fillText("WIN", rect.width / 4, y + 60);
     ctx.fillStyle = "#ff3333"; ctx.fillText("LOSE", rect.width * 0.75, y + 60);
@@ -176,7 +198,9 @@ function drawBall() {
 
 function loop() {
     ctx.clearRect(0, 0, rect.width, rect.height);
-    drawZones(); drawTrack(); drawBall();
+    drawZones();
+    drawTrack();
+    drawBall();
     updatePhysics();
     requestAnimationFrame(loop);
 }
