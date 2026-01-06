@@ -2,16 +2,16 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const dpr = window.devicePixelRatio || 1;
 
-// Настройка Canvas
 const rect = canvas.getBoundingClientRect();
 canvas.width = rect.width * dpr;
 canvas.height = rect.height * dpr;
 ctx.scale(dpr, dpr);
 
-// Элементы интерфейса
 const multEl = document.getElementById("multValue");
 const btn = document.getElementById("startBtn");
 const statusEl = document.getElementById("statusMessage");
+const betInput = document.getElementById("mbet"); 
+const diffSelect = document.getElementById("mcount");
 
 const CONFIG = {
     centerX: rect.width / 2,
@@ -19,10 +19,10 @@ const CONFIG = {
     radius: 140,
     ballRadius: 10,
     gapSize: 0.65, 
-    gravity: 0.35,        
+    gravity: 0.25,
     rotationSpeed: 0.02,
-    bounceDamping: 1.0,   
-    maxSpeed: 8,          
+    bounceDamping: 1.02, 
+    maxSpeed: 18,
     trailLength: 12
 };
 
@@ -44,21 +44,36 @@ let ball = {
     history: []
 };
 
+// Функция инициализации игры
 function initGame() {
-    // СТАВКА ЗАФИКСИРОВАНА: Теперь всегда 1 TON
-    const betValue = 1; 
+    if (state.running) return;
 
-    if (typeof window.gameAPI !== 'undefined') {
-        const currentBal = window.gameAPI.getBalance();
-        if (betValue > currentBal) {
-            alert("Недостаточно средств!");
-            return;
-        }
-        // Списываем 1 TON
-        window.gameAPI.updateBalance(-betValue);
+    const betAmount = parseFloat(betInput.value);
+
+    // 1. Проверка через ГЛОБАЛЬНЫЙ API баланса
+    const currentGlobalBalance = typeof window.gameAPI !== 'undefined' ? window.gameAPI.getBalance() : 100;
+
+    if (isNaN(betAmount) || betAmount < 1 || betAmount > 10) {
+        alert("Ставка должна быть от 1 до 10 TON");
+        return;
     }
 
-    state.currentBet = betValue;
+    if (betAmount > currentGlobalBalance) {
+        alert("Недостаточно средств на общем балансе!");
+        return;
+    }
+
+    // 2. Списание ставки через ГЛОБАЛЬНЫЙ API
+    if (typeof window.gameAPI !== 'undefined') {
+        window.gameAPI.updateBalance(-betAmount);
+    }
+
+    state.currentBet = betAmount;
+
+    // Настройка сложности
+    const difficulty = parseInt(diffSelect.value) || 5;
+    CONFIG.rotationSpeed = 0.005 * difficulty;
+
     state.multiplier = 1.00;
     state.running = true;
     state.falling = false;
@@ -68,11 +83,10 @@ function initGame() {
     
     multEl.textContent = "1.00";
     statusEl.className = "status hidden";
-    statusEl.classList.remove("win", "lose");
-    btn.style.display = "none";
+    btn.style.visibility = "hidden";
 
     const angle = Math.random() * Math.PI * 2;
-    const speed = 6;
+    const speed = 7;
     
     ball.x = CONFIG.centerX;
     ball.y = CONFIG.centerY;
@@ -86,16 +100,20 @@ function updatePhysics() {
 
     state.rotation += CONFIG.rotationSpeed;
 
+    // Частицы
+    for (let i = state.particles.length - 1; i >= 0; i--) {
+        let p = state.particles[i];
+        p.x += p.vx; p.y += p.vy;
+        p.life -= 0.05;
+        if (p.life <= 0) state.particles.splice(i, 1);
+    }
+
     if (state.falling) {
         ball.vy += CONFIG.gravity;
         ball.x += ball.vx;
         ball.y += ball.vy;
-
-        if (ball.x < 10 || ball.x > rect.width - 10) ball.vx *= -0.5;
-
-        if (ball.y > rect.height - 120 - CONFIG.ballRadius) {
-            finishGame();
-        }
+        if (ball.x < 10 || ball.x > rect.width - 10) ball.vx *= -0.6;
+        if (ball.y > rect.height - 120 - CONFIG.ballRadius) finishGame();
         return;
     }
 
@@ -113,28 +131,20 @@ function updatePhysics() {
         
         if (Math.abs(normalizedBallAngle - gapCenter) < CONFIG.gapSize / 2) {
             state.falling = true;
-            // Подкрутка шансов в сторону LOSE
-            ball.vx += 1.8; 
-            ball.y += 5; 
+            ball.y += 10; 
         } else {
             const nx = dx / dist;
             const ny = dy / dist;
             const dot = ball.vx * nx + ball.vy * ny;
-            
             ball.vx = (ball.vx - 2 * dot * nx) * CONFIG.bounceDamping;
             ball.vy = (ball.vy - 2 * dot * ny) * CONFIG.bounceDamping;
-
-            const currentSpeed = Math.sqrt(ball.vx**2 + ball.vy**2);
-            if (currentSpeed > CONFIG.maxSpeed) {
-                ball.vx = (ball.vx / currentSpeed) * CONFIG.maxSpeed;
-                ball.vy = (ball.vy / currentSpeed) * CONFIG.maxSpeed;
-            }
-
             ball.x = CONFIG.centerX + nx * (CONFIG.radius - CONFIG.ballRadius - 1);
             ball.y = CONFIG.centerY + ny * (CONFIG.radius - CONFIG.ballRadius - 1);
 
-            state.multiplier += 0.01;
+            // УВЕЛИЧЕНИЕ ИКСОВ ПРИ УДАРЕ
+            state.multiplier += 0.20; 
             multEl.textContent = state.multiplier.toFixed(2);
+            spawnParticles(ball.x, ball.y, "#00d2ff");
         }
     }
 }
@@ -147,19 +157,36 @@ function finishGame() {
     statusEl.classList.remove("hidden");
     
     if (isWin) {
+        // РАСЧЕТ ВЫИГРЫША: Ставка * Накопленные Иксы
         const winAmount = state.currentBet * state.multiplier;
+        
+        // Пополнение ГЛОБАЛЬНОГО баланса
         if (typeof window.gameAPI !== 'undefined') {
             window.gameAPI.updateBalance(winAmount);
         }
-        statusEl.textContent = `YOU WON ${winAmount.toFixed(1)} TON`;
-        statusEl.classList.add("win");
+        
+        statusEl.textContent = `WIN: +${winAmount.toFixed(2)} TON`;
+        statusEl.style.color = "#00ff88";
     } else {
-        statusEl.textContent = "LOSS";
-        statusEl.classList.add("lose");
+        statusEl.textContent = `LOSS: -${state.currentBet.toFixed(2)} TON`;
+        statusEl.style.color = "#ff3333";
     }
 
     btn.textContent = "PLAY AGAIN";
-    btn.style.display = "block";
+    btn.style.visibility = "visible";
+}
+
+// Рисование и прочее...
+function spawnParticles(x, y, color) {
+    for (let i = 0; i < 6; i++) {
+        state.particles.push({
+            x, y,
+            vx: (Math.random() - 0.5) * 4,
+            vy: (Math.random() - 0.5) * 4,
+            life: 1.0,
+            color
+        });
+    }
 }
 
 function drawZones() {
@@ -169,7 +196,6 @@ function drawZones() {
     ctx.fillRect(0, y, rect.width / 2, h);
     ctx.fillStyle = "rgba(255, 51, 51, 0.1)";
     ctx.fillRect(rect.width / 2, y, rect.width / 2, h);
-    
     ctx.font = "bold 24px Arial";
     ctx.textAlign = "center";
     ctx.fillStyle = "#00ff88"; ctx.fillText("WIN", rect.width / 4, y + 60);
@@ -196,10 +222,22 @@ function drawBall() {
     ctx.fill();
 }
 
+function drawParticles() {
+    for (let p of state.particles) {
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+}
+
 function loop() {
     ctx.clearRect(0, 0, rect.width, rect.height);
     drawZones();
     drawTrack();
+    drawParticles();
     drawBall();
     updatePhysics();
     requestAnimationFrame(loop);
