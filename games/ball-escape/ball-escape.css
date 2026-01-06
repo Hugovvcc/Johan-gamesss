@@ -33,7 +33,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 1; /* Фон под интерфейсом */
+    z-index: 1;
 }
 
 .ui-layer {
@@ -46,12 +46,12 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 40px 20px;
+    /* Уменьшил верхний padding, чтобы поднять всё содержимое */
+    padding: 20px 20px 30px 20px; 
     box-sizing: border-box;
-    pointer-events: none; /* Пропускает клики к канвасу там, где нет кнопок */
+    pointer-events: none;
 }
 
-/* Секции интерфейса */
 .ui-top, .ui-bottom {
     display: flex;
     flex-direction: column;
@@ -59,13 +59,18 @@ body {
     width: 100%;
 }
 
-/* Разрешаем клики по активным элементам */
+/* Секция ставок теперь будет выше */
+.ui-top {
+    justify-content: flex-start;
+}
+
 .bet-selector, .controls, .bet-btn, #startBtn {
     pointer-events: auto !important;
 }
 
 .multiplier-box {
-    margin-bottom: 20px;
+    /* Уменьшил отступ под цифрами, чтобы кнопки ставок были выше */
+    margin-bottom: 10px; 
     color: var(--neon-green);
     text-shadow: 0 0 15px var(--neon-green);
 }
@@ -106,7 +111,9 @@ body {
     color: white;
     font-size: 24px;
     font-weight: bold;
-    margin-bottom: 15px;
+    /* Добавил отступ сверху, чтобы отодвинуть надпись WIN от круга */
+    margin-top: 40px; 
+    margin-bottom: 10px;
     height: 30px;
 }
 
@@ -123,6 +130,8 @@ body {
     font-weight: bold;
     cursor: pointer;
     box-shadow: 0 0 20px rgba(255, 0, 255, 0.4);
+    /* Дополнительное смещение кнопки вниз */
+    margin-bottom: 10px; 
 }
 
 #startBtn:active { transform: scale(0.95); }
