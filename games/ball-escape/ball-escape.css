@@ -1,9 +1,7 @@
 :root {
     --bg-dark: #05000c;
-    --bg-panel: #1a0033;
     --neon-pink: #ff00ff;
     --neon-green: #00ff88;
-    --neon-blue: #00d2ff;
     --neon-red: #ff3333;
 }
 
@@ -11,11 +9,11 @@ body {
     margin: 0;
     height: 100vh;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    background: radial-gradient(circle at top, var(--bg-panel), var(--bg-dark));
+    background: #1a0033;
     font-family: sans-serif;
-    color: white;
     overflow: hidden;
 }
 
@@ -24,56 +22,68 @@ body {
     width: 380px;
     height: 640px;
     background: #000;
-    border-radius: 24px;
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 30px;
+    border: 4px solid #222;
     overflow: hidden;
 }
 
-/* Основной слой интерфейса */
+#canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1; /* Фон под интерфейсом */
+}
+
 .ui-layer {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
+    z-index: 10;
     display: flex;
     flex-direction: column;
-    justify-content: space-between; /* Распределяет блоки к верху и низу */
-    align-items: center;
+    justify-content: space-between;
     padding: 40px 20px;
     box-sizing: border-box;
-    z-index: 10;
-    pointer-events: none; /* Важно: само поле не ловит клики */
+    pointer-events: none; /* Пропускает клики к канвасу там, где нет кнопок */
 }
 
-/* Разрешаем клики только по кнопкам */
-.bet-selector, #startBtn, .bet-btn {
+/* Секции интерфейса */
+.ui-top, .ui-bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+/* Разрешаем клики по активным элементам */
+.bet-selector, .controls, .bet-btn, #startBtn {
     pointer-events: auto !important;
 }
 
-/* Верхний блок: Коэффициент и Ставки */
-.top-section {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    pointer-events: none;
+.multiplier-box {
+    margin-bottom: 20px;
+    color: var(--neon-green);
+    text-shadow: 0 0 15px var(--neon-green);
 }
 
 #multValue {
-    font-size: 56px;
-    font-weight: 800;
-    color: var(--neon-green);
-    margin-bottom: 20px;
-    text-shadow: 0 0 15px var(--neon-green);
+    font-size: 60px;
+    font-weight: 900;
+}
+
+.x-label {
+    font-size: 30px;
 }
 
 .bet-selector {
     display: grid;
-    grid-template-columns: 1fr 1fr; /* Кнопки в два ряда, чтобы не лезли на текст */
+    grid-template-columns: 1fr 1fr;
     gap: 10px;
     width: 100%;
-    max-width: 280px;
 }
 
 .bet-btn {
@@ -84,51 +94,35 @@ body {
     border-radius: 12px;
     cursor: pointer;
     font-weight: bold;
-    text-align: center;
-    transition: 0.2s;
 }
 
 .bet-btn.active {
     background: var(--neon-green);
-    color: black;
+    color: #000;
     box-shadow: 0 0 15px var(--neon-green);
 }
 
-/* Нижний блок: Статус и Старт */
-.bottom-section {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    pointer-events: none;
-}
-
 .status {
+    color: white;
     font-size: 24px;
     font-weight: bold;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     height: 30px;
 }
 
 .status.hidden { visibility: hidden; }
-.status.win { color: var(--neon-green); }
-.status.lose { color: var(--neon-red); }
 
 #startBtn {
-    width: 100%;
-    max-width: 250px;
-    padding: 20px;
-    font-size: 20px;
-    font-weight: bold;
+    width: 220px;
+    padding: 18px;
     border-radius: 50px;
     border: none;
-    cursor: pointer;
-    background: linear-gradient(135deg, #ff00ff, #bc00ff);
+    background: linear-gradient(135deg, var(--neon-pink), #bc00ff);
     color: white;
-    text-transform: uppercase;
-    box-shadow: 0 5px 20px rgba(255, 0, 255, 0.4);
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(255, 0, 255, 0.4);
 }
 
-#startBtn:active {
-    transform: scale(0.96);
-}
+#startBtn:active { transform: scale(0.95); }
