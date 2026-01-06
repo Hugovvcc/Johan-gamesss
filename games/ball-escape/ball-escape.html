@@ -13,24 +13,57 @@
     <canvas id="canvas"></canvas>
 
     <div class="ui-layer">
-        <div class="multiplier-box">
-            <span id="multValue">1.00</span><span class="x-label">x</span>
-        </div>
-        
-        <div class="bet-selector">
-            <button class="bet-btn active" data-amount="1">1 TON</button>
-            <button class="bet-btn" data-amount="3">3 TON</button>
-            <button class="bet-btn" data-amount="5">5 TON</button>
-            <button class="bet-btn" data-amount="10">10 TON</button>
+        <div class="ui-top">
+            <div class="multiplier-box">
+                <span id="multValue">1.00</span><span class="x-label">x</span>
+            </div>
+            
+            <div class="bet-selector">
+                <button class="bet-btn active" data-amount="1">1 TON</button>
+                <button class="bet-btn" data-amount="3">3 TON</button>
+                <button class="bet-btn" data-amount="5">5 TON</button>
+                <button class="bet-btn" data-amount="10">10 TON</button>
+            </div>
         </div>
 
-        <div id="statusMessage" class="status hidden"></div>
-
-        <div class="controls">
-            <button id="startBtn" class="primary-btn">START</button>
+        <div class="ui-bottom">
+            <div id="statusMessage" class="status hidden">WIN</div>
+            <div class="controls">
+                <button id="startBtn" class="primary-btn">START</button>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+    // Скрипт для работы кнопок (можно вынести в отдельный файл)
+    document.addEventListener('DOMContentLoaded', () => {
+        const betBtns = document.querySelectorAll('.bet-btn');
+        const startBtn = document.getElementById('startBtn');
+        const statusMsg = document.getElementById('statusMessage');
+        let currentBet = 1;
+
+        // Логика выбора ставки
+        betBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Предотвращаем конфликты
+                betBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentBet = btn.getAttribute('data-amount');
+                console.log("Выбрана ставка:", currentBet);
+            });
+        });
+
+        // Логика кнопки старт
+        startBtn.addEventListener('click', () => {
+            console.log("Игра запущена!");
+            statusMsg.classList.add('hidden');
+            
+            // Здесь должна быть ваша связь с game.js
+            // Например: startGame(currentBet);
+        });
+    });
+</script>
 
 </body>
 </html>
