@@ -2,216 +2,156 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const dpr = window.devicePixelRatio || 1;
 
-// UI
 const multEl = document.getElementById("multValue");
 const btn = document.getElementById("startBtn");
 const statusEl = document.getElementById("statusMessage");
 
-// Resize
 function resize() {
-    const rect = canvas.parentElement.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
+    const r = canvas.parentElement.getBoundingClientRect();
+    canvas.width = r.width * dpr;
+    canvas.height = r.height * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    return rect;
+    return r;
 }
-
 let rect = resize();
 
 const CONFIG = {
-    get centerX() { return canvas.width / (2 * dpr); },
-    centerY: 240,
+    get cx() { return canvas.width / (2 * dpr); },
+    cy: 240,
     radius: 120,
-    ballRadius: 10,
-    gapSize: 0.7,
+    ballR: 10,
+    gap: 0.7,
     gravity: 0.25,
-    rotationSpeed: 0.02,
-    fixedSpeed: 5 // ❗ ПОСТОЯННАЯ СКОРОСТЬ
+    rotSpeed: 0.02,
+    speed: 5
 };
 
 let state = {
     running: false,
     falling: false,
     rotation: 0,
-    multiplier: 1.0,
-    particles: [],
-    currentBet: 1
+    multiplier: 1,
+    bet: 1
 };
 
 let ball = { x: 0, y: 0, vx: 0, vy: 0 };
 
-// ===== HELPERS =====
-function normalizeBallSpeed() {
-    const speed = Math.hypot(ball.vx, ball.vy);
-    if (speed === 0) return;
-    const k = CONFIG.fixedSpeed / speed;
-    ball.vx *= k;
-    ball.vy *= k;
+function normalize() {
+    const s = Math.hypot(ball.vx, ball.vy);
+    if (!s) return;
+    ball.vx = ball.vx / s * CONFIG.speed;
+    ball.vy = ball.vy / s * CONFIG.speed;
 }
 
-function getSelectedBet() {
-    const btn = document.querySelector(".bet-btn.active");
-    return btn ? parseFloat(btn.dataset.amount) : 1;
+function getBet() {
+    const b = document.querySelector(".bet-btn.active");
+    return b ? +b.dataset.amount : 1;
 }
 
-// ===== GAME START =====
 function initGame() {
     if (state.running) return;
 
     rect = resize();
-    const bet = getSelectedBet();
-    const balance = window.gameAPI ? window.gameAPI.getBalance() : 100;
-
-    if (bet > balance) {
-        alert("Недостаточно средств");
-        return;
-    }
-
-    window.gameAPI?.updateBalance(-bet);
-
+    state.bet = getBet();
     state.running = true;
     state.falling = false;
     state.rotation = 0;
-    state.multiplier = 1.0;
-    state.currentBet = bet;
-    state.particles = [];
+    state.multiplier = 1;
 
     multEl.textContent = "1.00";
     statusEl.classList.add("hidden");
-
     btn.disabled = true;
-    btn.style.opacity = "0.5";
 
-    const angle = Math.random() * Math.PI * 2;
-    ball.x = CONFIG.centerX;
-    ball.y = CONFIG.centerY;
-    ball.vx = Math.cos(angle) * CONFIG.fixedSpeed;
-    ball.vy = Math.sin(angle) * CONFIG.fixedSpeed;
+    const a = Math.random() * Math.PI * 2;
+    ball.x = CONFIG.cx;
+    ball.y = CONFIG.cy;
+    ball.vx = Math.cos(a) * CONFIG.speed;
+    ball.vy = Math.sin(a) * CONFIG.speed;
 }
 
-// ===== PHYSICS =====
-function updatePhysics() {
+function update() {
     if (!state.running) return;
 
-    state.rotation += CONFIG.rotationSpeed;
-
-    // particles
-    state.particles = state.particles.filter(p => {
-        p.x += p.vx;
-        p.y += p.vy;
-        p.life -= 0.03;
-        return p.life > 0;
-    });
+    state.rotation += CONFIG.rotSpeed;
 
     if (state.falling) {
         ball.vy += CONFIG.gravity;
         ball.x += ball.vx;
         ball.y += ball.vy;
 
-        if (ball.x < 15 || ball.x > rect.width - 15) {
-            ball.vx *= -1;
-        }
-
-        if (ball.y > rect.height - 50) finishGame();
+        if (ball.y > rect.height - 50) finish();
         return;
     }
 
     ball.x += ball.vx;
     ball.y += ball.vy;
-    normalizeBallSpeed();
+    normalize();
 
-    const dx = ball.x - CONFIG.centerX;
-    const dy = ball.y - CONFIG.centerY;
+    const dx = ball.x - CONFIG.cx;
+    const dy = ball.y - CONFIG.cy;
     const dist = Math.hypot(dx, dy);
 
-    if (dist + CONFIG.ballRadius >= CONFIG.radius) {
-        const angle = Math.atan2(dy, dx);
-        const normAngle = (angle - state.rotation + Math.PI * 10) % (Math.PI * 2);
-        const gapCenter = Math.PI / 2;
+    if (dist + CONFIG.ballR >= CONFIG.radius) {
+        const ang = Math.atan2(dy, dx);
+        const a = (ang - state.rotation + Math.PI * 10) % (Math.PI * 2);
+        const gapC = Math.PI / 2;
 
-        if (Math.abs(normAngle - gapCenter) < CONFIG.gapSize / 2) {
+        if (Math.abs(a - gapC) < CONFIG.gap / 2) {
             state.falling = true;
         } else {
             const nx = dx / dist;
             const ny = dy / dist;
             const dot = ball.vx * nx + ball.vy * ny;
-
             ball.vx -= 2 * dot * nx;
             ball.vy -= 2 * dot * ny;
-            normalizeBallSpeed();
+            normalize();
 
-            ball.x = CONFIG.centerX + nx * (CONFIG.radius - CONFIG.ballRadius - 1);
-            ball.y = CONFIG.centerY + ny * (CONFIG.radius - CONFIG.ballRadius - 1);
+            ball.x = CONFIG.cx + nx * (CONFIG.radius - CONFIG.ballR - 1);
+            ball.y = CONFIG.cy + ny * (CONFIG.radius - CONFIG.ballR - 1);
 
             state.multiplier += 0.2;
             multEl.textContent = state.multiplier.toFixed(2);
-            spawnParticles(ball.x, ball.y, "#ff00ff");
         }
     }
 }
 
-// ===== FINISH =====
-function finishGame() {
+function finish() {
     state.running = false;
 
-    const isWin = Math.random() < 0.3; // ❗ 30% WIN / 70% LOSE
+    const isWin = ball.x < rect.width / 2;
 
     statusEl.classList.remove("hidden");
 
     if (isWin) {
-        const win = state.currentBet * state.multiplier;
+        const win = state.bet * state.multiplier;
         window.gameAPI?.updateBalance(win);
         statusEl.textContent = `WIN +${win.toFixed(2)} TON`;
         statusEl.className = "status win";
     } else {
-        statusEl.textContent = `LOSE -${state.currentBet.toFixed(2)} TON`;
+        statusEl.textContent = `LOSE -${state.bet.toFixed(2)} TON`;
         statusEl.className = "status lose";
     }
 
     btn.disabled = false;
-    btn.style.opacity = "1";
     btn.textContent = "PLAY AGAIN";
 }
 
-// ===== DRAW =====
-function spawnParticles(x, y, color) {
-    for (let i = 0; i < 5; i++) {
-        state.particles.push({
-            x, y,
-            vx: (Math.random() - 0.5) * 4,
-            vy: (Math.random() - 0.5) * 4,
-            life: 1,
-            color
-        });
-    }
-}
-
 function drawZones() {
-    const h = 80;
-    const y = rect.height - h;
-
-    ctx.fillStyle = "rgba(0,255,136,0.15)";
+    const h = 80, y = rect.height - h;
+    ctx.fillStyle = "rgba(0,255,136,.15)";
     ctx.fillRect(0, y, rect.width / 2, h);
-
-    ctx.fillStyle = "rgba(255,51,51,0.15)";
+    ctx.fillStyle = "rgba(255,51,51,.15)";
     ctx.fillRect(rect.width / 2, y, rect.width / 2, h);
-
-    ctx.font = "bold 20px Arial";
-    ctx.textAlign = "center";
-    ctx.fillStyle = "#00ff88";
-    ctx.fillText("WIN", rect.width / 4, y + 45);
-    ctx.fillStyle = "#ff3333";
-    ctx.fillText("LOSE", rect.width * 0.75, y + 45);
 }
 
 function drawTrack() {
     ctx.save();
-    ctx.translate(CONFIG.centerX, CONFIG.centerY);
+    ctx.translate(CONFIG.cx, CONFIG.cy);
     ctx.rotate(state.rotation);
     ctx.beginPath();
     ctx.arc(0, 0, CONFIG.radius,
-        Math.PI / 2 + CONFIG.gapSize / 2,
-        Math.PI / 2 - CONFIG.gapSize / 2
+        Math.PI / 2 + CONFIG.gap / 2,
+        Math.PI / 2 - CONFIG.gap / 2
     );
     ctx.strokeStyle = "#ff00ff";
     ctx.lineWidth = 10;
@@ -224,28 +164,18 @@ function loop() {
     drawZones();
     drawTrack();
 
-    state.particles.forEach(p => {
-        ctx.globalAlpha = p.life;
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
-        ctx.fill();
-    });
-    ctx.globalAlpha = 1;
-
     ctx.beginPath();
-    ctx.arc(ball.x, ball.y, CONFIG.ballRadius, 0, Math.PI * 2);
+    ctx.arc(ball.x, ball.y, CONFIG.ballR, 0, Math.PI * 2);
     ctx.fillStyle = "#00d2ff";
     ctx.shadowBlur = 15;
     ctx.shadowColor = "#00d2ff";
     ctx.fill();
     ctx.shadowBlur = 0;
 
-    updatePhysics();
+    update();
     requestAnimationFrame(loop);
 }
 
-// ===== EVENTS =====
 document.querySelectorAll(".bet-btn").forEach(b => {
     b.onclick = () => {
         if (state.running) return;
