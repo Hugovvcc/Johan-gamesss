@@ -13,11 +13,12 @@
     <canvas id="canvas"></canvas>
 
     <div class="ui-layer">
+        <!-- TOP -->
         <div class="ui-top">
             <div class="multiplier-box">
                 <span id="multValue">1.00</span><span class="x-label">x</span>
             </div>
-            
+
             <div class="bet-selector">
                 <button class="bet-btn active" data-amount="1">1 TON</button>
                 <button class="bet-btn" data-amount="3">3 TON</button>
@@ -26,43 +27,37 @@
             </div>
         </div>
 
+        <!-- BOTTOM -->
         <div class="ui-bottom">
             <div id="statusMessage" class="status hidden">WIN</div>
-            <div class="controls">
-                <button id="startBtn" class="primary-btn">START</button>
-            </div>
+            <button id="startBtn">START</button>
         </div>
     </div>
 </div>
 
 <script>
-    // Скрипт для работы кнопок (можно вынести в отдельный файл)
-    document.addEventListener('DOMContentLoaded', () => {
-        const betBtns = document.querySelectorAll('.bet-btn');
-        const startBtn = document.getElementById('startBtn');
-        const statusMsg = document.getElementById('statusMessage');
-        let currentBet = 1;
+document.addEventListener('DOMContentLoaded', () => {
+    const betBtns = document.querySelectorAll('.bet-btn');
+    const startBtn = document.getElementById('startBtn');
+    const statusMsg = document.getElementById('statusMessage');
+    let currentBet = 1;
 
-        // Логика выбора ставки
-        betBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation(); // Предотвращаем конфликты
-                betBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentBet = btn.getAttribute('data-amount');
-                console.log("Выбрана ставка:", currentBet);
-            });
-        });
-
-        // Логика кнопки старт
-        startBtn.addEventListener('click', () => {
-            console.log("Игра запущена!");
-            statusMsg.classList.add('hidden');
-            
-            // Здесь должна быть ваша связь с game.js
-            // Например: startGame(currentBet);
+    betBtns.forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+            betBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentBet = btn.dataset.amount;
+            console.log('Ставка:', currentBet);
         });
     });
+
+    startBtn.addEventListener('click', () => {
+        statusMsg.classList.add('hidden');
+        console.log('START GAME');
+        // startGame(currentBet);
+    });
+});
 </script>
 
 </body>
