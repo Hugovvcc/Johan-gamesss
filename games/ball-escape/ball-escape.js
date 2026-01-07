@@ -2,10 +2,12 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const dpr = window.devicePixelRatio || 1;
 
+// Элементы интерфейса
 const multEl = document.getElementById("multValue");
 const btn = document.getElementById("startBtn");
 const statusEl = document.getElementById("statusMessage");
 
+// Настройка размеров под контейнер
 function resize() {
     const rect = canvas.parentElement.getBoundingClientRect();
     canvas.width = rect.width * dpr;
@@ -18,14 +20,14 @@ let rect = resize();
 
 const CONFIG = {
     get centerX() { return canvas.width / (2 * dpr); },
-    centerY: 240, 
+    centerY: 240, // Позиция круга
     radius: 120,
     ballRadius: 10,
     gapSize: 0.7, 
     gravity: 0.25,
     rotationSpeed: 0.02,
-    bounceDamping: 1.0, 
-    maxSpeed: 12
+    bounceDamping: 1.05, // Немного увеличил для динамики
+    maxSpeed: 18
 };
 
 let state = {
@@ -45,6 +47,7 @@ let ball = {
     vy: 0
 };
 
+// Получение ставки из активной кнопки
 function getSelectedBet() {
     const activeBtn = document.querySelector('.bet-btn.active');
     return activeBtn ? parseFloat(activeBtn.getAttribute('data-amount')) : 1;
@@ -55,6 +58,8 @@ function initGame() {
 
     rect = resize(); 
     const betAmount = getSelectedBet();
+
+    // Проверка баланса (заглушка 100, если нет API)
     const currentGlobalBalance = typeof window.gameAPI !== 'undefined' ? window.gameAPI.getBalance() : 100;
 
     if (betAmount > currentGlobalBalance) {
@@ -79,6 +84,7 @@ function initGame() {
     btn.disabled = true;
     btn.style.opacity = "0.5";
 
+    // Начальный толчок
     const angle = Math.random() * Math.PI * 2;
     const speed = 5;
     ball.x = CONFIG.centerX;
@@ -92,6 +98,7 @@ function updatePhysics() {
 
     state.rotation += CONFIG.rotationSpeed;
 
+    // Частицы
     for (let i = state.particles.length - 1; i >= 0; i--) {
         let p = state.particles[i];
         p.x += p.vx; p.y += p.vy;
@@ -104,11 +111,13 @@ function updatePhysics() {
         ball.x += ball.vx;
         ball.y += ball.vy;
 
+        // Отскок от боковых стенок при падении
         if (ball.x < 15 || ball.x > rect.width - 15) {
             ball.vx *= -0.7;
             ball.x = ball.x < 15 ? 15 : rect.width - 15;
         }
         
+        // ПРОВЕРКА ПОПАДАНИЯ В ЗОНЫ (Нижняя граница)
         if (ball.y > rect.height - 50) {
             finishGame();
         }
@@ -129,9 +138,6 @@ function updatePhysics() {
         
         if (Math.abs(normalizedBallAngle - gapCenter) < CONFIG.gapSize / 2) {
             state.falling = true;
-            if (Math.random() < 0.65) {
-                ball.vx += 2.0; 
-            }
         } else {
             const nx = dx / dist;
             const ny = dy / dist;
@@ -143,10 +149,8 @@ function updatePhysics() {
             ball.x = CONFIG.centerX + nx * (CONFIG.radius - CONFIG.ballRadius - 1);
             ball.y = CONFIG.centerY + ny * (CONFIG.radius - CONFIG.ballRadius - 1);
 
-            if (state.multiplier < 2.50) {
-                state.multiplier += 0.05;
-                multEl.textContent = state.multiplier.toFixed(2);
-            }
+            state.multiplier += 0.20;
+            multEl.textContent = state.multiplier.toFixed(2);
             spawnParticles(ball.x, ball.y, "#ff00ff");
         }
     }
@@ -155,7 +159,10 @@ function updatePhysics() {
 function finishGame() {
     state.running = false;
     state.finished = true;
+    
+    // ЛОГИКА: Левая сторона (0 - 50%) = WIN, Правая (50% - 100%) = LOSE
     const isWin = ball.x < (rect.width / 2);
+    
     statusEl.classList.remove("hidden");
     
     if (isWin) {
@@ -164,7 +171,7 @@ function finishGame() {
             window.gameAPI.updateBalance(winAmount);
         }
         statusEl.textContent = `WIN: +${winAmount.toFixed(2)} TON`;
-        statusEl.className = "status win";
+        statusEl.className = "status win"; // Используем класс для цвета
         statusEl.style.color = "#00ff88";
     } else {
         statusEl.textContent = `LOSE: -${state.currentBet.toFixed(2)} TON`;
@@ -190,12 +197,18 @@ function spawnParticles(x, y, color) {
 }
 
 function drawZones() {
-    const h = 80; 
+    const h = 80; // Высота полей
     const y = rect.height - h;
+    
+    // Зеленая зона
     ctx.fillStyle = "rgba(0, 255, 136, 0.15)";
     ctx.fillRect(0, y, rect.width / 2, h);
+    
+    // Красная зона
     ctx.fillStyle = "rgba(255, 51, 51, 0.15)";
     ctx.fillRect(rect.width / 2, y, rect.width / 2, h);
+
+    // Подписи
     ctx.font = "bold 20px Arial";
     ctx.textAlign = "center";
     ctx.fillStyle = "rgba(0, 255, 136, 0.5)";
@@ -219,8 +232,11 @@ function drawTrack() {
 
 function loop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
     drawZones();
     drawTrack();
+    
+    // Рисуем частицы
     for (let p of state.particles) {
         ctx.globalAlpha = p.life;
         ctx.fillStyle = p.color;
@@ -229,6 +245,8 @@ function loop() {
         ctx.fill();
     }
     ctx.globalAlpha = 1;
+
+    // Рисуем шарик
     ctx.beginPath();
     ctx.arc(ball.x, ball.y, CONFIG.ballRadius, 0, Math.PI * 2);
     ctx.fillStyle = "#00d2ff";
@@ -236,10 +254,12 @@ function loop() {
     ctx.shadowColor = "#00d2ff";
     ctx.fill();
     ctx.shadowBlur = 0;
+
     updatePhysics();
     requestAnimationFrame(loop);
 }
 
+// Переключение кнопок ставок
 document.querySelectorAll('.bet-btn').forEach(button => {
     button.addEventListener('click', () => {
         if (state.running) return;
